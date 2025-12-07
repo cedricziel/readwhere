@@ -7,6 +7,10 @@ import '../../domain/entities/reading_settings.dart';
 import '../../domain/entities/toc_entry.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
+import '../../plugins/epub/epub_plugin.dart';
+import '../../plugins/epub/epub_reader_controller.dart';
+import '../../plugins/epub/epub_fallback_controller.dart';
+import '../../plugins/reader_controller.dart';
 
 /// Provider for managing reader state and reading operations
 ///
@@ -21,6 +25,7 @@ class ReaderProvider extends ChangeNotifier {
   final ReadingProgressRepository _readingProgressRepository;
   final BookmarkRepository _bookmarkRepository;
   final Uuid _uuid = const Uuid();
+  final EpubPlugin _epubPlugin = EpubPlugin();
 
   ReaderProvider({
     required ReadingProgressRepository readingProgressRepository,
@@ -37,6 +42,11 @@ class ReaderProvider extends ChangeNotifier {
   String? _error;
   int _currentChapterIndex = 0;
   List<TocEntry> _tableOfContents = [];
+
+  // Reader controller (supports both EpubReaderController and EpubFallbackController)
+  ReaderController? _readerController;
+  String _currentChapterHtml = '';
+  String _currentChapterCss = '';
 
   // Getters
 
@@ -70,6 +80,15 @@ class ReaderProvider extends ChangeNotifier {
   /// Current reading progress as a percentage (0-100)
   double get progressPercentage => (_progress?.progress ?? 0.0) * 100;
 
+  /// Current chapter HTML content
+  String get currentChapterHtml => _currentChapterHtml;
+
+  /// Current chapter CSS styles
+  String get currentChapterCss => _currentChapterCss;
+
+  /// The reader controller (if EPUB)
+  ReaderController? get readerController => _readerController;
+
   // Methods
 
   /// Open a book for reading
@@ -99,21 +118,81 @@ class ReaderProvider extends ChangeNotifier {
       // Load bookmarks
       _bookmarks = await _bookmarkRepository.getBookmarksForBook(book.id);
 
-      // TODO: Load table of contents from book file
-      _tableOfContents = await _loadTableOfContents(book);
+      // Open the book with the appropriate plugin
+      if (book.format.toLowerCase() == 'epub') {
+        _readerController = await _epubPlugin.openBook(book.filePath);
 
-      // Set current chapter from progress
-      _currentChapterIndex = await _getCurrentChapterFromProgress();
+        // Get table of contents from the controller
+        _tableOfContents = _readerController!.tableOfContents;
+
+        // Set current chapter from progress or start at beginning
+        _currentChapterIndex = _getChapterIndexFromCfi(_progress?.cfi);
+
+        // Load the current chapter content
+        await _loadChapterContent(_currentChapterIndex);
+      } else {
+        // Fallback for unsupported formats
+        _tableOfContents = [];
+        _currentChapterHtml = '<p>Unsupported format: ${book.format}</p>';
+      }
     } catch (e) {
       _error = 'Failed to open book: ${e.toString()}';
       _currentBook = null;
       _progress = null;
       _bookmarks = [];
       _tableOfContents = [];
+      _readerController = null;
+      _currentChapterHtml = '';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Load content for a specific chapter
+  Future<void> _loadChapterContent(int chapterIndex) async {
+    if (_readerController == null) return;
+
+    try {
+      // Handle different controller types
+      if (_readerController is EpubReaderController) {
+        final epubController = _readerController as EpubReaderController;
+        _currentChapterHtml = await epubController.getChapterContent(chapterIndex);
+
+        // Get CSS styles
+        final styles = epubController.getStyles();
+        final cssBuffer = StringBuffer();
+        for (final entry in styles.entries) {
+          cssBuffer.writeln(entry.value);
+        }
+        _currentChapterCss = cssBuffer.toString();
+      } else if (_readerController is EpubFallbackController) {
+        final fallbackController = _readerController as EpubFallbackController;
+        _currentChapterHtml = await fallbackController.getChapterContent(chapterIndex);
+        _currentChapterCss = ''; // Fallback doesn't extract CSS
+      } else {
+        _currentChapterHtml = '<p>Unsupported reader controller type</p>';
+        _currentChapterCss = '';
+      }
+    } catch (e) {
+      _currentChapterHtml = '<p>Error loading chapter: ${e.toString()}</p>';
+    }
+  }
+
+  /// Get chapter index from CFI string
+  int _getChapterIndexFromCfi(String? cfi) {
+    if (cfi == null || cfi.isEmpty) return 0;
+
+    // Try to extract chapter index from CFI
+    // Format: "chapter-X-Y" or similar
+    final match = RegExp(r'chapter-(\d+)').firstMatch(cfi);
+    if (match != null) {
+      final index = int.tryParse(match.group(1) ?? '0') ?? 0;
+      final maxIndex = _readerController?.totalChapters ?? 1;
+      return index.clamp(0, maxIndex - 1);
+    }
+
+    return 0;
   }
 
   /// Close the currently open book
@@ -128,11 +207,19 @@ class ReaderProvider extends ChangeNotifier {
       await saveProgress();
     }
 
+    // Dispose the reader controller
+    if (_readerController != null) {
+      await _readerController!.dispose();
+      _readerController = null;
+    }
+
     _currentBook = null;
     _progress = null;
     _bookmarks = [];
     _tableOfContents = [];
     _currentChapterIndex = 0;
+    _currentChapterHtml = '';
+    _currentChapterCss = '';
     _error = null;
 
     notifyListeners();
@@ -145,7 +232,8 @@ class ReaderProvider extends ChangeNotifier {
   ///
   /// [index] The index of the chapter in the table of contents
   Future<void> goToChapter(int index) async {
-    if (index < 0 || index >= _tableOfContents.length) {
+    final maxChapters = _readerController?.totalChapters ?? _tableOfContents.length;
+    if (index < 0 || index >= maxChapters) {
       _error = 'Invalid chapter index: $index';
       notifyListeners();
       return;
@@ -154,10 +242,18 @@ class ReaderProvider extends ChangeNotifier {
     _currentChapterIndex = index;
     _error = null;
 
-    // Update progress to this chapter
-    if (_currentBook != null && _tableOfContents.isNotEmpty) {
-      final chapter = _tableOfContents[index];
-      await goToLocation(chapter.href);
+    // Load the chapter content
+    await _loadChapterContent(index);
+
+    // Update progress
+    if (_currentBook != null) {
+      final progressValue = maxChapters > 0 ? (index + 1) / maxChapters : 0.0;
+      final cfi = 'chapter-$index-0';
+      _progress = _progress?.copyWith(
+        cfi: cfi,
+        progress: progressValue,
+        updatedAt: DateTime.now(),
+      );
     }
 
     notifyListeners();
@@ -177,8 +273,10 @@ class ReaderProvider extends ChangeNotifier {
     }
 
     try {
-      // TODO: Calculate progress percentage from CFI
-      final progressValue = _calculateProgressFromCfi(cfi);
+      // Calculate progress from CFI (extract chapter info)
+      final chapterIndex = _getChapterIndexFromCfi(cfi);
+      final maxChapters = _readerController?.totalChapters ?? _tableOfContents.length;
+      final progressValue = maxChapters > 0 ? (chapterIndex + 1) / maxChapters : 0.0;
 
       _progress = _progress?.copyWith(
         cfi: cfi,
@@ -324,8 +422,11 @@ class ReaderProvider extends ChangeNotifier {
           updatedAt: DateTime.now(),
         );
 
-    // Update chapter index based on progress
-    _updateChapterFromProgress();
+    // Update chapter index based on CFI
+    final newChapterIndex = _getChapterIndexFromCfi(cfi);
+    if (newChapterIndex != _currentChapterIndex) {
+      _currentChapterIndex = newChapterIndex;
+    }
 
     // Notify listeners to update UI
     notifyListeners();
@@ -333,39 +434,35 @@ class ReaderProvider extends ChangeNotifier {
 
   /// Navigate to the next chapter
   ///
-  /// Advances to the next chapter in the table of contents if available.
+  /// Advances to the next chapter if available.
   /// Does nothing if already at the last chapter.
   Future<void> nextChapter() async {
-    if (_tableOfContents.isEmpty) {
-      _error = 'No table of contents available';
+    final maxChapters = _readerController?.totalChapters ?? _tableOfContents.length;
+    if (maxChapters == 0) {
+      _error = 'No chapters available';
       notifyListeners();
       return;
     }
 
-    if (_currentChapterIndex < _tableOfContents.length - 1) {
+    if (_currentChapterIndex < maxChapters - 1) {
       await goToChapter(_currentChapterIndex + 1);
-    } else {
-      _error = 'Already at the last chapter';
-      notifyListeners();
     }
   }
 
   /// Navigate to the previous chapter
   ///
-  /// Goes back to the previous chapter in the table of contents if available.
+  /// Goes back to the previous chapter if available.
   /// Does nothing if already at the first chapter.
   Future<void> previousChapter() async {
-    if (_tableOfContents.isEmpty) {
-      _error = 'No table of contents available';
+    final maxChapters = _readerController?.totalChapters ?? _tableOfContents.length;
+    if (maxChapters == 0) {
+      _error = 'No chapters available';
       notifyListeners();
       return;
     }
 
     if (_currentChapterIndex > 0) {
       await goToChapter(_currentChapterIndex - 1);
-    } else {
-      _error = 'Already at the first chapter';
-      notifyListeners();
     }
   }
 
@@ -373,40 +470,5 @@ class ReaderProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
-  }
-
-  // Private helper methods
-
-  /// Load the table of contents from the book file
-  ///
-  /// TODO: Implement actual TOC extraction from EPUB/PDF
-  Future<List<TocEntry>> _loadTableOfContents(Book book) async {
-    // Placeholder implementation
-    // In a real app, this would parse the EPUB/PDF file to extract TOC
-    return [];
-  }
-
-  /// Get the current chapter index from reading progress
-  Future<int> _getCurrentChapterFromProgress() async {
-    if (_progress == null || _tableOfContents.isEmpty) return 0;
-
-    // TODO: Implement chapter detection from CFI
-    // For now, return first chapter
-    return 0;
-  }
-
-  /// Calculate progress percentage from CFI
-  double _calculateProgressFromCfi(String cfi) {
-    // TODO: Implement actual progress calculation
-    // This would require analyzing the CFI relative to the book structure
-    return _progress?.progress ?? 0.0;
-  }
-
-  /// Update the current chapter index based on progress
-  void _updateChapterFromProgress() {
-    if (_tableOfContents.isEmpty) return;
-
-    // TODO: Implement chapter detection from current CFI
-    // For now, keep the current chapter
   }
 }

@@ -116,7 +116,11 @@ class ResponsiveLayout extends StatelessWidget {
   ///   },
   /// )
   /// ```
-  factory ResponsiveLayout.value<T>({
+  /// Creates a responsive layout that passes different values to a builder.
+  ///
+  /// This is useful when you need to provide different values (like padding,
+  /// font size, etc.) based on screen size.
+  static ResponsiveLayout withValue<T>({
     Key? key,
     required T mobile,
     T? tablet,

@@ -8,6 +8,7 @@ import 'package:path/path.dart' as path;
 import '../../domain/entities/book_metadata.dart';
 import '../reader_controller.dart';
 import '../reader_plugin.dart';
+import 'epub_fallback_controller.dart';
 import 'epub_reader_controller.dart';
 import 'epub_utils.dart';
 
@@ -157,8 +158,23 @@ class EpubPlugin implements ReaderPlugin {
       _logger.info('Book opened successfully: ${epubBook.Title}');
       return controller;
     } catch (e, stackTrace) {
-      _logger.severe('Error opening book $filePath', e, stackTrace);
-      rethrow;
+      _logger.warning('epubx failed to open book, trying fallback parser: $e');
+
+      // Try fallback parser
+      try {
+        _logger.info('Using fallback EPUB parser for: $filePath');
+        final fallbackController = await EpubFallbackController.create(filePath);
+        _logger.info('Book opened with fallback parser');
+        return fallbackController;
+      } catch (fallbackError, fallbackStackTrace) {
+        _logger.severe(
+          'Both epubx and fallback parser failed for $filePath',
+          fallbackError,
+          fallbackStackTrace,
+        );
+        // Rethrow the original error since it's more informative
+        Error.throwWithStackTrace(e, stackTrace);
+      }
     }
   }
 }

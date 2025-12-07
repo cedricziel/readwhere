@@ -3,6 +3,7 @@ import '../../data/database/database_helper.dart';
 import '../../data/repositories/book_repository_impl.dart';
 import '../../data/repositories/reading_progress_repository_impl.dart';
 import '../../data/repositories/bookmark_repository_impl.dart';
+import '../../data/services/book_import_service.dart';
 import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
@@ -52,6 +53,11 @@ Future<void> setupServiceLocator() async {
     () => BookmarkRepositoryImpl(sl()),
   );
 
+  // Services
+  sl.registerLazySingleton<BookImportService>(
+    () => BookImportService(),
+  );
+
   // Providers
   sl.registerLazySingleton<ThemeProvider>(
     () => ThemeProvider(),
@@ -62,7 +68,10 @@ Future<void> setupServiceLocator() async {
   );
 
   sl.registerLazySingleton<LibraryProvider>(
-    () => LibraryProvider(bookRepository: sl()),
+    () => LibraryProvider(
+      bookRepository: sl(),
+      importService: sl(),
+    ),
   );
 
   sl.registerLazySingleton<ReaderProvider>(

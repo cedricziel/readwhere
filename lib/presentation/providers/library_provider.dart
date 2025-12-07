@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../data/services/book_import_service.dart';
 import '../../domain/entities/book.dart';
 import '../../domain/repositories/book_repository.dart';
 
@@ -37,9 +38,13 @@ enum LibraryViewMode {
 /// - Search functionality
 class LibraryProvider extends ChangeNotifier {
   final BookRepository _bookRepository;
+  final BookImportService _importService;
 
-  LibraryProvider({required BookRepository bookRepository})
-      : _bookRepository = bookRepository;
+  LibraryProvider({
+    required BookRepository bookRepository,
+    required BookImportService importService,
+  })  : _bookRepository = bookRepository,
+        _importService = importService;
 
   // State
   List<Book> _books = [];
@@ -115,6 +120,7 @@ class LibraryProvider extends ChangeNotifier {
   ///
   /// Creates a new book entry in the library from the provided file.
   /// The book will be added to the database and the library will be refreshed.
+  /// For EPUB files, metadata and cover will be extracted automatically.
   ///
   /// [filePath] Absolute path to the book file
   /// Returns the imported book if successful
@@ -124,18 +130,10 @@ class LibraryProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // TODO: Extract book metadata from file
-      // For now, create a basic book entry
-      final book = Book(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: _getFileNameFromPath(filePath),
-        author: 'Unknown',
-        filePath: filePath,
-        format: _getFileExtension(filePath),
-        fileSize: 0, // TODO: Get actual file size
-        addedAt: DateTime.now(),
-      );
+      // Use import service to parse book and extract metadata
+      final book = await _importService.importBook(filePath);
 
+      // Save to database
       final importedBook = await _bookRepository.insert(book);
       await loadBooks(); // Refresh the library
       return importedBook;
@@ -321,20 +319,5 @@ class LibraryProvider extends ChangeNotifier {
     } else {
       _filteredBooks = [];
     }
-  }
-
-  /// Extract filename from file path
-  String _getFileNameFromPath(String path) {
-    final parts = path.split('/');
-    final filename = parts.isNotEmpty ? parts.last : path;
-    // Remove extension
-    final dotIndex = filename.lastIndexOf('.');
-    return dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
-  }
-
-  /// Extract file extension from file path
-  String _getFileExtension(String path) {
-    final dotIndex = path.lastIndexOf('.');
-    return dotIndex != -1 ? path.substring(dotIndex + 1).toLowerCase() : '';
   }
 }

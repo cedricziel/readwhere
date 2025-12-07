@@ -45,21 +45,13 @@ class ReaderContentWidget extends StatelessWidget {
           );
         }
 
-        // Get current chapter content
-        // TODO: In a real implementation, this would come from a ReaderController
-        // For now, we'll show placeholder content
-        final currentChapterIndex = readerProvider.currentChapterIndex;
-        final toc = readerProvider.tableOfContents;
-
-        final chapterTitle = toc.isNotEmpty && currentChapterIndex < toc.length
-            ? toc[currentChapterIndex].title
-            : 'Chapter ${currentChapterIndex + 1}';
-
-        // Placeholder HTML content
-        final htmlContent = _generatePlaceholderContent(
-          chapterTitle,
-          readerProvider.currentBook?.title ?? 'Book Title',
-        );
+        // Get the actual chapter HTML content from the provider
+        final htmlContent = readerProvider.currentChapterHtml.isNotEmpty
+            ? readerProvider.currentChapterHtml
+            : _generatePlaceholderContent(
+                'Loading...',
+                readerProvider.currentBook?.title ?? 'Book Title',
+              );
 
         return SingleChildScrollView(
           controller: scrollController,
