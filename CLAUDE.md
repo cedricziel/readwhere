@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ReadWhere is a cross-platform e-reader Flutter application for open formats. It supports EPUB reading with a plugin-based architecture for format extensibility.
 
+## Setup
+
+@docs/0-setup/development.md
+
 ## Development Commands
 
 ```bash
