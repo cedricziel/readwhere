@@ -140,6 +140,55 @@ class ReaderContentWidget extends StatelessWidget {
               'img': Style(
                 margin: Margins.symmetric(vertical: readingTheme.fontSize),
               ),
+              // Code styling
+              'code': Style(
+                fontFamily: 'monospace',
+                fontSize: FontSize(readingTheme.fontSize * 0.9),
+                backgroundColor: readingTheme.textColor.withOpacity(0.08),
+                padding: HtmlPaddings.symmetric(horizontal: 4, vertical: 2),
+              ),
+              'pre': Style(
+                fontFamily: 'monospace',
+                fontSize: FontSize(readingTheme.fontSize * 0.85),
+                backgroundColor: readingTheme.textColor.withOpacity(0.06),
+                padding: HtmlPaddings.all(readingTheme.fontSize * 0.75),
+                margin: Margins.symmetric(vertical: readingTheme.fontSize),
+                lineHeight: const LineHeight(1.4),
+              ),
+              'pre code': Style(
+                backgroundColor: Colors.transparent,
+                padding: HtmlPaddings.zero,
+              ),
+              'kbd': Style(
+                fontFamily: 'monospace',
+                fontSize: FontSize(readingTheme.fontSize * 0.85),
+                backgroundColor: readingTheme.textColor.withOpacity(0.1),
+                border: Border.all(
+                  color: readingTheme.textColor.withOpacity(0.2),
+                  width: 1,
+                ),
+                padding: HtmlPaddings.symmetric(horizontal: 6, vertical: 2),
+              ),
+              'samp': Style(
+                fontFamily: 'monospace',
+                fontSize: FontSize(readingTheme.fontSize * 0.9),
+              ),
+              'var': Style(
+                fontFamily: 'monospace',
+                fontStyle: FontStyle.italic,
+              ),
+              // Tables
+              'table': Style(
+                margin: Margins.symmetric(vertical: readingTheme.fontSize),
+              ),
+              'th': Style(
+                fontWeight: FontWeight.bold,
+                padding: HtmlPaddings.all(8),
+                backgroundColor: readingTheme.textColor.withOpacity(0.05),
+              ),
+              'td': Style(
+                padding: HtmlPaddings.all(8),
+              ),
             },
             onLinkTap: (url, attributes, element) {
               // Handle internal links (chapter navigation)
