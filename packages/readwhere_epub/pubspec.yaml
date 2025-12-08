@@ -6,6 +6,8 @@ repository: https://github.com/cedricziel/readwhere
 environment:
   sdk: ^3.5.0
 
+resolution: workspace
+
 dependencies:
   archive: ^3.6.1
   xml: ^6.5.0
