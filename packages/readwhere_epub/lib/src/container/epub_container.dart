@@ -189,6 +189,22 @@ class EpubContainer {
     return _archive.hasFile('META-INF/encryption.xml');
   }
 
+  /// Gets the encryption.xml content if it exists.
+  String? getEncryptionXml() {
+    if (!hasEncryption()) return null;
+    return _archive.readFileString('META-INF/encryption.xml');
+  }
+
+  /// Checks if the EPUB has an Adobe DRM rights file.
+  bool hasRightsFile() {
+    return _archive.hasFile('META-INF/rights.xml');
+  }
+
+  /// Checks if the EPUB has an LCP license file.
+  bool hasLcpLicense() {
+    return _archive.hasFile('META-INF/license.lcpl');
+  }
+
   /// Validates the mimetype file.
   MimetypeValidation validateMimetype() {
     return _archive.validateMimetype();

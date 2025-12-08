@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:xml/xml.dart';
 
 import '../errors/epub_exception.dart';
+import '../fxl/rendition_properties.dart';
 import '../utils/xml_utils.dart';
 import 'manifest/manifest.dart';
 import 'metadata/metadata.dart';
@@ -27,8 +28,11 @@ class PackageDocument extends Equatable {
   /// Spine (reading order).
   final EpubSpine spine;
 
+  /// Rendition properties for layout, orientation, and spread.
+  final RenditionProperties renditionProperties;
+
   /// Whether this is a fixed-layout publication.
-  final bool isFixedLayout;
+  bool get isFixedLayout => renditionProperties.isFixedLayout;
 
   const PackageDocument({
     required this.path,
@@ -37,7 +41,7 @@ class PackageDocument extends Equatable {
     required this.metadata,
     required this.manifest,
     required this.spine,
-    this.isFixedLayout = false,
+    this.renditionProperties = const RenditionProperties(),
   });
 
   /// Parses an OPF package document from XML.
@@ -106,8 +110,8 @@ class PackageDocument extends Equatable {
     }
     final spine = _parseSpine(spineElement);
 
-    // Check for fixed layout
-    final isFixedLayout = _checkFixedLayout(metadataElement);
+    // Parse rendition properties
+    final renditionProperties = _parseRenditionProperties(metadataElement);
 
     return PackageDocument(
       path: path,
@@ -116,7 +120,7 @@ class PackageDocument extends Equatable {
       metadata: metadata,
       manifest: manifest,
       spine: spine,
-      isFixedLayout: isFixedLayout,
+      renditionProperties: renditionProperties,
     );
   }
 
@@ -455,10 +459,14 @@ class PackageDocument extends Equatable {
           ? <String>{}
           : propertiesStr.split(' ').where((p) => p.isNotEmpty).toSet();
 
+      // Parse per-item rendition overrides from properties
+      final rendition = _parseSpineItemRendition(properties);
+
       items.add(SpineItem(
         idref: idref,
         linear: linear,
         properties: properties,
+        rendition: rendition,
       ));
     }
 
@@ -469,16 +477,98 @@ class PackageDocument extends Equatable {
     );
   }
 
-  static bool _checkFixedLayout(XmlElement metadataElement) {
-    // Check for rendition:layout property
+  static SpineItemRendition _parseSpineItemRendition(Set<String> properties) {
+    RenditionLayout? layout;
+    RenditionOrientation? orientation;
+    RenditionSpread? spread;
+
+    for (final prop in properties) {
+      switch (prop) {
+        // Layout overrides
+        case 'rendition:layout-pre-paginated':
+          layout = RenditionLayout.prePaginated;
+          break;
+        case 'rendition:layout-reflowable':
+          layout = RenditionLayout.reflowable;
+          break;
+        // Orientation overrides
+        case 'rendition:orientation-auto':
+          orientation = RenditionOrientation.auto;
+          break;
+        case 'rendition:orientation-portrait':
+          orientation = RenditionOrientation.portrait;
+          break;
+        case 'rendition:orientation-landscape':
+          orientation = RenditionOrientation.landscape;
+          break;
+        // Spread overrides
+        case 'rendition:spread-auto':
+          spread = RenditionSpread.auto;
+          break;
+        case 'rendition:spread-none':
+          spread = RenditionSpread.none;
+          break;
+        case 'rendition:spread-landscape':
+          spread = RenditionSpread.landscape;
+          break;
+        case 'rendition:spread-both':
+          spread = RenditionSpread.both;
+          break;
+      }
+    }
+
+    return SpineItemRendition(
+      layout: layout,
+      orientation: orientation,
+      spread: spread,
+    );
+  }
+
+  static RenditionProperties _parseRenditionProperties(
+      XmlElement metadataElement) {
+    RenditionLayout layout = RenditionLayout.reflowable;
+    RenditionOrientation orientation = RenditionOrientation.auto;
+    RenditionSpread spread = RenditionSpread.auto;
+    ViewportDimensions? viewport;
+
     for (final meta
         in XmlUtils.findAllChildrenByLocalName(metadataElement, 'meta')) {
       final property = meta.getAttribute('property');
-      if (property == 'rendition:layout') {
-        return meta.innerText.trim() == 'pre-paginated';
+      final value = meta.innerText.trim();
+
+      switch (property) {
+        case 'rendition:layout':
+          layout = value == 'pre-paginated'
+              ? RenditionLayout.prePaginated
+              : RenditionLayout.reflowable;
+          break;
+        case 'rendition:orientation':
+          orientation = switch (value) {
+            'portrait' => RenditionOrientation.portrait,
+            'landscape' => RenditionOrientation.landscape,
+            _ => RenditionOrientation.auto,
+          };
+          break;
+        case 'rendition:spread':
+          spread = switch (value) {
+            'none' => RenditionSpread.none,
+            'landscape' => RenditionSpread.landscape,
+            'both' => RenditionSpread.both,
+            _ => RenditionSpread.auto,
+          };
+          break;
+        case 'rendition:viewport':
+          viewport = ViewportDimensions.tryParse(value);
+          break;
       }
     }
-    return false;
+
+    return RenditionProperties(
+      layout: layout,
+      orientation: orientation,
+      spread: spread,
+      viewport: viewport,
+    );
   }
 
   static DateTime? _parseDate(String? dateStr) {
@@ -523,6 +613,6 @@ class PackageDocument extends Equatable {
         metadata,
         manifest,
         spine,
-        isFixedLayout,
+        renditionProperties,
       ];
 }

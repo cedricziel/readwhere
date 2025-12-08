@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../errors/epub_exception.dart';
+import '../fxl/rendition_properties.dart';
 import '../navigation/toc.dart';
 import '../package/manifest/manifest.dart';
 import '../package/metadata/metadata.dart';
@@ -28,6 +29,9 @@ class EpubBook extends Equatable {
   /// Navigation structure (TOC, page list, landmarks).
   final EpubNavigation navigation;
 
+  /// Rendition properties (layout, orientation, spread, viewport).
+  final RenditionProperties renditionProperties;
+
   const EpubBook({
     required this.version,
     required this.uniqueIdentifier,
@@ -35,6 +39,7 @@ class EpubBook extends Equatable {
     required this.manifest,
     required this.spine,
     required this.navigation,
+    this.renditionProperties = const RenditionProperties(),
   });
 
   /// The book title.
@@ -62,11 +67,10 @@ class EpubBook extends Equatable {
   DateTime? get modifiedDate => metadata.modified;
 
   /// Whether this is a fixed-layout EPUB.
-  bool get isFixedLayout {
-    // Check rendition:layout in metadata
-    final layout = metadata.meta['rendition:layout'];
-    return layout == 'pre-paginated';
-  }
+  bool get isFixedLayout => renditionProperties.isFixedLayout;
+
+  /// Viewport dimensions for fixed-layout content, if specified.
+  ViewportDimensions? get viewport => renditionProperties.viewport;
 
   /// Total number of chapters in spine.
   int get chapterCount => spine.length;
@@ -91,5 +95,6 @@ class EpubBook extends Equatable {
         manifest,
         spine,
         navigation,
+        renditionProperties,
       ];
 }

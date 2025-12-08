@@ -60,3 +60,12 @@ export 'src/resources/image.dart';
 
 // Errors
 export 'src/errors/epub_exception.dart';
+
+// Fixed-Layout
+export 'src/fxl/rendition_properties.dart';
+
+// Encryption
+export 'src/encryption/encryption_info.dart';
+
+// Media Overlays
+export 'src/media/smil_models.dart';

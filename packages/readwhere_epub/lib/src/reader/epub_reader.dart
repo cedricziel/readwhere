@@ -3,7 +3,11 @@ import 'dart:typed_data';
 
 import '../container/epub_container.dart';
 import '../content/content_document.dart';
+import '../encryption/encryption_info.dart';
+import '../encryption/encryption_parser.dart';
 import '../errors/epub_exception.dart';
+import '../media/smil_models.dart';
+import '../media/smil_parser.dart';
 import '../navigation/nav_document.dart';
 import '../navigation/ncx_parser.dart';
 import '../navigation/toc.dart';
@@ -168,6 +172,7 @@ class EpubReader {
         manifest: _package.manifest,
         spine: _package.spine,
         navigation: _navigation,
+        renditionProperties: _package.renditionProperties,
       );
 
   /// Book metadata.
@@ -444,11 +449,88 @@ class EpubReader {
   }
 
   // ============================================================
+  // Media Overlays
+  // ============================================================
+
+  /// Whether this EPUB has any media overlays.
+  bool get hasMediaOverlays {
+    return manifest.items.any((item) => item.mediaOverlay != null);
+  }
+
+  /// Gets all media overlay manifest items.
+  List<ManifestItem> get mediaOverlayItems {
+    return manifest.items
+        .where((item) =>
+            item.mediaType == 'application/smil+xml' ||
+            item.properties.contains('media-overlay'))
+        .toList();
+  }
+
+  /// Gets the media overlay for a specific content document (by manifest ID).
+  ///
+  /// Returns null if the content document has no media overlay.
+  MediaOverlay? getMediaOverlay(String contentId) {
+    final contentItem = manifest.getById(contentId);
+    if (contentItem == null || contentItem.mediaOverlay == null) return null;
+
+    return getMediaOverlayById(contentItem.mediaOverlay!);
+  }
+
+  /// Gets a media overlay by its manifest ID.
+  MediaOverlay? getMediaOverlayById(String overlayId) {
+    final overlayItem = manifest.getById(overlayId);
+    if (overlayItem == null) return null;
+
+    try {
+      final path = _container.resolveOpfRelativePath(overlayItem.href);
+      final content = _container.readFileString(path);
+      return SmilParser.parse(content, overlayId, overlayItem.href);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Gets the media overlay for a spine item by index.
+  MediaOverlay? getMediaOverlayBySpineIndex(int index) {
+    if (index < 0 || index >= spine.length) return null;
+
+    final spineItem = spine[index];
+    return getMediaOverlay(spineItem.idref);
+  }
+
+  /// Gets all media overlays in reading order.
+  List<MediaOverlay> getAllMediaOverlays() {
+    final overlays = <MediaOverlay>[];
+
+    for (var i = 0; i < spine.length; i++) {
+      final overlay = getMediaOverlayBySpineIndex(i);
+      if (overlay != null) {
+        overlays.add(overlay);
+      }
+    }
+
+    return overlays;
+  }
+
+  // ============================================================
   // Validation and info
   // ============================================================
 
   /// Whether the EPUB has encryption metadata.
   bool get hasEncryption => _container.hasEncryption();
+
+  /// Detailed encryption information.
+  ///
+  /// Returns [EncryptionInfo.none] if no encryption is detected.
+  /// Note: This library does not support DRM decryption.
+  EncryptionInfo get encryptionInfo {
+    final encryptionXml = _container.getEncryptionXml();
+    return EncryptionParser.parse(
+      encryptionXml,
+      hasRightsFile: _container.hasRightsFile(),
+      hasLcpLicense: _container.hasLcpLicense(),
+    );
+  }
 
   /// Total number of files in the EPUB.
   int get fileCount => _container.fileCount;

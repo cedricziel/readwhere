@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../fxl/rendition_properties.dart';
+
 /// A single item in the EPUB spine.
 ///
 /// Spine items define the reading order of the publication.
@@ -16,10 +18,14 @@ class SpineItem extends Equatable {
   /// Properties for this spine item.
   final Set<String> properties;
 
+  /// Per-item rendition overrides.
+  final SpineItemRendition rendition;
+
   const SpineItem({
     required this.idref,
     this.linear = true,
     this.properties = const {},
+    this.rendition = const SpineItemRendition(),
   });
 
   /// Page spread direction for this item.
@@ -40,7 +46,7 @@ class SpineItem extends Equatable {
   bool get renditionSpreadNone => properties.contains('rendition:spread-none');
 
   @override
-  List<Object?> get props => [idref, linear, properties];
+  List<Object?> get props => [idref, linear, properties, rendition];
 
   @override
   String toString() => 'SpineItem($idref, linear: $linear)';
