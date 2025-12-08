@@ -6,96 +6,96 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ReadWhere is a cross-platform e-reader Flutter application for open formats. It supports EPUB reading with a plugin-based architecture for format extensibility.
 
-## Setup
-
-@docs/0-setup/development.md
-
 ## Development Commands
 
 ```bash
 # Run the app
 flutter run
-
-# Run on specific platform
-flutter run -d macos
-flutter run -d ios
-flutter run -d android
-flutter run -d chrome
+flutter run -d macos    # macOS
+flutter run -d chrome   # Web
 
 # Build
 flutter build macos
-flutter build ios
 flutter build apk
 
-# Analysis and linting
+# Analysis (pre-commit runs these automatically)
 flutter analyze
-dart analyze
 
-# Run tests
-flutter test
-flutter test test/widget_test.dart  # Single test file
+# Run all tests
+flutter test                              # Main app tests
+dart test -p packages/readwhere_epub      # EPUB package tests
 
-# Generate code (for mockito mocks)
+# Run single test file
+flutter test test/widget_test.dart
+dart test packages/readwhere_epub/test/validation/epub_validator_test.dart
+
+# Generate mocks
 dart run build_runner build
 
-# Get dependencies
+# Dependencies
 flutter pub get
 ```
 
+## Pre-commit Hook
+
+The project uses `dart_pre_commit` which enforces:
+- **format**: Code formatting
+- **analyze**: Zero analyzer warnings required
+- **outdated**: Dependencies must not be outdated
+- **pull-up-dependencies**: Dependencies must use latest compatible versions
+
+Always ensure commits pass the pre-commit hook. Never use `--no-verify`.
+
 ## Architecture
 
-The app follows **Clean Architecture** with a clear separation of concerns:
+The app follows **Clean Architecture**:
 
 ```
 lib/
-├── core/           # Shared utilities, DI, constants, extensions, errors
-├── data/           # Data layer: database, repositories impl, models, sources
-├── domain/         # Business logic: entities, repository interfaces, use cases
+├── core/           # DI (get_it), constants, extensions, errors
+├── data/           # Repositories impl, models, database (sqflite)
+├── domain/         # Entities, repository interfaces, use cases
 ├── plugins/        # Reader plugin system for format support
-├── presentation/   # UI layer: providers, screens, widgets, themes, router
-└── scripting/      # Lua scripting bindings for extensibility
+├── presentation/   # Providers (ChangeNotifier), screens, widgets, go_router
+└── scripting/      # Lua scripting bindings (lua_dardo_co)
 ```
 
-### Key Architectural Patterns
+### Plugin System
 
-1. **Dependency Injection**: Uses `get_it` package. Service locator at `lib/core/di/service_locator.dart`. Call `setupServiceLocator()` at app startup.
+Reader plugins provide format support via `lib/plugins/`:
+- `ReaderPlugin` - Abstract interface defining `canHandle()`, `parseMetadata()`, `openBook()`, `extractCover()`
+- `PluginRegistry` - Singleton for plugin registration/lookup by extension or MIME type
+- `ReaderController` - Controls reading session state
+- EPUB plugin implementation at `lib/plugins/epub/`
 
-2. **State Management**: Provider pattern with `ChangeNotifier`. Main providers:
-   - `LibraryProvider` - Book library state
-   - `ReaderProvider` - Reading session state
-   - `SettingsProvider` - App settings with SharedPreferences persistence
-   - `ThemeProvider` - Theme management
+### State Management
 
-3. **Navigation**: Uses `go_router` configured in `lib/presentation/router/`
+Provider pattern with `ChangeNotifier`:
+- `LibraryProvider` - Book library state
+- `ReaderProvider` - Reading session state
+- `SettingsProvider` - Persisted app settings (SharedPreferences)
+- `ThemeProvider` - Theme management
 
-4. **Plugin System**: Extensible reader plugins in `lib/plugins/`:
-   - `ReaderPlugin` - Abstract interface for format support
-   - `ReaderController` - Reading session controller
-   - `PluginRegistry` - Singleton plugin manager
-   - Currently implements EPUB support in `lib/plugins/epub/`
+### Dependency Injection
 
-### Data Flow
+Uses `get_it` package. Service locator at `lib/core/di/service_locator.dart`. Call `setupServiceLocator()` at app startup.
 
+## Workspace Structure
+
+This is a Dart workspace with:
+- **Main app** (`/`) - Flutter application
+- **readwhere_epub** (`packages/readwhere_epub/`) - Pure Dart EPUB 3.3 parsing library
+
+The EPUB package uses `test` package (not `flutter_test`) and has its own test suite.
+
+## Test Coverage
+
+Target: 80% coverage. The EPUB package has comprehensive tests (~700+). Run coverage:
+```bash
+cd packages/readwhere_epub
+dart test --coverage=coverage
 ```
-UI (Screens/Widgets)
-    ↓ (Consumer/Provider)
-Providers (ChangeNotifier)
-    ↓ (Repository interface)
-Domain Repositories (abstract)
-    ↓ (implementation)
-Data Repositories (concrete)
-    ↓
-Database/Sources
-```
-
-## Key Dependencies
-
-- **UI**: `google_fonts`, `flutter_svg`, `macos_ui` (macOS-specific)
-- **EPUB**: `epubx`, `flutter_html`, `archive`
-- **Storage**: `sqflite`, `shared_preferences`, `path_provider`
-- **Scripting**: `lua_dardo_co` for Lua plugin scripting
-- **Content Sources**: `dart_rss` for RSS/Atom feeds
 
 ## Commit Guidelines
 
-Use semantic commits (e.g., `feat:`, `fix:`, `chore:`, `refactor:`).
+Use semantic commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`
