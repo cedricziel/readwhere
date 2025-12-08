@@ -7,6 +7,7 @@ import '../../../../domain/entities/opds_entry.dart';
 import '../../../../domain/entities/opds_link.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../router/routes.dart';
+import '../../../widgets/common/cache_status_indicator.dart';
 import 'widgets/feed_breadcrumbs.dart';
 import 'widgets/opds_entry_card.dart';
 
@@ -24,6 +25,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
   final _searchController = TextEditingController();
   bool _isGridView = true;
   bool _showSearch = false;
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -46,6 +48,20 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
       orElse: () => throw Exception('Catalog not found'),
     );
     await provider.openCatalog(catalog);
+  }
+
+  Future<void> _refreshFeed() async {
+    if (_isRefreshing) return;
+
+    setState(() => _isRefreshing = true);
+    try {
+      final provider = sl<CatalogsProvider>();
+      await provider.refreshCurrentFeed();
+    } finally {
+      if (mounted) {
+        setState(() => _isRefreshing = false);
+      }
+    }
   }
 
   void _handleEntryTap(CatalogsProvider provider, OpdsEntry entry) {
@@ -303,6 +319,15 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
                     onTap: (index) => _handleBreadcrumbTap(provider, index),
                   ),
 
+                // Cache status indicator
+                CacheStatusIndicator(
+                  isFromCache: provider.isFromCache,
+                  isFresh: provider.isCacheFresh,
+                  cacheAgeText: provider.cacheAgeText,
+                  onRefresh: _refreshFeed,
+                  isRefreshing: _isRefreshing,
+                ),
+
                 // Content
                 Expanded(child: _buildContent(provider)),
               ],
@@ -328,7 +353,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _loadCatalog,
+      onRefresh: _refreshFeed,
       child: _isGridView
           ? _buildGridView(provider, feed.entries)
           : _buildListView(provider, feed.entries),

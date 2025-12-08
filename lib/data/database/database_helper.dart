@@ -6,6 +6,9 @@ import 'tables/bookmarks_table.dart';
 import 'tables/annotations_table.dart';
 import 'tables/catalogs_table.dart';
 import 'tables/feeds_table.dart';
+import 'tables/cached_opds_feeds_table.dart';
+import 'tables/cached_opds_entries_table.dart';
+import 'tables/cached_opds_links_table.dart';
 
 /// SQLite database helper for the readwhere e-reader app
 ///
@@ -23,7 +26,9 @@ class DatabaseHelper {
   /// Version 2: Added encryption_type, is_fixed_layout, has_media_overlays
   /// Version 3: Added source_catalog_id, source_entry_id for remote book tracking
   ///            Added api_key, type, server_version to catalogs table
-  static const int _databaseVersion = 3;
+  /// Version 4: Added cached_opds_feeds, cached_opds_entries, cached_opds_links
+  ///            for offline catalog browsing
+  static const int _databaseVersion = 4;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -64,6 +69,10 @@ class DatabaseHelper {
     await db.execute(AnnotationsTable.createTableQuery());
     await db.execute(CatalogsTable.createTableQuery());
     await db.execute(FeedsTable.createTableQuery());
+    // Cache tables for offline catalog browsing
+    await db.execute(CachedOpdsFeedsTable.createTableQuery());
+    await db.execute(CachedOpdsEntriesTable.createTableQuery());
+    await db.execute(CachedOpdsLinksTable.createTableQuery());
 
     // Create indices for better query performance
     await _createIndices(db);
@@ -78,6 +87,9 @@ class DatabaseHelper {
       ...AnnotationsTable.createIndices(),
       ...CatalogsTable.createIndices(),
       ...FeedsTable.createIndices(),
+      ...CachedOpdsFeedsTable.createIndices(),
+      ...CachedOpdsEntriesTable.createIndices(),
+      ...CachedOpdsLinksTable.createIndices(),
     ];
 
     for (final index in indices) {
@@ -100,6 +112,21 @@ class DatabaseHelper {
       }
       for (final query in CatalogsTable.migrateFromV2()) {
         await db.execute(query);
+      }
+    }
+    // Version 4: Add cache tables for offline catalog browsing
+    if (oldVersion < 4) {
+      await db.execute(CachedOpdsFeedsTable.createTableQuery());
+      await db.execute(CachedOpdsEntriesTable.createTableQuery());
+      await db.execute(CachedOpdsLinksTable.createTableQuery());
+      for (final index in CachedOpdsFeedsTable.createIndices()) {
+        await db.execute(index);
+      }
+      for (final index in CachedOpdsEntriesTable.createIndices()) {
+        await db.execute(index);
+      }
+      for (final index in CachedOpdsLinksTable.createIndices()) {
+        await db.execute(index);
       }
     }
   }

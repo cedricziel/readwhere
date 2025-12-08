@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../data/models/opds/cached_opds_feed_model.dart';
 import '../../data/services/book_import_service.dart';
 import '../../data/services/kavita_api_service.dart';
+import '../../data/services/opds_cache_service.dart';
 import '../../data/services/opds_client_service.dart';
 import '../../domain/entities/book.dart';
 import '../../domain/entities/catalog.dart';
@@ -24,6 +26,7 @@ import '../../domain/repositories/catalog_repository.dart';
 class CatalogsProvider extends ChangeNotifier {
   final CatalogRepository _catalogRepository;
   final OpdsClientService _opdsClientService;
+  final OpdsCacheService _cacheService;
   final KavitaApiService _kavitaApiService;
   final BookImportService _importService;
   final BookRepository _bookRepository;
@@ -31,11 +34,13 @@ class CatalogsProvider extends ChangeNotifier {
   CatalogsProvider({
     required CatalogRepository catalogRepository,
     required OpdsClientService opdsClientService,
+    required OpdsCacheService cacheService,
     required KavitaApiService kavitaApiService,
     required BookImportService importService,
     required BookRepository bookRepository,
   }) : _catalogRepository = catalogRepository,
        _opdsClientService = opdsClientService,
+       _cacheService = cacheService,
        _kavitaApiService = kavitaApiService,
        _importService = importService,
        _bookRepository = bookRepository;
@@ -45,11 +50,18 @@ class CatalogsProvider extends ChangeNotifier {
   Catalog? _selectedCatalog;
   OpdsFeed? _currentFeed;
   final List<OpdsFeed> _navigationStack = [];
+  final List<String> _navigationUrlStack = [];
+  String? _currentFeedUrl;
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
   final Map<String, double> _downloadProgress = {};
   final Set<String> _downloadedEntryIds = {};
+
+  // Cache state
+  bool _isFromCache = false;
+  DateTime? _cachedAt;
+  DateTime? _cacheExpiresAt;
 
   // Getters
   List<Catalog> get catalogs => List.unmodifiable(_catalogs);
@@ -60,6 +72,25 @@ class CatalogsProvider extends ChangeNotifier {
   String? get error => _error;
   String get searchQuery => _searchQuery;
   int get catalogCount => _catalogs.length;
+
+  // Cache getters
+  bool get isFromCache => _isFromCache;
+  DateTime? get cachedAt => _cachedAt;
+  DateTime? get cacheExpiresAt => _cacheExpiresAt;
+
+  /// Whether the cached data is still fresh (not expired)
+  bool get isCacheFresh =>
+      !_isFromCache ||
+      (_cacheExpiresAt != null && DateTime.now().isBefore(_cacheExpiresAt!));
+
+  /// Human-readable cache age text
+  String get cacheAgeText {
+    if (!_isFromCache || _cachedAt == null) return '';
+    final age = DateTime.now().difference(_cachedAt!);
+    if (age.inMinutes < 60) return '${age.inMinutes}m ago';
+    if (age.inHours < 24) return '${age.inHours}h ago';
+    return '${age.inDays}d ago';
+  }
 
   /// Whether we can navigate back in the feed stack
   bool get canNavigateBack => _navigationStack.isNotEmpty;
@@ -240,50 +271,90 @@ class CatalogsProvider extends ChangeNotifier {
   // Feed Navigation
 
   /// Open a catalog and fetch its root feed
-  Future<void> openCatalog(Catalog catalog) async {
+  ///
+  /// [strategy] - Optional fetch strategy (defaults to networkFirst)
+  Future<void> openCatalog(Catalog catalog, {FetchStrategy? strategy}) async {
     _isLoading = true;
     _error = null;
     _selectedCatalog = catalog;
     _navigationStack.clear();
+    _navigationUrlStack.clear();
     _searchQuery = '';
+    _currentFeedUrl = catalog.opdsUrl;
     notifyListeners();
 
     try {
-      _currentFeed = await _opdsClientService.fetchFeed(catalog.opdsUrl);
+      final result = await _cacheService.fetchFeed(
+        catalogId: catalog.id,
+        url: catalog.opdsUrl,
+        strategy: strategy ?? FetchStrategy.networkFirst,
+      );
+      _currentFeed = result.feed;
+      _updateCacheState(result);
       await _catalogRepository.updateLastAccessed(catalog.id);
     } catch (e) {
       _error = 'Failed to open catalog: $e';
       _currentFeed = null;
+      _clearCacheState();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  /// Update cache state from a CachedFeedResult
+  void _updateCacheState(CachedFeedResult result) {
+    _isFromCache = result.isFromCache;
+    _cachedAt = result.cachedAt;
+    _cacheExpiresAt = result.expiresAt;
+  }
+
+  /// Clear cache state
+  void _clearCacheState() {
+    _isFromCache = false;
+    _cachedAt = null;
+    _cacheExpiresAt = null;
+  }
+
   /// Navigate to a feed via a link
-  Future<void> navigateToFeed(OpdsLink link) async {
-    if (_currentFeed == null) return;
+  ///
+  /// [strategy] - Optional fetch strategy (defaults to networkFirst)
+  Future<void> navigateToFeed(OpdsLink link, {FetchStrategy? strategy}) async {
+    if (_currentFeed == null || _selectedCatalog == null) return;
 
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // Save current feed to stack for back navigation
+      // Save current feed and URL to stack for back navigation
       _navigationStack.add(_currentFeed!);
+      if (_currentFeedUrl != null) {
+        _navigationUrlStack.add(_currentFeedUrl!);
+      }
 
       // Resolve URL and fetch new feed
       final baseUrl = _selectedCatalog?.opdsUrl ?? '';
       final url = _opdsClientService.resolveCoverUrl(baseUrl, link.href);
-      _currentFeed = await _opdsClientService.fetchFeed(
-        url.isNotEmpty ? url : link.href,
+      final resolvedUrl = url.isNotEmpty ? url : link.href;
+
+      final result = await _cacheService.fetchFeed(
+        catalogId: _selectedCatalog!.id,
+        url: resolvedUrl,
+        strategy: strategy ?? FetchStrategy.networkFirst,
       );
+      _currentFeed = result.feed;
+      _currentFeedUrl = resolvedUrl;
+      _updateCacheState(result);
       _searchQuery = '';
     } catch (e) {
       _error = 'Failed to navigate: $e';
       // Restore previous feed
       if (_navigationStack.isNotEmpty) {
         _currentFeed = _navigationStack.removeLast();
+      }
+      if (_navigationUrlStack.isNotEmpty) {
+        _currentFeedUrl = _navigationUrlStack.removeLast();
       }
     } finally {
       _isLoading = false;
@@ -296,8 +367,12 @@ class CatalogsProvider extends ChangeNotifier {
     if (_navigationStack.isEmpty) return;
 
     _currentFeed = _navigationStack.removeLast();
+    if (_navigationUrlStack.isNotEmpty) {
+      _currentFeedUrl = _navigationUrlStack.removeLast();
+    }
     _searchQuery = '';
     _error = null;
+    // Note: we keep the cache state from the current feed - we don't track it per-feed
     notifyListeners();
   }
 
@@ -305,10 +380,36 @@ class CatalogsProvider extends ChangeNotifier {
   void closeCatalog() {
     _selectedCatalog = null;
     _currentFeed = null;
+    _currentFeedUrl = null;
     _navigationStack.clear();
+    _navigationUrlStack.clear();
     _searchQuery = '';
     _error = null;
+    _clearCacheState();
     notifyListeners();
+  }
+
+  /// Force refresh the current feed from network
+  Future<void> refreshCurrentFeed() async {
+    if (_selectedCatalog == null || _currentFeedUrl == null) return;
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final result = await _cacheService.refreshFeed(
+        _selectedCatalog!.id,
+        _currentFeedUrl!,
+      );
+      _currentFeed = result.feed;
+      _updateCacheState(result);
+    } catch (e) {
+      _error = 'Failed to refresh: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Fetch next page of current feed

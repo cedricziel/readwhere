@@ -5,13 +5,16 @@ import '../../data/database/database_helper.dart';
 import '../../data/repositories/book_repository_impl.dart';
 import '../../data/repositories/bookmark_repository_impl.dart';
 import '../../data/repositories/catalog_repository_impl.dart';
+import '../../data/repositories/opds_cache_repository_impl.dart';
 import '../../data/repositories/reading_progress_repository_impl.dart';
 import '../../data/services/book_import_service.dart';
 import '../../data/services/kavita_api_service.dart';
+import '../../data/services/opds_cache_service.dart';
 import '../../data/services/opds_client_service.dart';
 import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
+import '../../domain/repositories/opds_cache_repository.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
 import '../../presentation/providers/audio_provider.dart';
 import '../../presentation/providers/catalogs_provider.dart';
@@ -61,6 +64,10 @@ Future<void> setupServiceLocator() async {
     () => CatalogRepositoryImpl(sl()),
   );
 
+  sl.registerLazySingleton<OpdsCacheRepository>(
+    () => OpdsCacheRepositoryImpl(sl()),
+  );
+
   // Services
   sl.registerLazySingleton<BookImportService>(() => BookImportService());
 
@@ -70,6 +77,10 @@ Future<void> setupServiceLocator() async {
 
   sl.registerLazySingleton<KavitaApiService>(
     () => KavitaApiService(http.Client()),
+  );
+
+  sl.registerLazySingleton<OpdsCacheService>(
+    () => OpdsCacheService(opdsClient: sl(), cacheRepository: sl()),
   );
 
   // Providers
@@ -87,6 +98,7 @@ Future<void> setupServiceLocator() async {
     () => CatalogsProvider(
       catalogRepository: sl(),
       opdsClientService: sl(),
+      cacheService: sl(),
       kavitaApiService: sl(),
       importService: sl(),
       bookRepository: sl(),
