@@ -8,6 +8,7 @@ environment:
 
 workspace:
   - packages/readwhere_epub
+  - packages/readwhere_cbz
 
 dependencies:
   flutter:

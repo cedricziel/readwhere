@@ -1,0 +1,23 @@
+name: readwhere_cbz
+description: A pure Dart library for reading CBZ comic book archives.
+version: 0.1.0
+repository: https://github.com/cedricziel/readwhere
+
+environment:
+  sdk: ^3.5.0
+
+resolution: workspace
+
+dependencies:
+  archive: ^4.0.7
+  xml: ^6.6.1
+  image: ^4.5.3
+  collection: ^1.19.1
+  path: ^1.9.1
+  equatable: ^2.0.7
+
+dev_dependencies:
+  test: ^1.25.0
+  mockito: ^5.6.1
+  build_runner: ^2.10.4
+  coverage: ^1.7.0
