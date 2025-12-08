@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:test/test.dart';
 import 'package:readwhere_epub/src/fxl/rendition_properties.dart';
 import 'package:readwhere_epub/src/package/spine/spine.dart';
 

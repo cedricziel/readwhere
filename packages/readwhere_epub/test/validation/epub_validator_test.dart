@@ -116,7 +116,7 @@ void main() {
       final encoder = ZipEncoder();
       final bytes = encoder.encode(archive);
       final filePath = '${tempDir.path}/test.epub';
-      await File(filePath).writeAsBytes(bytes!);
+      await File(filePath).writeAsBytes(bytes);
 
       return filePath;
     }
@@ -199,7 +199,7 @@ void main() {
         final encoder = ZipEncoder();
         final bytes = encoder.encode(archive);
         final filePath = '${tempDir.path}/no_container.epub';
-        await File(filePath).writeAsBytes(bytes!);
+        await File(filePath).writeAsBytes(bytes);
 
         final result = await validator.validate(filePath);
 

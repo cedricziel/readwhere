@@ -103,7 +103,7 @@ class EpubValidator {
       // Find and parse container.xml
       final containerFile = archive.findFile('META-INF/container.xml');
       final containerXml = XmlDocument.parse(
-        String.fromCharCodes(containerFile!.content as Uint8List),
+        String.fromCharCodes(containerFile!.content),
       );
 
       // Get OPF path
@@ -113,7 +113,7 @@ class EpubValidator {
       // Find and parse OPF
       final opfFile = archive.findFile(opfPath!);
       final opfXml = XmlDocument.parse(
-        String.fromCharCodes(opfFile!.content as Uint8List),
+        String.fromCharCodes(opfFile!.content),
       );
 
       // Validate package document
@@ -209,8 +209,7 @@ class EpubValidator {
         location: 'mimetype',
       ));
     } else {
-      final mimetypeContent =
-          String.fromCharCodes(mimetypeFile.content as Uint8List).trim();
+      final mimetypeContent = String.fromCharCodes(mimetypeFile.content).trim();
       if (mimetypeContent != 'application/epub+zip') {
         errors.add(EpubValidationError(
           severity: EpubValidationSeverity.error,
@@ -243,7 +242,7 @@ class EpubValidator {
     XmlDocument containerXml;
     try {
       containerXml = XmlDocument.parse(
-        String.fromCharCodes(containerFile.content as Uint8List),
+        String.fromCharCodes(containerFile.content),
       );
     } catch (e) {
       errors.add(EpubValidationError(
@@ -570,7 +569,7 @@ class EpubValidator {
       if (mediaType == 'application/xhtml+xml') {
         try {
           XmlDocument.parse(
-            String.fromCharCodes(file.content as Uint8List),
+            String.fromCharCodes(file.content),
           );
         } catch (e) {
           errors.add(EpubValidationError(

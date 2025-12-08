@@ -107,16 +107,7 @@ class ArchiveReader {
   /// Throws [EpubResourceNotFoundException] if the file doesn't exist.
   Uint8List readFileBytes(String path) {
     final file = _getFile(path);
-    final content = file.content;
-
-    if (content is Uint8List) {
-      return content;
-    }
-    if (content is List<int>) {
-      return Uint8List.fromList(content);
-    }
-
-    throw EpubReadException('Unexpected content type for file: $path');
+    return file.content;
   }
 
   /// Gets the content of a file as a string (UTF-8).

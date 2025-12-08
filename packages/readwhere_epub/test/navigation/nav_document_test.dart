@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:test/test.dart';
 import 'package:readwhere_epub/src/errors/epub_exception.dart';
 import 'package:readwhere_epub/src/navigation/nav_document.dart';
 import 'package:readwhere_epub/src/navigation/toc.dart';
