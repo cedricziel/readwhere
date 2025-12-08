@@ -21,7 +21,7 @@ jobs:
           sdk: stable
 
       - name: Install dependencies
-        run: dart pub get  # Runs at workspace root, resolves all packages
+        run: flutter pub get  # Runs at workspace root, resolves all packages
 
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed packages/readwhere_epub
