@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:readwhere_epub/readwhere_epub.dart' as epub;
 
 import '../../domain/entities/book.dart';
+import '../../domain/entities/import_result.dart';
 
 /// Service for importing books into the library
 ///
@@ -14,6 +15,46 @@ import '../../domain/entities/book.dart';
 /// - Extracting and caching cover images
 /// - Creating Book entities with proper metadata
 class BookImportService {
+  /// Import an EPUB file with validation and return an ImportResult.
+  ///
+  /// [filePath] Path to the EPUB file
+  /// Returns an ImportResult with the book and any validation warnings
+  ///
+  /// The EPUB is validated before import. Critical errors prevent import,
+  /// while warnings are returned with the successful import.
+  Future<ImportResult> importEpubWithValidation(String filePath) async {
+    // Validate EPUB structure before importing
+    final validator = epub.EpubValidator();
+    final validation = await validator.validate(filePath);
+
+    if (!validation.isValid) {
+      // Critical errors - can't import
+      final errorMessages = validation.errors
+          .map((e) => '${e.code}: ${e.message}')
+          .join('\n');
+      return ImportResult.failed(
+        reason: 'Invalid EPUB file',
+        details: errorMessages,
+      );
+    }
+
+    // Collect warnings
+    final warnings = validation.warnings
+        .map((w) => w.message)
+        .toList();
+
+    // Proceed with import
+    try {
+      final book = await importEpub(filePath);
+      return ImportResult.success(book: book, warnings: warnings);
+    } catch (e) {
+      return ImportResult.failed(
+        reason: 'Import failed',
+        details: e.toString(),
+      );
+    }
+  }
+
   /// Import an EPUB file and return a Book entity with full metadata
   ///
   /// [filePath] Path to the EPUB file
@@ -22,6 +63,8 @@ class BookImportService {
   /// The EPUB file is copied into the app's sandbox to ensure
   /// persistent access (macOS sandbox permissions are temporary for
   /// user-selected files).
+  ///
+  /// Note: Use [importEpubWithValidation] for validation support.
   Future<Book> importEpub(String filePath) async {
     // Get file info
     final file = File(filePath);

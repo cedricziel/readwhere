@@ -180,14 +180,24 @@ class ReadwhereEpubController implements ReaderController {
     try {
       _logger.info('Navigating to CFI: $cfi');
 
-      // Simple CFI parsing - extract spine position
-      // Format: epubcfi(/6/{spine_index}!/4/...)
-      final match = RegExp(r'/6/(\d+)').firstMatch(cfi);
-      if (match != null) {
-        final spinePosition = int.tryParse(match.group(1) ?? '') ?? 0;
-        if (spinePosition >= 0 && spinePosition < _reader.chapterCount) {
-          _currentChapterIndex = spinePosition;
+      // Try to parse as proper EPUB CFI
+      final parsedCfi = epub.EpubCfi.tryParse(cfi);
+      if (parsedCfi != null) {
+        // Valid EPUB CFI - use spine index
+        final spineIndex = parsedCfi.spineIndex;
+        if (spineIndex >= 0 && spineIndex < _reader.chapterCount) {
+          _currentChapterIndex = spineIndex;
           _updateProgress();
+        }
+      } else {
+        // Fallback: try legacy format "chapter-X-Y" or simple index extraction
+        final legacyMatch = RegExp(r'chapter-(\d+)').firstMatch(cfi);
+        if (legacyMatch != null) {
+          final chapterIndex = int.tryParse(legacyMatch.group(1) ?? '') ?? 0;
+          if (chapterIndex >= 0 && chapterIndex < _reader.chapterCount) {
+            _currentChapterIndex = chapterIndex;
+            _updateProgress();
+          }
         }
       }
 
@@ -230,44 +240,34 @@ class ReadwhereEpubController implements ReaderController {
 
     try {
       _logger.info('Searching for: $query');
-      final results = <SearchResult>[];
-      final searchTerm = query.toLowerCase();
 
+      // Collect all chapters for search
+      final chapters = <epub.EpubChapter>[];
       for (var i = 0; i < _reader.chapterCount; i++) {
-        final chapter = _reader.getChapter(i);
-        final plainText = chapter.plainText;
-        final lowerText = plainText.toLowerCase();
+        chapters.add(_reader.getChapter(i));
+      }
 
-        // Find all occurrences
-        var startIndex = 0;
-        while (true) {
-          final index = lowerText.indexOf(searchTerm, startIndex);
-          if (index == -1) break;
+      // Use EpubSearchEngine for advanced search
+      final engine = epub.EpubSearchEngine(chapters);
+      final results = <SearchResult>[];
 
-          // Extract context around the match
-          final contextStart = (index - 100).clamp(0, plainText.length);
-          final contextEnd = (index + searchTerm.length + 100).clamp(
-            0,
-            plainText.length,
-          );
-          var context = plainText.substring(contextStart, contextEnd);
-
-          if (contextStart > 0) context = '...$context';
-          if (contextEnd < plainText.length) context = '$context...';
-
-          final cfi = 'epubcfi(/6/$i!/4/1:$index)';
-
-          results.add(
-            SearchResult(
-              chapterId: chapter.id,
-              chapterTitle: chapter.title ?? 'Chapter ${i + 1}',
-              text: context,
-              cfi: cfi,
-            ),
-          );
-
-          startIndex = index + searchTerm.length;
-        }
+      await for (final result in engine.search(
+        query,
+        options: const epub.SearchOptions(
+          caseSensitive: false,
+          contextChars: 100,
+          maxResults: 200,
+        ),
+      )) {
+        results.add(
+          SearchResult(
+            chapterId: result.chapterId,
+            chapterTitle:
+                result.chapterTitle ?? 'Chapter ${result.chapterIndex + 1}',
+            text: result.fullContext,
+            cfi: result.cfi?.toString() ?? '',
+          ),
+        );
       }
 
       _logger.info('Found ${results.length} results for query: $query');
@@ -281,7 +281,12 @@ class ReadwhereEpubController implements ReaderController {
   @override
   String? getCurrentCfi() {
     _ensureInitialized();
-    return _currentCfi ?? 'epubcfi(/6/$_currentChapterIndex!/4/1:0)';
+    // Return stored CFI if available, otherwise generate from current position
+    if (_currentCfi != null) {
+      return _currentCfi;
+    }
+    // Generate proper EPUB CFI for current chapter
+    return epub.EpubCfi.fromSpineIndex(_currentChapterIndex).toString();
   }
 
   @override
@@ -320,6 +325,15 @@ class ReadwhereEpubController implements ReaderController {
     try {
       final chapter = _reader.getChapter(_currentChapterIndex);
 
+      // Sanitize HTML to prevent XSS attacks
+      final sanitizedHtml = epub.HtmlSanitizer.sanitize(
+        chapter.content,
+        options: const epub.SanitizeOptions(
+          allowStyles: true,
+          allowDataImages: true,
+        ),
+      );
+
       // Collect CSS from stylesheets
       final cssContent = _collectStylesheets(chapter);
 
@@ -329,7 +343,7 @@ class ReadwhereEpubController implements ReaderController {
       final content = ReaderContent(
         chapterId: chapter.id,
         chapterTitle: chapter.title ?? 'Chapter ${_currentChapterIndex + 1}',
-        htmlContent: chapter.content,
+        htmlContent: sanitizedHtml,
         cssContent: cssContent,
         images: images,
       );
