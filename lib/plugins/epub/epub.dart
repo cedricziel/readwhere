@@ -45,7 +45,6 @@
 // }
 // ```
 
-export 'epub_parser.dart';
-export 'epub_plugin.dart';
-export 'epub_reader_controller.dart';
-export 'epub_utils.dart';
+// EPUB plugin using the readwhere_epub library
+export 'readwhere_epub_plugin.dart';
+export 'readwhere_epub_controller.dart';

@@ -6,14 +6,14 @@
 import 'package:logging/logging.dart';
 
 import '../plugin_registry.dart';
-import 'epub_plugin.dart';
+import 'readwhere_epub_plugin.dart';
 
 /// Initialize the EPUB plugin with the registry
 void initializeEpubPlugin() {
   final registry = PluginRegistry();
 
   // Register the EPUB plugin
-  registry.register(EpubPlugin());
+  registry.register(ReadwhereEpubPlugin());
 
   print('EPUB plugin registered successfully');
   print('Supported extensions: ${registry.getSupportedExtensions()}');

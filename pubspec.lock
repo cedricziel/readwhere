@@ -241,14 +241,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  epubx:
-    dependency: "direct main"
-    description:
-      name: epubx
-      sha256: "0ab9354efa177c4be52c46f857bc15bf83f83a92667fb673465c8f89fca26db3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.0.0"
   equatable:
     dependency: "direct main"
     description:
@@ -432,14 +424,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
-  image:
-    dependency: transitive
-    description:
-      name: image
-      sha256: "8e9d133755c3e84c73288363e6343157c383a0c6c56fc51afcc5d4d7180306d6"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.3.0"
   intl:
     dependency: transitive
     description:
@@ -784,14 +768,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
-  quiver:
-    dependency: transitive
+  readwhere_epub:
+    dependency: "direct main"
     description:
-      name: quiver
-      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.2.2"
+      path: "packages/readwhere_epub"
+      relative: true
+    source: path
+    version: "0.1.0"
   rxdart:
     dependency: transitive
     description:

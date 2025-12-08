@@ -1,13 +1,13 @@
 # EPUB Plugin for ReadWhere
 
-Comprehensive EPUB 2.0 and EPUB 3.0 reader plugin for the ReadWhere e-reader application.
+Comprehensive EPUB 2.0 and EPUB 3.0 reader plugin for the ReadWhere e-reader application, powered by the custom `readwhere_epub` library.
 
 ## Overview
 
 The EPUB plugin provides full support for reading EPUB format books, including:
 
 - **Metadata Extraction**: Title, author, publisher, language, description, cover image
-- **Table of Contents**: Hierarchical TOC parsing from EPUB navigation
+- **Table of Contents**: Hierarchical TOC parsing from EPUB 3 nav documents and EPUB 2 NCX
 - **Chapter Navigation**: Forward, backward, and direct chapter access
 - **Full-text Search**: Search across all chapters with context
 - **CFI Support**: Canonical Fragment Identifier for precise location tracking
@@ -18,23 +18,23 @@ The EPUB plugin provides full support for reading EPUB format books, including:
 
 ### Core Components
 
-#### 1. EpubPlugin (`epub_plugin.dart`)
+#### 1. ReadwhereEpubPlugin (`readwhere_epub_plugin.dart`)
 
-Main plugin implementation that extends `ReaderPlugin`.
+Main plugin implementation that implements `ReaderPlugin`.
 
 **Key Methods:**
 - `canHandle(String filePath)`: Validates EPUB files by checking extension and ZIP signature
-- `parseMetadata(String filePath)`: Extracts complete book metadata
-- `openBook(String filePath)`: Creates and initializes an `EpubReaderController`
+- `parseMetadata(String filePath)`: Extracts complete book metadata using `readwhere_epub`
+- `openBook(String filePath)`: Creates and initializes a `ReadwhereEpubController`
 - `extractCover(String filePath)`: Retrieves cover image as `Uint8List`
 
 **Supported Formats:**
 - Extensions: `.epub`, `.epub3`
 - MIME Types: `application/epub+zip`, `application/epub`
 
-#### 2. EpubReaderController (`epub_reader_controller.dart`)
+#### 2. ReadwhereEpubController (`readwhere_epub_controller.dart`)
 
-Reading session controller that extends `ReaderController`.
+Reading session controller that implements `ReaderController`.
 
 **Features:**
 - Chapter navigation (next, previous, goto)
@@ -50,29 +50,15 @@ Reading session controller that extends `ReaderController`.
 - Current CFI location
 - Broadcast stream for content updates
 
-#### 3. EpubParser (`epub_parser.dart`)
+### Library: readwhere_epub
 
-Helper utilities for EPUB file parsing.
+The plugin is powered by `readwhere_epub`, a custom EPUB 3.3 compliant library located in `packages/readwhere_epub/`. This library provides:
 
-**Utilities:**
-- `parseBook(String filePath)`: Parse EPUB file to `EpubBook` object
-- `extractMetadata(EpubBook)`: Convert to `BookMetadata`
-- `extractCover(EpubBook)`: Get cover image
-- `getChapterContent(EpubBook, int)`: Retrieve chapter HTML
-- `getAllImages(EpubBook)`: Extract all embedded images
-- `getAllCssFiles(EpubBook)`: Extract all stylesheets
-
-#### 4. EpubUtils (`epub_utils.dart`)
-
-Low-level EPUB manipulation utilities.
-
-**Functionality:**
-- Table of contents extraction (multiple methods)
-- Cover image detection (metadata, manifest, filenames)
-- HTML sanitization and cleaning
-- CSS extraction and combination
-- CFI parsing and generation
-- Image reference resolution
+- **EpubReader**: Main entry point for opening and reading EPUB files
+- **EpubMetadata**: Complete Dublin Core metadata support
+- **EpubNavigation**: TOC, page list, and landmarks
+- **EpubChapter**: Chapter content with plain text extraction
+- **CoverExtractor**: Multi-strategy cover image detection
 
 ## Usage
 
@@ -83,7 +69,7 @@ import 'package:readwhere/plugins/plugins.dart';
 
 // Initialize plugin registry
 final registry = PluginRegistry();
-registry.register(EpubPlugin());
+registry.register(ReadwhereEpubPlugin());
 ```
 
 ### Open an EPUB Book
@@ -175,18 +161,21 @@ for (final entry in controller.tableOfContents) {
 ## Data Flow
 
 ```
-EPUB File
-    ↓
-EpubPlugin.openBook()
-    ↓
-EpubParser.parseBook()
-    ↓
-EpubBook (epubx library)
-    ↓
-EpubReaderController
-    ↓
+EPUB File (.epub)
+    |
+    v
+ReadwhereEpubPlugin.openBook()
+    |
+    v
+readwhere_epub.EpubReader.open()
+    |
+    v
+ReadwhereEpubController
+    |
+    v
 ReaderContent (via contentStream)
-    ↓
+    |
+    v
 UI Layer
 ```
 
@@ -200,8 +189,8 @@ Each chapter is delivered as a `ReaderContent` object:
 class ReaderContent {
   final String chapterId;          // Unique chapter identifier
   final String chapterTitle;       // Chapter title
-  final String htmlContent;        // Sanitized HTML
-  final String cssContent;         // Combined CSS
+  final String htmlContent;        // Chapter HTML content
+  final String cssContent;         // Combined CSS stylesheets
   final Map<String, Uint8List> images;  // Embedded images
 }
 ```
@@ -225,41 +214,33 @@ class BookMetadata {
 
 ## Implementation Details
 
-### HTML Sanitization
+### Cover Image Extraction
 
-The plugin automatically sanitizes HTML content by:
-- Removing `<script>` tags
-- Stripping dangerous event handlers (`onclick`, `onload`, etc.)
-- Preserving document structure
-- Maintaining embedded styles and classes
-
-### Image Handling
-
-Images are extracted and mapped in multiple ways:
-1. Direct references from chapter HTML
-2. Normalized path resolution
-3. Fallback to manifest entries
-4. Support for relative and absolute paths
+The `readwhere_epub` library uses multiple strategies to find cover images:
+1. EPUB 3 manifest `cover-image` property
+2. EPUB 2 metadata `cover` meta element
+3. Guide references
+4. First image in first spine item
+5. Image with "cover" in filename
 
 ### CFI (Canonical Fragment Identifier)
 
 CFI format used for location tracking:
 ```
-epubcfi(/6/4!/4/2/1)
+epubcfi(/6/4!/4/1:0)
 ```
 
 Components:
 - Spine position (chapter index)
-- Character offset (optional)
-- Element path (future enhancement)
+- Element path
+- Character offset
 
 ### Table of Contents Extraction
 
-Multiple fallback methods:
-1. **Chapters** (primary): From `EpubBook.Chapters`
-2. **Navigation**: From EPUB 3.0 nav document
-3. **NCX**: From EPUB 2.0 NCX file
-4. **Spine**: Generated from spine items
+The library uses multiple fallback methods:
+1. **EPUB 3 Nav Document**: Modern navigation document
+2. **EPUB 2 NCX**: Navigation Center eXtended
+3. **Spine Fallback**: Generated from spine items when no TOC exists
 
 ## Error Handling
 
@@ -274,66 +255,56 @@ The plugin handles various error scenarios:
 ## Performance Considerations
 
 ### Memory Management
-- Chapters loaded on-demand
+- Chapters loaded on-demand with caching
 - Images extracted per-chapter basis
-- CSS combined once at initialization
+- CSS collected from referenced stylesheets
 - Stream-based content delivery
 
 ### Optimization Tips
 1. Dispose controllers when done
 2. Cancel stream subscriptions
 3. Use CFI for bookmarking instead of full content
-4. Limit search result count for large books
+4. Use `clearCache()` to free memory when needed
 
 ## Testing
 
-Run EPUB plugin tests:
+Run tests for the readwhere_epub library:
 
 ```bash
-flutter test test/plugins/epub/
+cd packages/readwhere_epub
+flutter test
 ```
 
 Test coverage includes:
-- File format validation
-- Metadata extraction
-- Chapter navigation
-- Search functionality
-- CFI generation/parsing
+- Path utilities
+- XML utilities
+- TOC parsing
+- Navigation structures
 - Error handling
 
 ## Dependencies
 
-- **epubx** (^4.0.0): Core EPUB parsing
-- **html** (^0.15.5): HTML parsing and sanitization
+The plugin uses `readwhere_epub` which depends on:
+
 - **archive** (^3.6.1): ZIP file handling
+- **xml** (^6.5.0): XML parsing for OPF, NCX, and nav documents
+- **html** (^0.15.5): HTML parsing for content documents
+- **equatable** (^2.0.7): Value equality for models
+- **collection** (^1.18.0): Collection utilities
+- **path** (^1.9.0): Path manipulation
 
 ## Future Enhancements
 
-- [ ] Advanced CFI with element paths
+- [ ] Advanced CFI with precise character positioning
+- [ ] Full-text search with highlighting
 - [ ] Annotation support
-- [ ] Highlight management
-- [ ] Reading statistics
-- [ ] Font and style customization
+- [ ] Fixed-layout EPUB (FXL) support
+- [ ] Media overlays (SMIL) support
+- [ ] EPUB validation
 - [ ] Text-to-speech integration
-- [ ] Accessibility improvements
-- [ ] FXL (Fixed Layout) support
-
-## Contributing
-
-When contributing to the EPUB plugin:
-
-1. Maintain compatibility with EPUB 2.0 and 3.0 specs
-2. Add tests for new features
-3. Update documentation
-4. Follow Dart/Flutter style guidelines
-5. Ensure backward compatibility
-
-## License
-
-See the main ReadWhere project LICENSE file.
 
 ## References
 
 - [EPUB 3.3 Specification](https://www.w3.org/TR/epub-33/)
 - [EPUB CFI Specification](https://idpf.org/epub/linking/cfi/)
-- [epubx Library](https://pub.dev/packages/epubx)
+- [readwhere_epub Library](packages/readwhere_epub/)

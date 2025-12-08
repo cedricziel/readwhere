@@ -5,7 +5,7 @@ import 'app.dart';
 import 'core/di/service_locator.dart';
 import 'core/utils/logger.dart';
 import 'plugins/plugin_registry.dart';
-import 'plugins/epub/epub_plugin.dart';
+import 'plugins/epub/readwhere_epub_plugin.dart';
 import 'presentation/providers/library_provider.dart';
 import 'presentation/providers/reader_provider.dart';
 import 'presentation/providers/settings_provider.dart';
@@ -27,7 +27,7 @@ Future<void> main() async {
 
   // Register EPUB plugin with PluginRegistry
   final pluginRegistry = PluginRegistry();
-  pluginRegistry.register(EpubPlugin());
+  pluginRegistry.register(ReadwhereEpubPlugin());
 
   // Initialize providers from service locator
   final themeProvider = sl<ThemeProvider>();

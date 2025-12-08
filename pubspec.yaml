@@ -28,7 +28,8 @@ dependencies:
   shared_preferences: ^2.3.5
 
   # EPUB Support
-  epubx: ^4.0.0
+  readwhere_epub:
+    path: packages/readwhere_epub
   flutter_html: ^3.0.0-beta.2
   html: ^0.15.5
   archive: ^3.6.1

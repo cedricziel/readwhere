@@ -14,7 +14,7 @@ void initializePlugins() {
   final registry = PluginRegistry();
 
   // Register the EPUB plugin
-  registry.register(EpubPlugin());
+  registry.register(ReadwhereEpubPlugin());
 
   // Future: Register other plugins
   // registry.register(PdfPlugin());

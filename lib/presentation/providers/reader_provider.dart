@@ -7,9 +7,8 @@ import '../../domain/entities/reading_settings.dart';
 import '../../domain/entities/toc_entry.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
-import '../../plugins/epub/epub_plugin.dart';
-import '../../plugins/epub/epub_reader_controller.dart';
-import '../../plugins/epub/epub_fallback_controller.dart';
+import '../../plugins/epub/readwhere_epub_plugin.dart';
+import '../../plugins/epub/readwhere_epub_controller.dart';
 import '../../plugins/reader_controller.dart';
 
 /// Provider for managing reader state and reading operations
@@ -25,7 +24,7 @@ class ReaderProvider extends ChangeNotifier {
   final ReadingProgressRepository _readingProgressRepository;
   final BookmarkRepository _bookmarkRepository;
   final Uuid _uuid = const Uuid();
-  final EpubPlugin _epubPlugin = EpubPlugin();
+  final ReadwhereEpubPlugin _epubPlugin = ReadwhereEpubPlugin();
 
   ReaderProvider({
     required ReadingProgressRepository readingProgressRepository,
@@ -43,7 +42,7 @@ class ReaderProvider extends ChangeNotifier {
   int _currentChapterIndex = 0;
   List<TocEntry> _tableOfContents = [];
 
-  // Reader controller (supports both EpubReaderController and EpubFallbackController)
+  // Reader controller (using ReadwhereEpubController)
   ReaderController? _readerController;
   String _currentChapterHtml = '';
   String _currentChapterCss = '';
@@ -154,9 +153,8 @@ class ReaderProvider extends ChangeNotifier {
     if (_readerController == null) return;
 
     try {
-      // Handle different controller types
-      if (_readerController is EpubReaderController) {
-        final epubController = _readerController as EpubReaderController;
+      if (_readerController is ReadwhereEpubController) {
+        final epubController = _readerController as ReadwhereEpubController;
         _currentChapterHtml = await epubController.getChapterContent(chapterIndex);
 
         // Get CSS styles
@@ -166,10 +164,6 @@ class ReaderProvider extends ChangeNotifier {
           cssBuffer.writeln(entry.value);
         }
         _currentChapterCss = cssBuffer.toString();
-      } else if (_readerController is EpubFallbackController) {
-        final fallbackController = _readerController as EpubFallbackController;
-        _currentChapterHtml = await fallbackController.getChapterContent(chapterIndex);
-        _currentChapterCss = ''; // Fallback doesn't extract CSS
       } else {
         _currentChapterHtml = '<p>Unsupported reader controller type</p>';
         _currentChapterCss = '';

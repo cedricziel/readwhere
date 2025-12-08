@@ -2,19 +2,21 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:logging/logging.dart';
+import 'package:readwhere_epub/readwhere_epub.dart' as epub;
 
 import '../../domain/entities/toc_entry.dart';
 import '../reader_content.dart';
 import '../reader_controller.dart';
 import '../search_result.dart';
-import 'epub_fallback_reader.dart';
 
-/// Fallback controller for reading EPUB files when epubx fails
-/// Uses the archive package directly to parse EPUBs
-class EpubFallbackController implements ReaderController {
-  static final _logger = Logger('EpubFallbackController');
+/// Reader controller using the readwhere_epub library.
+///
+/// Implements [ReaderController] to provide chapter navigation,
+/// content streaming, and search functionality.
+class ReadwhereEpubController implements ReaderController {
+  static final _logger = Logger('ReadwhereEpubController');
 
-  final EpubFallbackReader _reader;
+  final epub.EpubReader _reader;
   final String filePath;
 
   late String _bookId;
@@ -30,62 +32,87 @@ class EpubFallbackController implements ReaderController {
   bool _isInitialized = false;
   bool _isClosed = false;
 
-  EpubFallbackController._({
-    required EpubFallbackReader reader,
+  ReadwhereEpubController._({
+    required epub.EpubReader reader,
     required this.filePath,
   }) : _reader = reader;
 
-  /// Create and initialize a fallback controller
-  static Future<EpubFallbackController> create(String filePath) async {
-    _logger.info('Creating fallback controller for: $filePath');
+  /// Create and initialize a controller.
+  static Future<ReadwhereEpubController> create(String filePath) async {
+    _logger.info('Creating ReadwhereEpubController for: $filePath');
 
-    final reader = await EpubFallbackReader.parse(filePath);
-    final controller = EpubFallbackController._(
+    final reader = await epub.EpubReader.open(filePath);
+    final controller = ReadwhereEpubController._(
       reader: reader,
       filePath: filePath,
     );
 
-    await controller.initialize();
+    await controller._initialize();
     return controller;
   }
 
-  /// Initialize the controller
-  Future<void> initialize() async {
+  /// Initialize the controller.
+  Future<void> _initialize() async {
     if (_isInitialized) {
       _logger.warning('Controller already initialized');
       return;
     }
 
     try {
-      _logger.info('Initializing fallback EPUB reader controller');
+      _logger.info('Initializing ReadwhereEpubController');
 
-      // Generate book ID from file path
-      _bookId = filePath.hashCode.toString();
+      // Generate book ID from identifier or file path
+      _bookId = _reader.metadata.identifier.isNotEmpty
+          ? _reader.metadata.identifier
+          : filePath.hashCode.toString();
 
-      // Build table of contents from spine items
-      _tableOfContents = _buildTableOfContents();
+      // Build table of contents
+      _tableOfContents = _convertTocEntries(_reader.navigation.tableOfContents);
+
+      // If no TOC, create one from spine
+      if (_tableOfContents.isEmpty) {
+        _tableOfContents = _buildTocFromSpine();
+      }
 
       _isInitialized = true;
       _logger.info(
-        'Fallback controller initialized with ${_reader.chapterCount} chapters',
+        'Controller initialized with ${_reader.chapterCount} chapters',
       );
     } catch (e, stackTrace) {
-      _logger.severe('Error initializing fallback controller', e, stackTrace);
+      _logger.severe('Error initializing controller', e, stackTrace);
       rethrow;
     }
   }
 
-  List<TocEntry> _buildTableOfContents() {
+  /// Build TOC entries from spine when no navigation is available.
+  List<TocEntry> _buildTocFromSpine() {
     final toc = <TocEntry>[];
     for (var i = 0; i < _reader.chapterCount; i++) {
+      final chapter = _reader.getChapter(i);
       toc.add(TocEntry(
-        id: 'chapter_$i',
-        title: 'Chapter ${i + 1}',
-        href: 'chapter_$i',
+        id: chapter.id,
+        title: chapter.title ?? 'Chapter ${i + 1}',
+        href: chapter.href,
         level: 0,
       ));
     }
     return toc;
+  }
+
+  /// Convert readwhere_epub TocEntry list to app TocEntry list.
+  List<TocEntry> _convertTocEntries(List<epub.TocEntry> entries) {
+    return entries.map((entry) => _convertTocEntry(entry)).toList();
+  }
+
+  /// Convert a single TocEntry recursively.
+  TocEntry _convertTocEntry(epub.TocEntry entry) {
+    return TocEntry(
+      id: entry.id,
+      title: entry.title,
+      href: entry.href,
+      level: entry.level,
+      children: _convertTocEntries(entry.children),
+    );
   }
 
   @override
@@ -112,11 +139,6 @@ class EpubFallbackController implements ReaderController {
     return _currentChapterIndex;
   }
 
-  String? get currentCfi {
-    _ensureInitialized();
-    return _currentCfi;
-  }
-
   @override
   double get progress {
     _ensureInitialized();
@@ -133,7 +155,8 @@ class EpubFallbackController implements ReaderController {
 
     if (index < 0 || index >= _reader.chapterCount) {
       throw ArgumentError(
-          'Chapter index $index out of bounds (0-${_reader.chapterCount - 1})');
+        'Chapter index $index out of bounds (0-${_reader.chapterCount - 1})',
+      );
     }
 
     try {
@@ -156,7 +179,8 @@ class EpubFallbackController implements ReaderController {
       _logger.info('Navigating to CFI: $cfi');
 
       // Simple CFI parsing - extract spine position
-      final match = RegExp(r'/(\d+)').firstMatch(cfi);
+      // Format: epubcfi(/6/{spine_index}!/4/...)
+      final match = RegExp(r'/6/(\d+)').firstMatch(cfi);
       if (match != null) {
         final spinePosition = int.tryParse(match.group(1) ?? '') ?? 0;
         if (spinePosition >= 0 && spinePosition < _reader.chapterCount) {
@@ -193,48 +217,6 @@ class EpubFallbackController implements ReaderController {
     }
   }
 
-  /// Get the content of a specific chapter
-  Future<String> getChapterContent(int index) async {
-    _ensureInitialized();
-    _ensureNotClosed();
-
-    if (index < 0 || index >= _reader.chapterCount) {
-      throw ArgumentError(
-          'Chapter index $index out of bounds (0-${_reader.chapterCount - 1})');
-    }
-
-    try {
-      _logger.fine('Getting content for chapter $index');
-      final content = _reader.getChapterContent(index);
-
-      if (content == null) {
-        return '<p>Unable to load chapter content</p>';
-      }
-
-      // Clean the HTML content
-      return _cleanHtmlContent(content);
-    } catch (e, stackTrace) {
-      _logger.severe('Error getting chapter content for index $index', e,
-          stackTrace);
-      rethrow;
-    }
-  }
-
-  /// Clean HTML content for safe rendering
-  String _cleanHtmlContent(String html) {
-    // Remove script tags
-    var cleaned = html.replaceAll(
-        RegExp(r'<script[^>]*>[\s\S]*?</script>', caseSensitive: false), '');
-
-    // Remove event handlers (onclick, onload, etc.)
-    cleaned = cleaned.replaceAll(
-        RegExp(r'\s+on\w+\s*=\s*"[^"]*"', caseSensitive: false), '');
-    cleaned = cleaned.replaceAll(
-        RegExp(r"\s+on\w+\s*=\s*'[^']*'", caseSensitive: false), '');
-
-    return cleaned;
-  }
-
   @override
   Future<List<SearchResult>> search(String query) async {
     _ensureInitialized();
@@ -250,11 +232,8 @@ class EpubFallbackController implements ReaderController {
       final searchTerm = query.toLowerCase();
 
       for (var i = 0; i < _reader.chapterCount; i++) {
-        final content = _reader.getChapterContent(i);
-        if (content == null) continue;
-
-        // Remove HTML tags for text search
-        final plainText = _stripHtmlTags(content);
+        final chapter = _reader.getChapter(i);
+        final plainText = chapter.plainText;
         final lowerText = plainText.toLowerCase();
 
         // Find all occurrences
@@ -275,8 +254,8 @@ class EpubFallbackController implements ReaderController {
           final cfi = 'epubcfi(/6/$i!/4/1:$index)';
 
           results.add(SearchResult(
-            chapterId: 'chapter_$i',
-            chapterTitle: 'Chapter ${i + 1}',
+            chapterId: chapter.id,
+            chapterTitle: chapter.title ?? 'Chapter ${i + 1}',
             text: context,
             cfi: cfi,
           ));
@@ -293,10 +272,6 @@ class EpubFallbackController implements ReaderController {
     }
   }
 
-  String _stripHtmlTags(String html) {
-    return html.replaceAll(RegExp(r'<[^>]*>'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-  }
-
   @override
   String? getCurrentCfi() {
     _ensureInitialized();
@@ -311,8 +286,9 @@ class EpubFallbackController implements ReaderController {
     }
 
     try {
-      _logger.info('Disposing fallback reader controller');
+      _logger.info('Disposing ReadwhereEpubController');
       await _contentController.close();
+      _reader.clearCache();
       _isClosed = true;
     } catch (e, stackTrace) {
       _logger.severe('Error disposing controller', e, stackTrace);
@@ -320,24 +296,7 @@ class EpubFallbackController implements ReaderController {
     }
   }
 
-  /// Get the cover image if available
-  Uint8List? getCover() {
-    return _reader.getCover();
-  }
-
-  /// Get metadata about the EPUB
-  Map<String, dynamic> getMetadata() {
-    _ensureInitialized();
-
-    return {
-      'title': _reader.title,
-      'author': _reader.author,
-      'totalChapters': _reader.chapterCount,
-      'hasTableOfContents': _tableOfContents.isNotEmpty,
-    };
-  }
-
-  /// Update reading progress based on current chapter
+  /// Update reading progress based on current chapter.
   void _updateProgress() {
     if (_reader.chapterCount == 0) {
       _progress = 0.0;
@@ -348,21 +307,25 @@ class EpubFallbackController implements ReaderController {
     _progress = _progress.clamp(0.0, 1.0);
   }
 
-  /// Emit current chapter content to the content stream
+  /// Emit current chapter content to the content stream.
   Future<void> _emitContent() async {
     if (_contentController.isClosed) return;
 
     try {
-      final htmlContent = await getChapterContent(_currentChapterIndex);
-      final chapterTitle = 'Chapter ${_currentChapterIndex + 1}';
-      final chapterId = 'chapter_$_currentChapterIndex';
+      final chapter = _reader.getChapter(_currentChapterIndex);
+
+      // Collect CSS from stylesheets
+      final cssContent = _collectStylesheets(chapter);
+
+      // Collect images
+      final images = _collectImages(chapter);
 
       final content = ReaderContent(
-        chapterId: chapterId,
-        chapterTitle: chapterTitle,
-        htmlContent: htmlContent,
-        cssContent: '',
-        images: const {},
+        chapterId: chapter.id,
+        chapterTitle: chapter.title ?? 'Chapter ${_currentChapterIndex + 1}',
+        htmlContent: chapter.content,
+        cssContent: cssContent,
+        images: images,
       );
 
       _contentController.add(content);
@@ -371,9 +334,90 @@ class EpubFallbackController implements ReaderController {
     }
   }
 
+  /// Collect CSS from chapter's referenced stylesheets.
+  String _collectStylesheets(epub.EpubChapter chapter) {
+    final cssBuffer = StringBuffer();
+
+    for (final href in chapter.stylesheetHrefs) {
+      try {
+        final stylesheets = _reader.getStylesheets();
+        final stylesheet = stylesheets.where(
+          (s) => s.href.endsWith(href) || href.endsWith(s.href),
+        ).firstOrNull;
+
+        if (stylesheet != null) {
+          cssBuffer.writeln(stylesheet.content);
+        }
+      } catch (e) {
+        _logger.fine('Could not load stylesheet $href: $e');
+      }
+    }
+
+    return cssBuffer.toString();
+  }
+
+  /// Collect images referenced in the chapter.
+  Map<String, Uint8List> _collectImages(epub.EpubChapter chapter) {
+    final images = <String, Uint8List>{};
+
+    for (final href in chapter.imageHrefs) {
+      try {
+        final image = _reader.getImage(href);
+        if (image != null) {
+          images[href] = image.bytes;
+        }
+      } catch (e) {
+        _logger.fine('Could not load image $href: $e');
+      }
+    }
+
+    return images;
+  }
+
+  /// Get the HTML content of a specific chapter.
+  ///
+  /// This method provides direct access to chapter content for backward
+  /// compatibility with providers that don't use the stream-based approach.
+  Future<String> getChapterContent(int index) async {
+    _ensureInitialized();
+    _ensureNotClosed();
+
+    if (index < 0 || index >= _reader.chapterCount) {
+      throw ArgumentError(
+        'Chapter index $index out of bounds (0-${_reader.chapterCount - 1})',
+      );
+    }
+
+    try {
+      final chapter = _reader.getChapter(index);
+      return chapter.content;
+    } catch (e, stackTrace) {
+      _logger.severe('Error getting chapter content for index $index', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  /// Get all CSS stylesheets as a map of href to content.
+  ///
+  /// This method provides direct access to stylesheets for backward
+  /// compatibility with providers that don't use the stream-based approach.
+  Map<String, String> getStyles() {
+    _ensureInitialized();
+
+    final styles = <String, String>{};
+    try {
+      for (final stylesheet in _reader.getStylesheets()) {
+        styles[stylesheet.href] = stylesheet.content;
+      }
+    } catch (e) {
+      _logger.fine('Error getting styles: $e');
+    }
+    return styles;
+  }
+
   void _ensureInitialized() {
     if (!_isInitialized) {
-      throw StateError('Controller not initialized. Call initialize() first.');
+      throw StateError('Controller not initialized.');
     }
   }
 

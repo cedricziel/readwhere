@@ -3,10 +3,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:readwhere_epub/readwhere_epub.dart' as epub;
 
 import '../../domain/entities/book.dart';
-import '../../plugins/epub/epub_fallback_reader.dart';
-import '../../plugins/epub/epub_parser.dart';
 
 /// Service for importing books into the library
 ///
@@ -53,17 +52,17 @@ class BookImportService {
     debugPrint('Copied EPUB to library: $internalPath');
 
     try {
-      // Try to parse the EPUB file for metadata (using internal copy)
-      final epubBook = await EpubParser.parseBook(internalPath);
+      // Parse EPUB using readwhere_epub library
+      final reader = await epub.EpubReader.open(internalPath);
+      final metadata = reader.metadata;
 
-      // Extract metadata
-      final metadata = EpubParser.extractMetadata(epubBook);
       title = metadata.title;
-      author = metadata.author;
+      author = metadata.author ?? 'Unknown';
 
       // Save cover image if available
-      if (metadata.coverImage != null) {
-        coverPath = await _saveCoverImage(bookId, metadata.coverImage!);
+      final cover = reader.getCoverImage();
+      if (cover != null) {
+        coverPath = await _saveCoverImage(bookId, cover.bytes);
       }
     } catch (e, stackTrace) {
       // If EPUB parsing fails, we still import the book with basic info
@@ -261,31 +260,17 @@ class BookImportService {
 
     Uint8List? coverImage;
 
-    // Try main parser first
+    // Parse EPUB and extract cover using readwhere_epub
     try {
-      debugPrint('extractCover - Trying main EPUB parser...');
-      final epubBook = await EpubParser.parseBook(book.filePath);
-      final metadata = EpubParser.extractMetadata(epubBook);
-      coverImage = metadata.coverImage;
+      debugPrint('extractCover - Parsing EPUB...');
+      final reader = await epub.EpubReader.open(book.filePath);
+      final cover = reader.getCoverImage();
+      coverImage = cover?.bytes;
       if (coverImage != null && coverImage.isNotEmpty) {
-        debugPrint('extractCover - Found cover via main parser (${coverImage.length} bytes)');
+        debugPrint('extractCover - Found cover (${coverImage.length} bytes)');
       }
     } catch (e) {
-      debugPrint('extractCover - Main parser failed: $e');
-    }
-
-    // Fallback to direct archive extraction if main parser failed or found no cover
-    if (coverImage == null || coverImage.isEmpty) {
-      try {
-        debugPrint('extractCover - Trying fallback reader...');
-        final fallbackReader = await EpubFallbackReader.parse(book.filePath);
-        coverImage = fallbackReader.getCover();
-        if (coverImage != null && coverImage.isNotEmpty) {
-          debugPrint('extractCover - Found cover via fallback reader (${coverImage.length} bytes)');
-        }
-      } catch (e) {
-        debugPrint('extractCover - Fallback reader failed: $e');
-      }
+      debugPrint('extractCover - EPUB parsing failed: $e');
     }
 
     // Save the cover if we found one
