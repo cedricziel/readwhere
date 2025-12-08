@@ -19,6 +19,11 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
   final _urlController = TextEditingController();
   final _apiKeyController = TextEditingController();
 
+  // Explicit FocusNodes help work around macOS keyboard event bugs
+  final _urlFocusNode = FocusNode();
+  final _apiKeyFocusNode = FocusNode();
+  final _nameFocusNode = FocusNode();
+
   CatalogType _catalogType = CatalogType.kavita;
   bool _isValidating = false;
   bool _isValidated = false;
@@ -31,6 +36,9 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
     _nameController.dispose();
     _urlController.dispose();
     _apiKeyController.dispose();
+    _urlFocusNode.dispose();
+    _apiKeyFocusNode.dispose();
+    _nameFocusNode.dispose();
     super.dispose();
   }
 
@@ -136,6 +144,8 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
               // Server URL
               TextFormField(
                 controller: _urlController,
+                focusNode: _urlFocusNode,
+                autofocus: true,
                 decoration: InputDecoration(
                   labelText: 'Server URL',
                   hintText: _catalogType == CatalogType.kavita
@@ -170,6 +180,7 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
               if (_catalogType == CatalogType.kavita) ...[
                 TextFormField(
                   controller: _apiKeyController,
+                  focusNode: _apiKeyFocusNode,
                   decoration: const InputDecoration(
                     labelText: 'OPDS API Key',
                     hintText: 'Your Kavita OPDS API key',
@@ -299,6 +310,7 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _nameController,
+                  focusNode: _nameFocusNode,
                   decoration: const InputDecoration(
                     labelText: 'Display Name',
                     hintText: 'My Kavita Server',
