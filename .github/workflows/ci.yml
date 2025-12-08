@@ -11,9 +11,6 @@ jobs:
   readwhere-epub:
     name: readwhere_epub
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/readwhere_epub
 
     steps:
       - uses: actions/checkout@v6
@@ -24,16 +21,16 @@ jobs:
           sdk: stable
 
       - name: Install dependencies
-        run: dart pub get
+        run: dart pub get  # Runs at workspace root, resolves all packages
 
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed .
+        run: dart format --output=none --set-exit-if-changed packages/readwhere_epub
 
       - name: Analyze
-        run: dart analyze --fatal-infos
+        run: dart analyze --fatal-infos packages/readwhere_epub
 
       - name: Run tests
-        run: dart test
+        run: dart test packages/readwhere_epub
 
   # Analyze and test the main Flutter app
   flutter-app:
