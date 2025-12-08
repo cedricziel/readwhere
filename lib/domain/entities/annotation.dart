@@ -1,14 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 /// Color options for annotations/highlights
-enum AnnotationColor {
-  yellow,
-  green,
-  blue,
-  pink,
-  purple,
-  orange,
-}
+enum AnnotationColor { yellow, green, blue, pink, purple, orange }
 
 /// Represents an annotation or highlight in a book
 class Annotation extends Equatable {
@@ -61,16 +54,16 @@ class Annotation extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        bookId,
-        chapterId,
-        cfiStart,
-        cfiEnd,
-        text,
-        note,
-        color,
-        createdAt,
-      ];
+    id,
+    bookId,
+    chapterId,
+    cfiStart,
+    cfiEnd,
+    text,
+    note,
+    color,
+    createdAt,
+  ];
 
   @override
   String toString() {

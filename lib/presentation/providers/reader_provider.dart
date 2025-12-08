@@ -29,8 +29,8 @@ class ReaderProvider extends ChangeNotifier {
   ReaderProvider({
     required ReadingProgressRepository readingProgressRepository,
     required BookmarkRepository bookmarkRepository,
-  })  : _readingProgressRepository = readingProgressRepository,
-        _bookmarkRepository = bookmarkRepository;
+  }) : _readingProgressRepository = readingProgressRepository,
+       _bookmarkRepository = bookmarkRepository;
 
   // State
   Book? _currentBook;
@@ -105,7 +105,8 @@ class ReaderProvider extends ChangeNotifier {
       _currentBook = book;
 
       // Load reading progress
-      _progress = await _readingProgressRepository.getProgressForBook(book.id) ??
+      _progress =
+          await _readingProgressRepository.getProgressForBook(book.id) ??
           ReadingProgress(
             id: _uuid.v4(),
             bookId: book.id,
@@ -155,7 +156,9 @@ class ReaderProvider extends ChangeNotifier {
     try {
       if (_readerController is ReadwhereEpubController) {
         final epubController = _readerController as ReadwhereEpubController;
-        _currentChapterHtml = await epubController.getChapterContent(chapterIndex);
+        _currentChapterHtml = await epubController.getChapterContent(
+          chapterIndex,
+        );
 
         // Get CSS styles
         final styles = epubController.getStyles();
@@ -226,7 +229,8 @@ class ReaderProvider extends ChangeNotifier {
   ///
   /// [index] The index of the chapter in the table of contents
   Future<void> goToChapter(int index) async {
-    final maxChapters = _readerController?.totalChapters ?? _tableOfContents.length;
+    final maxChapters =
+        _readerController?.totalChapters ?? _tableOfContents.length;
     if (index < 0 || index >= maxChapters) {
       _error = 'Invalid chapter index: $index';
       notifyListeners();
@@ -269,14 +273,18 @@ class ReaderProvider extends ChangeNotifier {
     try {
       // Calculate progress from CFI (extract chapter info)
       final chapterIndex = _getChapterIndexFromCfi(cfi);
-      final maxChapters = _readerController?.totalChapters ?? _tableOfContents.length;
-      final progressValue = maxChapters > 0 ? (chapterIndex + 1) / maxChapters : 0.0;
+      final maxChapters =
+          _readerController?.totalChapters ?? _tableOfContents.length;
+      final progressValue = maxChapters > 0
+          ? (chapterIndex + 1) / maxChapters
+          : 0.0;
 
-      _progress = _progress?.copyWith(
-        cfi: cfi,
-        progress: progressValue,
-        updatedAt: DateTime.now(),
-      ) ??
+      _progress =
+          _progress?.copyWith(
+            cfi: cfi,
+            progress: progressValue,
+            updatedAt: DateTime.now(),
+          ) ??
           ReadingProgress(
             id: _uuid.v4(),
             bookId: _currentBook!.id,
@@ -403,11 +411,12 @@ class ReaderProvider extends ChangeNotifier {
   void updateProgressWhileReading(String cfi, double progressValue) {
     if (_currentBook == null) return;
 
-    _progress = _progress?.copyWith(
-      cfi: cfi,
-      progress: progressValue,
-      updatedAt: DateTime.now(),
-    ) ??
+    _progress =
+        _progress?.copyWith(
+          cfi: cfi,
+          progress: progressValue,
+          updatedAt: DateTime.now(),
+        ) ??
         ReadingProgress(
           id: _uuid.v4(),
           bookId: _currentBook!.id,
@@ -431,7 +440,8 @@ class ReaderProvider extends ChangeNotifier {
   /// Advances to the next chapter if available.
   /// Does nothing if already at the last chapter.
   Future<void> nextChapter() async {
-    final maxChapters = _readerController?.totalChapters ?? _tableOfContents.length;
+    final maxChapters =
+        _readerController?.totalChapters ?? _tableOfContents.length;
     if (maxChapters == 0) {
       _error = 'No chapters available';
       notifyListeners();
@@ -448,7 +458,8 @@ class ReaderProvider extends ChangeNotifier {
   /// Goes back to the previous chapter if available.
   /// Does nothing if already at the first chapter.
   Future<void> previousChapter() async {
-    final maxChapters = _readerController?.totalChapters ?? _tableOfContents.length;
+    final maxChapters =
+        _readerController?.totalChapters ?? _tableOfContents.length;
     if (maxChapters == 0) {
       _error = 'No chapters available';
       notifyListeners();

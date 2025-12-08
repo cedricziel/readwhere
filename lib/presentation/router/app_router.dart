@@ -48,9 +48,7 @@ class AppNavigationObserver extends NavigatorObserver {
     final routeName = route.settings.name ?? 'unknown';
     final previousRouteName = previousRoute?.settings.name ?? 'none';
 
-    AppLogger.info(
-      'Navigation $action: $previousRouteName -> $routeName',
-    );
+    AppLogger.info('Navigation $action: $previousRouteName -> $routeName');
 
     // TODO: Send analytics event
     // Example: Firebase Analytics
@@ -78,9 +76,7 @@ GoRouter createAppRouter() {
   return GoRouter(
     initialLocation: AppRoutes.library,
     debugLogDiagnostics: true,
-    observers: [
-      AppNavigationObserver(),
-    ],
+    observers: [AppNavigationObserver()],
     routes: [
       // Root redirect
       GoRoute(
@@ -109,33 +105,29 @@ GoRouter createAppRouter() {
           // Library route
           GoRoute(
             path: AppRoutes.library,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: LibraryScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: LibraryScreen()),
           ),
 
           // Catalogs route
           GoRoute(
             path: AppRoutes.catalogs,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: CatalogsScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CatalogsScreen()),
           ),
 
           // Feeds route
           GoRoute(
             path: AppRoutes.feeds,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: FeedsScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: FeedsScreen()),
           ),
 
           // Settings route
           GoRoute(
             path: AppRoutes.settings,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: SettingsScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SettingsScreen()),
           ),
         ],
       ),
@@ -161,18 +153,12 @@ GoRouter createAppRouter() {
     // Error handling
     errorBuilder: (context, state) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Error'),
-        ),
+        appBar: AppBar(title: const Text('Error')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               const Text(
                 'Page Not Found',

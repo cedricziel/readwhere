@@ -31,7 +31,9 @@ class FileUtils {
   static Future<Directory> getBooksDirectory() async {
     try {
       final appDir = await getAppDocumentsDirectory();
-      final booksDir = Directory(path.join(appDir.path, AppConstants.booksDirectory));
+      final booksDir = Directory(
+        path.join(appDir.path, AppConstants.booksDirectory),
+      );
 
       if (!await booksDir.exists()) {
         await booksDir.create(recursive: true);
@@ -50,7 +52,9 @@ class FileUtils {
   static Future<Directory> getCoversDirectory() async {
     try {
       final appDir = await getAppDocumentsDirectory();
-      final coversDir = Directory(path.join(appDir.path, AppConstants.coversDirectory));
+      final coversDir = Directory(
+        path.join(appDir.path, AppConstants.coversDirectory),
+      );
 
       if (!await coversDir.exists()) {
         await coversDir.create(recursive: true);
@@ -69,7 +73,9 @@ class FileUtils {
   static Future<Directory> getTempDirectory() async {
     try {
       final appDir = await getAppDocumentsDirectory();
-      final tempDir = Directory(path.join(appDir.path, AppConstants.tempDirectory));
+      final tempDir = Directory(
+        path.join(appDir.path, AppConstants.tempDirectory),
+      );
 
       if (!await tempDir.exists()) {
         await tempDir.create(recursive: true);

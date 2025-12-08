@@ -87,7 +87,7 @@ class ResponsiveLayout extends StatelessWidget {
   factory ResponsiveLayout.builder({
     Key? key,
     required Widget Function(BuildContext context, DeviceType deviceType)
-        builder,
+    builder,
   }) {
     return ResponsiveLayout(
       key: key,
@@ -206,11 +206,7 @@ extension ResponsiveLayoutExtensions on BuildContext {
   ///   desktop: 24.0,
   /// );
   /// ```
-  T responsiveValue<T>({
-    required T mobile,
-    T? tablet,
-    T? desktop,
-  }) {
+  T responsiveValue<T>({required T mobile, T? tablet, T? desktop}) {
     if (isDesktop) {
       return desktop ?? tablet ?? mobile;
     } else if (isTablet) {

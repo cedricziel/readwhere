@@ -228,10 +228,10 @@ class ReadingThemes {
 
   /// All available theme options as a list.
   static List<ReadingTheme> get allThemes => [
-        ReadingTheme.light,
-        ReadingTheme.dark,
-        ReadingTheme.sepia,
-      ];
+    ReadingTheme.light,
+    ReadingTheme.dark,
+    ReadingTheme.sepia,
+  ];
 
   /// Gets a human-readable name for a reading theme.
   static String getThemeName(ReadingTheme theme) {
@@ -271,8 +271,8 @@ class ReadingThemeProvider extends InheritedWidget {
   });
 
   static ReadingThemeData of(BuildContext context) {
-    final provider =
-        context.dependOnInheritedWidgetOfExactType<ReadingThemeProvider>();
+    final provider = context
+        .dependOnInheritedWidgetOfExactType<ReadingThemeProvider>();
     if (provider == null) {
       throw FlutterError(
         'ReadingThemeProvider not found in widget tree.\n'
@@ -284,8 +284,8 @@ class ReadingThemeProvider extends InheritedWidget {
 
   /// Tries to get the reading theme from context, returning null if not found.
   static ReadingThemeData? maybeOf(BuildContext context) {
-    final provider =
-        context.dependOnInheritedWidgetOfExactType<ReadingThemeProvider>();
+    final provider = context
+        .dependOnInheritedWidgetOfExactType<ReadingThemeProvider>();
     return provider?.themeData;
   }
 

@@ -241,8 +241,7 @@ class EpubValidationResult extends Equatable {
   int get totalIssues => allIssues.length;
 
   @override
-  List<Object?> get props =>
-      [isValid, errors, warnings, info, detectedVersion];
+  List<Object?> get props => [isValid, errors, warnings, info, detectedVersion];
 }
 
 /// EPUB specification version.

@@ -16,11 +16,7 @@ class BookListTile extends StatelessWidget {
   /// Callback when the tile is tapped to open the book
   final VoidCallback onTap;
 
-  const BookListTile({
-    super.key,
-    required this.book,
-    required this.onTap,
-  });
+  const BookListTile({super.key, required this.book, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -108,11 +104,7 @@ class BookListTile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (book.isFavorite)
-                    Icon(
-                      Icons.favorite,
-                      size: 20,
-                      color: colorScheme.error,
-                    ),
+                    Icon(Icons.favorite, size: 20, color: colorScheme.error),
                   const SizedBox(height: 8),
                   IconButton(
                     icon: const Icon(Icons.more_vert),
@@ -200,7 +192,9 @@ class BookListTile extends StatelessWidget {
                   value: progress,
                   minHeight: 6,
                   backgroundColor: colorScheme.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    colorScheme.primary,
+                  ),
                 ),
               ),
             ),
@@ -221,7 +215,10 @@ class BookListTile extends StatelessWidget {
 
   /// Shows a context menu for book actions
   void _showContextMenu(BuildContext context) {
-    final libraryProvider = Provider.of<LibraryProvider>(context, listen: false);
+    final libraryProvider = Provider.of<LibraryProvider>(
+      context,
+      listen: false,
+    );
 
     showModalBottomSheet(
       context: context,
@@ -265,9 +262,7 @@ class BookListTile extends StatelessWidget {
               ),
               title: Text(
                 'Delete',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -297,15 +292,9 @@ class BookListTile extends StatelessWidget {
                 'File Size',
                 '${(book.fileSize / 1024 / 1024).toStringAsFixed(2)} MB',
               ),
-              _buildDetailRow(
-                'Added',
-                _formatDate(book.addedAt),
-              ),
+              _buildDetailRow('Added', _formatDate(book.addedAt)),
               if (book.lastOpenedAt != null)
-                _buildDetailRow(
-                  'Last Opened',
-                  _formatDate(book.lastOpenedAt!),
-                ),
+                _buildDetailRow('Last Opened', _formatDate(book.lastOpenedAt!)),
               if (book.readingProgress != null)
                 _buildDetailRow(
                   'Progress',
@@ -338,9 +327,7 @@ class BookListTile extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );

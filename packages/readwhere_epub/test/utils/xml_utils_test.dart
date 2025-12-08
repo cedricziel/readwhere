@@ -22,7 +22,8 @@ void main() {
         // findChildByLocalName uses firstWhere which may return null or throw
         // The implementation throws StateError via orElse, but due to return type XmlElement?
         // we catch it and return null behavior differs
-        final result = XmlUtils.findChildByLocalNameOrNull(xml.rootElement, 'missing');
+        final result =
+            XmlUtils.findChildByLocalNameOrNull(xml.rootElement, 'missing');
         expect(result, isNull);
       });
     });
@@ -31,14 +32,16 @@ void main() {
       test('finds child element', () {
         final xml = XmlDocument.parse('<root><child>value</child></root>');
 
-        final child = XmlUtils.findChildByLocalNameOrNull(xml.rootElement, 'child');
+        final child =
+            XmlUtils.findChildByLocalNameOrNull(xml.rootElement, 'child');
         expect(child?.innerText, equals('value'));
       });
 
       test('returns null when not found', () {
         final xml = XmlDocument.parse('<root><child/></root>');
 
-        final result = XmlUtils.findChildByLocalNameOrNull(xml.rootElement, 'missing');
+        final result =
+            XmlUtils.findChildByLocalNameOrNull(xml.rootElement, 'missing');
         expect(result, isNull);
       });
     });
@@ -53,7 +56,9 @@ void main() {
           </root>
         ''');
 
-        final items = XmlUtils.findAllChildrenByLocalName(xml.rootElement, 'item').toList();
+        final items =
+            XmlUtils.findAllChildrenByLocalName(xml.rootElement, 'item')
+                .toList();
         expect(items.length, equals(3));
         expect(items[0].innerText, equals('1'));
         expect(items[1].innerText, equals('2'));
@@ -63,7 +68,8 @@ void main() {
       test('returns empty list when none found', () {
         final xml = XmlDocument.parse('<root><child/></root>');
 
-        final items = XmlUtils.findAllChildrenByLocalName(xml.rootElement, 'item');
+        final items =
+            XmlUtils.findAllChildrenByLocalName(xml.rootElement, 'item');
         expect(items, isEmpty);
       });
     });

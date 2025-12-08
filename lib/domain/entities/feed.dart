@@ -38,14 +38,7 @@ class Feed extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        id,
-        name,
-        url,
-        iconUrl,
-        addedAt,
-        lastRefreshedAt,
-      ];
+  List<Object?> get props => [id, name, url, iconUrl, addedAt, lastRefreshedAt];
 
   @override
   String toString() {

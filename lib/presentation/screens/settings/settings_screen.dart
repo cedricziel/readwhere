@@ -42,9 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, child) {
           return ListView(
@@ -192,10 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   family == settingsProvider.defaultReadingSettings.fontFamily;
 
               return RadioListTile<String>(
-                title: Text(
-                  family,
-                  style: TextStyle(fontFamily: family),
-                ),
+                title: Text(family, style: TextStyle(fontFamily: family)),
                 value: family,
                 groupValue: settingsProvider.defaultReadingSettings.fontFamily,
                 selected: isSelected,
@@ -312,9 +307,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.pop(context);
               // TODO: Implement cache clearing
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Cache cleared successfully'),
-                ),
+                const SnackBar(content: Text('Cache cleared successfully')),
               );
             },
             child: const Text('Clear'),

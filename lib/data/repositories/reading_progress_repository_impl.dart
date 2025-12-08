@@ -31,7 +31,9 @@ class ReadingProgressRepositoryImpl implements ReadingProgressRepository {
 
       return ReadingProgressModel.fromMap(maps.first).toEntity();
     } catch (e) {
-      throw Exception('Failed to retrieve reading progress for book $bookId: $e');
+      throw Exception(
+        'Failed to retrieve reading progress for book $bookId: $e',
+      );
     }
   }
 

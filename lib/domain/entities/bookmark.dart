@@ -38,14 +38,7 @@ class Bookmark extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        id,
-        bookId,
-        chapterId,
-        cfi,
-        title,
-        createdAt,
-      ];
+  List<Object?> get props => [id, bookId, chapterId, cfi, title, createdAt];
 
   @override
   String toString() {

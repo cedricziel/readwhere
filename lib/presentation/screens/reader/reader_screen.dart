@@ -18,10 +18,7 @@ import 'widgets/reading_settings_sheet.dart';
 class ReaderScreen extends StatefulWidget {
   final String bookId;
 
-  const ReaderScreen({
-    super.key,
-    required this.bookId,
-  });
+  const ReaderScreen({super.key, required this.bookId});
 
   @override
   State<ReaderScreen> createState() => _ReaderScreenState();
@@ -82,12 +79,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
         final currentChapter = readerProvider.currentChapterIndex;
 
         // Simple CFI based on chapter and scroll position
-        final cfi = 'chapter-$currentChapter-${(_scrollPosition * 100).toInt()}';
+        final cfi =
+            'chapter-$currentChapter-${(_scrollPosition * 100).toInt()}';
 
         // Calculate overall progress (simplified)
         final totalChapters = readerProvider.tableOfContents.length;
         final overallProgress = totalChapters > 0
-            ? (currentChapter / totalChapters) + (_scrollPosition / totalChapters)
+            ? (currentChapter / totalChapters) +
+                  (_scrollPosition / totalChapters)
             : _scrollPosition;
 
         readerProvider.updateProgressWhileReading(
@@ -179,9 +178,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         // Show error state
         if (readerProvider.error != null && !readerProvider.hasOpenBook) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Error'),
-            ),
+            appBar: AppBar(title: const Text('Error')),
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -212,7 +209,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
         }
 
         // Get reading theme from settings
-        final readingTheme = ReadingThemes.fromSettings(readerProvider.settings);
+        final readingTheme = ReadingThemes.fromSettings(
+          readerProvider.settings,
+        );
 
         // Main reader UI
         return ReadingThemeProvider(
@@ -267,11 +266,16 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     onTableOfContents: _showTableOfContents,
                     onProgressChanged: (value) {
                       // Update progress slider
-                      final totalChapters = readerProvider.tableOfContents.length;
+                      final totalChapters =
+                          readerProvider.tableOfContents.length;
                       if (totalChapters > 0) {
-                        final targetChapter = (value / 100 * totalChapters).floor();
-                        if (targetChapter != readerProvider.currentChapterIndex) {
-                          readerProvider.goToChapter(targetChapter.clamp(0, totalChapters - 1));
+                        final targetChapter = (value / 100 * totalChapters)
+                            .floor();
+                        if (targetChapter !=
+                            readerProvider.currentChapterIndex) {
+                          readerProvider.goToChapter(
+                            targetChapter.clamp(0, totalChapters - 1),
+                          );
                           if (_scrollController.hasClients) {
                             _scrollController.jumpTo(0);
                           }

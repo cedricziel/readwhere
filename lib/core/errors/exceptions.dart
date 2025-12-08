@@ -6,11 +6,7 @@ abstract class AppException implements Exception {
   final dynamic originalException;
   final StackTrace? stackTrace;
 
-  const AppException(
-    this.message, {
-    this.originalException,
-    this.stackTrace,
-  });
+  const AppException(this.message, {this.originalException, this.stackTrace});
 
   @override
   String toString() {

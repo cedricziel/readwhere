@@ -241,15 +241,17 @@ class EpubMetadata extends Equatable {
   /// The primary author name.
   String? get author {
     final authors = creators.where((c) =>
-      c.role == null || c.role == 'aut' || c.roleEnum == CreatorRole.author
-    );
+        c.role == null || c.role == 'aut' || c.roleEnum == CreatorRole.author);
     return authors.firstOrNull?.name;
   }
 
   /// All author names.
   List<String> get authors {
     return creators
-        .where((c) => c.role == null || c.role == 'aut' || c.roleEnum == CreatorRole.author)
+        .where((c) =>
+            c.role == null ||
+            c.role == 'aut' ||
+            c.roleEnum == CreatorRole.author)
         .map((c) => c.name)
         .toList();
   }

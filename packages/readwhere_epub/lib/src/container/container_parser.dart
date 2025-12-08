@@ -44,7 +44,8 @@ class ContainerParser {
     final version = root.getAttribute('version') ?? '1.0';
 
     // Find rootfiles element
-    final rootfilesElement = XmlUtils.findChildByLocalNameOrNull(root, 'rootfiles');
+    final rootfilesElement =
+        XmlUtils.findChildByLocalNameOrNull(root, 'rootfiles');
     if (rootfilesElement == null) {
       throw const EpubParseException(
         'Invalid container.xml: missing <rootfiles> element',
@@ -73,8 +74,8 @@ class ContainerParser {
         );
       }
 
-      final mediaType = element.getAttribute('media-type') ??
-          'application/oebps-package+xml';
+      final mediaType =
+          element.getAttribute('media-type') ?? 'application/oebps-package+xml';
 
       rootfiles.add(Rootfile(
         fullPath: fullPath,

@@ -123,9 +123,33 @@ class EpubChapter extends Equatable {
 
   static bool _isBlockElement(String tagName) {
     const blockTags = {
-      'p', 'div', 'section', 'article', 'header', 'footer', 'nav', 'aside',
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'figure',
-      'figcaption', 'ul', 'ol', 'li', 'dl', 'dt', 'dd', 'table', 'tr', 'br',
+      'p',
+      'div',
+      'section',
+      'article',
+      'header',
+      'footer',
+      'nav',
+      'aside',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'blockquote',
+      'pre',
+      'figure',
+      'figcaption',
+      'ul',
+      'ol',
+      'li',
+      'dl',
+      'dt',
+      'dd',
+      'table',
+      'tr',
+      'br',
     };
     return blockTags.contains(tagName.toLowerCase());
   }

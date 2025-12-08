@@ -22,7 +22,9 @@ class AppLogger {
     Logger.root.onRecord.listen((record) {
       // Format: [LEVEL] Time - Logger: Message
       final time = record.time.toString().split('.').first;
-      print('[${record.level.name}] $time - ${record.loggerName}: ${record.message}');
+      print(
+        '[${record.level.name}] $time - ${record.loggerName}: ${record.message}',
+      );
 
       if (record.error != null) {
         print('Error: ${record.error}');
@@ -70,7 +72,11 @@ class AppLogger {
   /// Logs a critical error message.
   ///
   /// Use for very severe error events that might cause the app to abort.
-  static void critical(String message, [Object? error, StackTrace? stackTrace]) {
+  static void critical(
+    String message, [
+    Object? error,
+    StackTrace? stackTrace,
+  ]) {
     _logger.shout(message, error, stackTrace);
   }
 

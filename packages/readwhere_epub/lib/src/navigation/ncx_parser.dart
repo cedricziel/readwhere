@@ -36,12 +36,12 @@ class NcxParser {
 
     // Parse navMap (table of contents)
     final navMap = XmlUtils.findChildByLocalNameOrNull(ncx, 'navMap');
-    final tableOfContents = navMap != null
-        ? _parseNavMap(navMap)
-        : <TocEntry>[];
+    final tableOfContents =
+        navMap != null ? _parseNavMap(navMap) : <TocEntry>[];
 
     // Parse pageList
-    final pageListElement = XmlUtils.findChildByLocalNameOrNull(ncx, 'pageList');
+    final pageListElement =
+        XmlUtils.findChildByLocalNameOrNull(ncx, 'pageList');
     final pageList = pageListElement != null
         ? _parsePageList(pageListElement)
         : <PageEntry>[];
@@ -58,7 +58,8 @@ class NcxParser {
   static List<TocEntry> _parseNavMap(XmlElement navMap) {
     final entries = <TocEntry>[];
 
-    for (final navPoint in XmlUtils.findAllChildrenByLocalName(navMap, 'navPoint')) {
+    for (final navPoint
+        in XmlUtils.findAllChildrenByLocalName(navMap, 'navPoint')) {
       final entry = _parseNavPoint(navPoint, 0);
       if (entry != null) {
         entries.add(entry);
@@ -71,7 +72,8 @@ class NcxParser {
   /// Recursively parses a navPoint element.
   static TocEntry? _parseNavPoint(XmlElement navPoint, int level) {
     // Get ID
-    final id = navPoint.getAttribute('id') ?? 'nav-$level-${DateTime.now().millisecondsSinceEpoch}';
+    final id = navPoint.getAttribute('id') ??
+        'nav-$level-${DateTime.now().millisecondsSinceEpoch}';
 
     // Note: playOrder attribute is available but not currently used
     // final playOrderStr = navPoint.getAttribute('playOrder');
@@ -96,7 +98,8 @@ class NcxParser {
 
     // Parse child navPoints
     final children = <TocEntry>[];
-    for (final childNavPoint in XmlUtils.findAllChildrenByLocalName(navPoint, 'navPoint')) {
+    for (final childNavPoint
+        in XmlUtils.findAllChildrenByLocalName(navPoint, 'navPoint')) {
       final childEntry = _parseNavPoint(childNavPoint, level + 1);
       if (childEntry != null) {
         children.add(childEntry);
@@ -116,9 +119,11 @@ class NcxParser {
   static List<PageEntry> _parsePageList(XmlElement pageList) {
     final pages = <PageEntry>[];
 
-    for (final pageTarget in XmlUtils.findAllChildrenByLocalName(pageList, 'pageTarget')) {
+    for (final pageTarget
+        in XmlUtils.findAllChildrenByLocalName(pageList, 'pageTarget')) {
       // Get navLabel/text
-      final navLabel = XmlUtils.findChildByLocalNameOrNull(pageTarget, 'navLabel');
+      final navLabel =
+          XmlUtils.findChildByLocalNameOrNull(pageTarget, 'navLabel');
       String? label;
       if (navLabel != null) {
         final text = XmlUtils.findChildByLocalNameOrNull(navLabel, 'text');
@@ -128,7 +133,8 @@ class NcxParser {
       }
 
       // Get content src
-      final content = XmlUtils.findChildByLocalNameOrNull(pageTarget, 'content');
+      final content =
+          XmlUtils.findChildByLocalNameOrNull(pageTarget, 'content');
       final href = content?.getAttribute('src');
 
       // Get value attribute (page number)
@@ -168,7 +174,8 @@ class NcxParser {
     try {
       final document = XmlDocument.parse(xml);
       final ncx = document.rootElement;
-      for (final docAuthor in XmlUtils.findAllChildrenByLocalName(ncx, 'docAuthor')) {
+      for (final docAuthor
+          in XmlUtils.findAllChildrenByLocalName(ncx, 'docAuthor')) {
         final text = XmlUtils.findChildByLocalNameOrNull(docAuthor, 'text');
         if (text != null) {
           final author = text.innerText.trim();

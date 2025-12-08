@@ -38,14 +38,7 @@ class Catalog extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        id,
-        name,
-        url,
-        iconUrl,
-        addedAt,
-        lastAccessedAt,
-      ];
+  List<Object?> get props => [id, name, url, iconUrl, addedAt, lastAccessedAt];
 
   @override
   String toString() {

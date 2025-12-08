@@ -21,7 +21,9 @@ void initializePlugins() {
   // registry.register(MobiPlugin());
 
   print('Registered ${registry.pluginCount} plugins');
-  print('Supported extensions: ${registry.getSupportedExtensions().join(", ")}');
+  print(
+    'Supported extensions: ${registry.getSupportedExtensions().join(", ")}',
+  );
 }
 
 /// Example: Open and read a book
@@ -79,7 +81,9 @@ Future<void> openAndReadBook(String filePath) async {
     // Navigate to different chapters
     for (var i = 0; i < controller.totalChapters.clamp(0, 3); i++) {
       await controller.goToChapter(i);
-      logger.info('Progress: ${(controller.progress * 100).toStringAsFixed(1)}%');
+      logger.info(
+        'Progress: ${(controller.progress * 100).toStringAsFixed(1)}%',
+      );
     }
 
     // Dispose the controller when done

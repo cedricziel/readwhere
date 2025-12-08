@@ -46,9 +46,9 @@ class ReaderBindings {
     required LuaEngine luaEngine,
     required ReaderProvider readerProvider,
     required SettingsProvider settingsProvider,
-  })  : _luaEngine = luaEngine,
-        _readerProvider = readerProvider,
-        _settingsProvider = settingsProvider;
+  }) : _luaEngine = luaEngine,
+       _readerProvider = readerProvider,
+       _settingsProvider = settingsProvider;
 
   /// Register all reader bindings with the Lua engine
   ///

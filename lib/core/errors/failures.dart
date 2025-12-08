@@ -45,11 +45,7 @@ class FileFailure extends Failure {
 class ParsingFailure extends Failure {
   final String? format;
 
-  const ParsingFailure(
-    super.message, {
-    this.format,
-    super.details,
-  });
+  const ParsingFailure(super.message, {this.format, super.details});
 
   @override
   List<Object?> get props => [message, details, format];
@@ -90,11 +86,7 @@ class UnsupportedFormatFailure extends Failure {
 class NetworkFailure extends Failure {
   final int? statusCode;
 
-  const NetworkFailure(
-    super.message, {
-    this.statusCode,
-    super.details,
-  });
+  const NetworkFailure(super.message, {this.statusCode, super.details});
 
   @override
   List<Object?> get props => [message, details, statusCode];
@@ -114,11 +106,7 @@ class NetworkFailure extends Failure {
 class ValidationFailure extends Failure {
   final Map<String, String>? fieldErrors;
 
-  const ValidationFailure(
-    super.message, {
-    this.fieldErrors,
-    super.details,
-  });
+  const ValidationFailure(super.message, {this.fieldErrors, super.details});
 
   @override
   List<Object?> get props => [message, details, fieldErrors];
@@ -168,11 +156,7 @@ class CacheFailure extends Failure {
 class PermissionFailure extends Failure {
   final String permission;
 
-  const PermissionFailure(
-    super.message,
-    this.permission, {
-    super.details,
-  });
+  const PermissionFailure(super.message, this.permission, {super.details});
 
   @override
   List<Object?> get props => [message, details, permission];

@@ -149,7 +149,8 @@ class BookRepositoryImpl implements BookRepository {
 
       final List<Map<String, dynamic>> maps = await db.query(
         BooksTable.tableName,
-        where: '${BooksTable.columnTitle} LIKE ? OR ${BooksTable.columnAuthor} LIKE ?',
+        where:
+            '${BooksTable.columnTitle} LIKE ? OR ${BooksTable.columnAuthor} LIKE ?',
         whereArgs: [searchPattern, searchPattern],
         orderBy: '${BooksTable.columnTitle} ASC',
       );

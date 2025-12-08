@@ -149,7 +149,9 @@ class LuaEngine {
     _ensureInitialized();
 
     try {
-      _logger.fine('Calling Lua function: $functionName with ${args.length} args');
+      _logger.fine(
+        'Calling Lua function: $functionName with ${args.length} args',
+      );
 
       // Get the global function
       _state!.getGlobal(functionName);
@@ -265,7 +267,9 @@ class LuaEngine {
   /// Ensure the engine is initialized
   void _ensureInitialized() {
     if (!_isInitialized || _state == null) {
-      throw StateError('LuaEngine is not initialized. Call initialize() first.');
+      throw StateError(
+        'LuaEngine is not initialized. Call initialize() first.',
+      );
     }
   }
 

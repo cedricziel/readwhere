@@ -51,9 +51,7 @@ class ArchiveReader {
   /// Throws [EpubReadException] if the bytes are not a valid ZIP archive.
   static ArchiveReader fromBytes(Uint8List bytes) {
     // Verify ZIP magic number
-    if (bytes.length < 4 ||
-        bytes[0] != 0x50 ||
-        bytes[1] != 0x4B) {
+    if (bytes.length < 4 || bytes[0] != 0x50 || bytes[1] != 0x4B) {
       throw const EpubReadException('Invalid EPUB: not a ZIP archive');
     }
 
@@ -87,10 +85,7 @@ class ArchiveReader {
 
   /// List of all file paths in the archive.
   List<String> get filePaths {
-    return _archive.files
-        .where((f) => f.isFile)
-        .map((f) => f.name)
-        .toList();
+    return _archive.files.where((f) => f.isFile).map((f) => f.name).toList();
   }
 
   /// Number of files in the archive.
@@ -135,9 +130,8 @@ class ArchiveReader {
   /// Gets a file from the archive.
   ArchiveFile _getFile(String path) {
     // Try exact match first
-    final exactMatch = _archive.files
-        .where((f) => f.isFile && f.name == path)
-        .firstOrNull;
+    final exactMatch =
+        _archive.files.where((f) => f.isFile && f.name == path).firstOrNull;
 
     if (exactMatch != null) {
       return exactMatch;

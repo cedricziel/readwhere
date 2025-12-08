@@ -250,7 +250,8 @@ class EpubNavigation extends Equatable {
     TocEntry? findInList(List<TocEntry> entries) {
       for (final entry in entries) {
         final entryDocHref = entry.documentHref.toLowerCase();
-        if (entryDocHref == docHref || entry.href.toLowerCase() == normalizedHref) {
+        if (entryDocHref == docHref ||
+            entry.href.toLowerCase() == normalizedHref) {
           return entry;
         }
         if (entry.children.isNotEmpty) {

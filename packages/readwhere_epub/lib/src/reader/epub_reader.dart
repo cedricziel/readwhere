@@ -225,7 +225,8 @@ class EpubReader {
     final title = _findTitleForHref(manifestItem.href);
 
     // Resolve resource paths in content
-    final resolvedContent = ContentExtractor.resolveResourcePaths(content, path);
+    final resolvedContent =
+        ContentExtractor.resolveResourcePaths(content, path);
 
     final chapter = EpubChapter(
       id: manifestItem.id,

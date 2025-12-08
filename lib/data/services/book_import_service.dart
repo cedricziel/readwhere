@@ -89,7 +89,10 @@ class BookImportService {
   ///
   /// Returns the path to the copied file
   Future<String> _copyToLibrary(
-      String bookId, String originalPath, Uint8List bytes) async {
+    String bookId,
+    String originalPath,
+    Uint8List bytes,
+  ) async {
     final appDir = await getApplicationDocumentsDirectory();
     final booksDir = Directory(p.join(appDir.path, 'books'));
 
@@ -178,7 +181,10 @@ class BookImportService {
     }
 
     // Check for PNG
-    if (data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47) {
+    if (data[0] == 0x89 &&
+        data[1] == 0x50 &&
+        data[2] == 0x4E &&
+        data[3] == 0x47) {
       return '.png';
     }
 
@@ -189,8 +195,14 @@ class BookImportService {
 
     // Check for WebP
     if (data.length >= 12 &&
-        data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
-        data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50) {
+        data[0] == 0x52 &&
+        data[1] == 0x49 &&
+        data[2] == 0x46 &&
+        data[3] == 0x46 &&
+        data[8] == 0x57 &&
+        data[9] == 0x45 &&
+        data[10] == 0x42 &&
+        data[11] == 0x50) {
       return '.webp';
     }
 

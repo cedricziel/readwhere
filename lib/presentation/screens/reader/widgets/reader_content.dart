@@ -11,10 +11,7 @@ import '../../../themes/reading_themes.dart';
 class ReaderContentWidget extends StatelessWidget {
   final ScrollController scrollController;
 
-  const ReaderContentWidget({
-    super.key,
-    required this.scrollController,
-  });
+  const ReaderContentWidget({super.key, required this.scrollController});
 
   @override
   Widget build(BuildContext context) {
@@ -102,12 +99,8 @@ class ReaderContentWidget extends StatelessWidget {
                 color: readingTheme.linkColor,
                 textDecoration: TextDecoration.underline,
               ),
-              'em': Style(
-                fontStyle: FontStyle.italic,
-              ),
-              'strong': Style(
-                fontWeight: FontWeight.bold,
-              ),
+              'em': Style(fontStyle: FontStyle.italic),
+              'strong': Style(fontWeight: FontWeight.bold),
               'blockquote': Style(
                 margin: Margins.symmetric(
                   vertical: readingTheme.fontSize,
@@ -186,9 +179,7 @@ class ReaderContentWidget extends StatelessWidget {
                 padding: HtmlPaddings.all(8),
                 backgroundColor: readingTheme.textColor.withOpacity(0.05),
               ),
-              'td': Style(
-                padding: HtmlPaddings.all(8),
-              ),
+              'td': Style(padding: HtmlPaddings.all(8)),
             },
             onLinkTap: (url, attributes, element) {
               // Handle internal links (chapter navigation)

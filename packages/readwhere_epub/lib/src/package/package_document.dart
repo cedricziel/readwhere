@@ -74,17 +74,20 @@ class PackageDocument extends Equatable {
     final uniqueIdRef = root.getAttribute('unique-identifier');
 
     // Parse metadata
-    final metadataElement = XmlUtils.findChildByLocalNameOrNull(root, 'metadata');
+    final metadataElement =
+        XmlUtils.findChildByLocalNameOrNull(root, 'metadata');
     if (metadataElement == null) {
       throw EpubParseException(
         'Invalid package document: missing <metadata> element',
         documentPath: path,
       );
     }
-    final metadata = _parseMetadata(metadataElement, uniqueIdRef, version, path);
+    final metadata =
+        _parseMetadata(metadataElement, uniqueIdRef, version, path);
 
     // Parse manifest
-    final manifestElement = XmlUtils.findChildByLocalNameOrNull(root, 'manifest');
+    final manifestElement =
+        XmlUtils.findChildByLocalNameOrNull(root, 'manifest');
     if (manifestElement == null) {
       throw EpubParseException(
         'Invalid package document: missing <manifest> element',
@@ -172,14 +175,16 @@ class PackageDocument extends Equatable {
 
       final id = dcTitle.getAttribute('id');
       final lang = dcTitle.getAttribute('lang') ??
-          dcTitle.getAttribute('lang', namespace: 'http://www.w3.org/XML/1998/namespace');
+          dcTitle.getAttribute('lang',
+              namespace: 'http://www.w3.org/XML/1998/namespace');
 
       // Look for title-type refinement
       TitleType? titleType;
       int? displaySeq;
 
       if (id != null) {
-        for (final meta in XmlUtils.findAllChildrenByLocalName(element, 'meta')) {
+        for (final meta
+            in XmlUtils.findAllChildrenByLocalName(element, 'meta')) {
           final refines = meta.getAttribute('refines');
           if (refines == '#$id') {
             final property = meta.getAttribute('property');
@@ -210,7 +215,8 @@ class PackageDocument extends Equatable {
 
     // Parse language
     String language = 'en';
-    final dcLang = XmlUtils.findElementByNs(element, 'language', EpubNamespaces.dc);
+    final dcLang =
+        XmlUtils.findElementByNs(element, 'language', EpubNamespaces.dc);
     if (dcLang != null) {
       final langValue = dcLang.innerText.trim();
       if (langValue.isNotEmpty) {
@@ -236,7 +242,8 @@ class PackageDocument extends Equatable {
 
       // Look for role refinement
       if (id != null && role == null) {
-        for (final meta in XmlUtils.findAllChildrenByLocalName(element, 'meta')) {
+        for (final meta
+            in XmlUtils.findAllChildrenByLocalName(element, 'meta')) {
           final refines = meta.getAttribute('refines');
           if (refines == '#$id') {
             final property = meta.getAttribute('property');
@@ -281,13 +288,19 @@ class PackageDocument extends Equatable {
     }
 
     // Parse other Dublin Core elements
-    final publisher = XmlUtils.getChildTextNs(element, 'publisher', EpubNamespaces.dc);
-    final description = XmlUtils.getChildTextNs(element, 'description', EpubNamespaces.dc);
-    final rights = XmlUtils.getChildTextNs(element, 'rights', EpubNamespaces.dc);
-    final source = XmlUtils.getChildTextNs(element, 'source', EpubNamespaces.dc);
+    final publisher =
+        XmlUtils.getChildTextNs(element, 'publisher', EpubNamespaces.dc);
+    final description =
+        XmlUtils.getChildTextNs(element, 'description', EpubNamespaces.dc);
+    final rights =
+        XmlUtils.getChildTextNs(element, 'rights', EpubNamespaces.dc);
+    final source =
+        XmlUtils.getChildTextNs(element, 'source', EpubNamespaces.dc);
     final type = XmlUtils.getChildTextNs(element, 'type', EpubNamespaces.dc);
-    final format = XmlUtils.getChildTextNs(element, 'format', EpubNamespaces.dc);
-    final coverage = XmlUtils.getChildTextNs(element, 'coverage', EpubNamespaces.dc);
+    final format =
+        XmlUtils.getChildTextNs(element, 'format', EpubNamespaces.dc);
+    final coverage =
+        XmlUtils.getChildTextNs(element, 'coverage', EpubNamespaces.dc);
 
     // Parse subjects
     final subjects = <String>[];
@@ -427,7 +440,8 @@ class PackageDocument extends Equatable {
       _ => PageProgression.defaultDirection,
     };
 
-    for (final itemref in XmlUtils.findAllChildrenByLocalName(element, 'itemref')) {
+    for (final itemref
+        in XmlUtils.findAllChildrenByLocalName(element, 'itemref')) {
       final idref = itemref.getAttribute('idref');
       if (idref == null) continue;
 
@@ -457,7 +471,8 @@ class PackageDocument extends Equatable {
 
   static bool _checkFixedLayout(XmlElement metadataElement) {
     // Check for rendition:layout property
-    for (final meta in XmlUtils.findAllChildrenByLocalName(metadataElement, 'meta')) {
+    for (final meta
+        in XmlUtils.findAllChildrenByLocalName(metadataElement, 'meta')) {
       final property = meta.getAttribute('property');
       if (property == 'rendition:layout') {
         return meta.innerText.trim() == 'pre-paginated';

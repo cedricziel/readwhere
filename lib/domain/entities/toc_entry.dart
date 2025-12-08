@@ -34,13 +34,7 @@ class TocEntry extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        id,
-        title,
-        href,
-        level,
-        children,
-      ];
+  List<Object?> get props => [id, title, href, level, children];
 
   @override
   String toString() {

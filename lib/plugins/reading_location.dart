@@ -19,8 +19,10 @@ class ReadingLocation extends Equatable {
     this.cfi,
     required this.progress,
     required this.timestamp,
-  }) : assert(progress >= 0.0 && progress <= 1.0,
-            'Progress must be between 0.0 and 1.0');
+  }) : assert(
+         progress >= 0.0 && progress <= 1.0,
+         'Progress must be between 0.0 and 1.0',
+       );
 
   /// Creates a copy of this ReadingLocation with the given fields replaced
   ReadingLocation copyWith({
@@ -38,12 +40,7 @@ class ReadingLocation extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        chapterIndex,
-        cfi,
-        progress,
-        timestamp,
-      ];
+  List<Object?> get props => [chapterIndex, cfi, progress, timestamp];
 
   @override
   String toString() {

@@ -29,21 +29,17 @@ final GetIt sl = GetIt.instance;
 Future<void> setupServiceLocator() async {
   // Core Services
   // DatabaseHelper is registered as async singleton to handle initialization
-  sl.registerLazySingletonAsync<DatabaseHelper>(
-    () async {
-      final dbHelper = DatabaseHelper();
-      await dbHelper.database; // Ensure database is initialized
-      return dbHelper;
-    },
-  );
+  sl.registerLazySingletonAsync<DatabaseHelper>(() async {
+    final dbHelper = DatabaseHelper();
+    await dbHelper.database; // Ensure database is initialized
+    return dbHelper;
+  });
 
   // Wait for DatabaseHelper to be ready before registering repositories
   await sl.isReady<DatabaseHelper>();
 
   // Repositories
-  sl.registerLazySingleton<BookRepository>(
-    () => BookRepositoryImpl(sl()),
-  );
+  sl.registerLazySingleton<BookRepository>(() => BookRepositoryImpl(sl()));
 
   sl.registerLazySingleton<ReadingProgressRepository>(
     () => ReadingProgressRepositoryImpl(sl()),
@@ -54,24 +50,15 @@ Future<void> setupServiceLocator() async {
   );
 
   // Services
-  sl.registerLazySingleton<BookImportService>(
-    () => BookImportService(),
-  );
+  sl.registerLazySingleton<BookImportService>(() => BookImportService());
 
   // Providers
-  sl.registerLazySingleton<ThemeProvider>(
-    () => ThemeProvider(),
-  );
+  sl.registerLazySingleton<ThemeProvider>(() => ThemeProvider());
 
-  sl.registerLazySingleton<SettingsProvider>(
-    () => SettingsProvider(),
-  );
+  sl.registerLazySingleton<SettingsProvider>(() => SettingsProvider());
 
   sl.registerLazySingleton<LibraryProvider>(
-    () => LibraryProvider(
-      bookRepository: sl(),
-      importService: sl(),
-    ),
+    () => LibraryProvider(bookRepository: sl(), importService: sl()),
   );
 
   sl.registerLazySingleton<ReaderProvider>(

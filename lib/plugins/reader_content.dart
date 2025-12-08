@@ -46,12 +46,12 @@ class ReaderContent extends Equatable {
 
   @override
   List<Object?> get props => [
-        chapterId,
-        chapterTitle,
-        htmlContent,
-        cssContent,
-        images,
-      ];
+    chapterId,
+    chapterTitle,
+    htmlContent,
+    cssContent,
+    images,
+  ];
 
   @override
   String toString() {

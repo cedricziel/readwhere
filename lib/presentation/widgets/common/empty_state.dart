@@ -36,10 +36,10 @@ class EmptyState extends StatelessWidget {
     this.iconColor,
     this.iconSize,
   }) : assert(
-          (actionLabel == null && onAction == null) ||
-              (actionLabel != null && onAction != null),
-          'If actionLabel is provided, onAction must also be provided, and vice versa',
-        );
+         (actionLabel == null && onAction == null) ||
+             (actionLabel != null && onAction != null),
+         'If actionLabel is provided, onAction must also be provided, and vice versa',
+       );
 
   @override
   Widget build(BuildContext context) {

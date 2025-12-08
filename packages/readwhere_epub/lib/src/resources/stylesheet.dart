@@ -27,7 +27,8 @@ class EpubStylesheet extends EpubResource {
   List<String> get importUrls {
     final imports = <String>[];
     // Match @import url("...") or @import "..."
-    final regex = RegExp(r'''@import\s+(?:url\(["']?([^"')\s]+)["']?\)|["']([^"']+)["'])''');
+    final regex = RegExp(
+        r'''@import\s+(?:url\(["']?([^"')\s]+)["']?\)|["']([^"']+)["'])''');
 
     for (final match in regex.allMatches(content)) {
       final url = match.group(1) ?? match.group(2);
@@ -88,7 +89,9 @@ class StylesheetCollection extends Equatable {
   /// Gets a stylesheet by href.
   EpubStylesheet? getByHref(String href) {
     final normalizedHref = href.toLowerCase();
-    return stylesheets.where((s) => s.href.toLowerCase() == normalizedHref).firstOrNull;
+    return stylesheets
+        .where((s) => s.href.toLowerCase() == normalizedHref)
+        .firstOrNull;
   }
 
   /// All CSS content concatenated.

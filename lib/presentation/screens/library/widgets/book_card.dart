@@ -15,11 +15,7 @@ class BookCard extends StatelessWidget {
   /// Callback when the card is tapped to open the book
   final VoidCallback onTap;
 
-  const BookCard({
-    super.key,
-    required this.book,
-    required this.onTap,
-  });
+  const BookCard({super.key, required this.book, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +31,7 @@ class BookCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Book Cover
-            Expanded(
-              flex: 3,
-              child: _buildCover(colorScheme),
-            ),
+            Expanded(flex: 3, child: _buildCover(colorScheme)),
             // Book Info
             Expanded(
               flex: 2,
@@ -71,9 +64,7 @@ class BookCard extends StatelessWidget {
                     Row(
                       children: [
                         if (book.readingProgress != null) ...[
-                          Expanded(
-                            child: _buildProgressBar(colorScheme),
-                          ),
+                          Expanded(child: _buildProgressBar(colorScheme)),
                           const SizedBox(width: 8),
                         ],
                         if (book.isFavorite)
@@ -167,7 +158,10 @@ class BookCard extends StatelessWidget {
 
   /// Shows a context menu for book actions
   void _showContextMenu(BuildContext context) {
-    final libraryProvider = Provider.of<LibraryProvider>(context, listen: false);
+    final libraryProvider = Provider.of<LibraryProvider>(
+      context,
+      listen: false,
+    );
 
     showModalBottomSheet(
       context: context,
@@ -211,9 +205,7 @@ class BookCard extends StatelessWidget {
               ),
               title: Text(
                 'Delete',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -243,15 +235,9 @@ class BookCard extends StatelessWidget {
                 'File Size',
                 '${(book.fileSize / 1024 / 1024).toStringAsFixed(2)} MB',
               ),
-              _buildDetailRow(
-                'Added',
-                _formatDate(book.addedAt),
-              ),
+              _buildDetailRow('Added', _formatDate(book.addedAt)),
               if (book.lastOpenedAt != null)
-                _buildDetailRow(
-                  'Last Opened',
-                  _formatDate(book.lastOpenedAt!),
-                ),
+                _buildDetailRow('Last Opened', _formatDate(book.lastOpenedAt!)),
               if (book.readingProgress != null)
                 _buildDetailRow(
                   'Progress',
@@ -284,9 +270,7 @@ class BookCard extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );

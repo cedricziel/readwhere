@@ -63,17 +63,17 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
 
           // Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: Row(
               children: [
                 const Icon(Icons.text_format, size: 24),
                 const SizedBox(width: 12),
                 const Text(
                   'Reading Settings',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
                 IconButton(
@@ -213,17 +213,15 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
             color: bgColor,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isSelected ? Theme.of(context).primaryColor : Colors.grey[300]!,
+              color: isSelected
+                  ? Theme.of(context).primaryColor
+                  : Colors.grey[300]!,
               width: isSelected ? 2 : 1,
             ),
           ),
           child: Column(
             children: [
-              Icon(
-                Icons.text_fields,
-                color: textColor,
-                size: 24,
-              ),
+              Icon(Icons.text_fields, color: textColor, size: 24),
               const SizedBox(height: 4),
               Text(
                 label,
@@ -253,10 +251,7 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
             ),
             Text(
               '${_tempSettings.fontSize.toInt()}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -302,9 +297,7 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
         DropdownButtonFormField<String>(
           initialValue: _tempSettings.fontFamily,
           decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 8,
@@ -313,10 +306,7 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
           items: fontFamilies.map((font) {
             return DropdownMenuItem(
               value: font,
-              child: Text(
-                font,
-                style: TextStyle(fontFamily: font),
-              ),
+              child: Text(font, style: TextStyle(fontFamily: font)),
             );
           }).toList(),
           onChanged: (value) {
@@ -342,10 +332,7 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
             ),
             Text(
               _tempSettings.lineHeight.toStringAsFixed(1),
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -376,10 +363,7 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
             ),
             Text(
               '${_tempSettings.marginHorizontal.toInt()}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -390,10 +374,12 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
           max: 48,
           divisions: 12,
           onChanged: (value) {
-            _updateSettings(_tempSettings.copyWith(
-              marginHorizontal: value,
-              marginVertical: value * 1.5,
-            ));
+            _updateSettings(
+              _tempSettings.copyWith(
+                marginHorizontal: value,
+                marginVertical: value * 1.5,
+              ),
+            );
           },
         ),
       ],

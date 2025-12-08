@@ -14,12 +14,7 @@ class LoadingIndicator extends StatelessWidget {
   /// Optional color for the progress indicator
   final Color? color;
 
-  const LoadingIndicator({
-    super.key,
-    this.message,
-    this.size,
-    this.color,
-  });
+  const LoadingIndicator({super.key, this.message, this.size, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +66,7 @@ class CompactLoadingIndicator extends StatelessWidget {
   /// Optional color for the progress indicator
   final Color? color;
 
-  const CompactLoadingIndicator({
-    super.key,
-    this.size,
-    this.color,
-  });
+  const CompactLoadingIndicator({super.key, this.size, this.color});
 
   @override
   Widget build(BuildContext context) {

@@ -43,8 +43,8 @@ class LibraryProvider extends ChangeNotifier {
   LibraryProvider({
     required BookRepository bookRepository,
     required BookImportService importService,
-  })  : _bookRepository = bookRepository,
-        _importService = importService;
+  }) : _bookRepository = bookRepository,
+       _importService = importService;
 
   // State
   List<Book> _books = [];
@@ -134,7 +134,9 @@ class LibraryProvider extends ChangeNotifier {
       return;
     }
 
-    debugPrint('Found ${booksWithoutCovers.length} books without covers, extracting...');
+    debugPrint(
+      'Found ${booksWithoutCovers.length} books without covers, extracting...',
+    );
 
     for (final book in booksWithoutCovers) {
       try {
@@ -150,7 +152,9 @@ class LibraryProvider extends ChangeNotifier {
             _books[index] = updatedBook;
           }
 
-          final filteredIndex = _filteredBooks.indexWhere((b) => b.id == book.id);
+          final filteredIndex = _filteredBooks.indexWhere(
+            (b) => b.id == book.id,
+          );
           if (filteredIndex != -1) {
             _filteredBooks[filteredIndex] = updatedBook;
           }
@@ -375,12 +379,14 @@ class LibraryProvider extends ChangeNotifier {
         });
         break;
       case LibrarySortOrder.title:
-        _books.sort((a, b) =>
-            a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+        _books.sort(
+          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+        );
         break;
       case LibrarySortOrder.author:
-        _books.sort((a, b) =>
-            a.author.toLowerCase().compareTo(b.author.toLowerCase()));
+        _books.sort(
+          (a, b) => a.author.toLowerCase().compareTo(b.author.toLowerCase()),
+        );
         break;
     }
   }
@@ -390,9 +396,11 @@ class LibraryProvider extends ChangeNotifier {
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       _filteredBooks = _books
-          .where((book) =>
-              book.title.toLowerCase().contains(query) ||
-              book.author.toLowerCase().contains(query))
+          .where(
+            (book) =>
+                book.title.toLowerCase().contains(query) ||
+                book.author.toLowerCase().contains(query),
+          )
           .toList();
     } else {
       _filteredBooks = [];

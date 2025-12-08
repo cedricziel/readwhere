@@ -2,11 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
 /// Available reading themes
-enum ReadingTheme {
-  light,
-  dark,
-  sepia,
-}
+enum ReadingTheme { light, dark, sepia }
 
 /// Represents user reading preferences and settings
 class ReadingSettings extends Equatable {
@@ -64,14 +60,14 @@ class ReadingSettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        fontSize,
-        fontFamily,
-        lineHeight,
-        marginHorizontal,
-        marginVertical,
-        theme,
-        textAlign,
-      ];
+    fontSize,
+    fontFamily,
+    lineHeight,
+    marginHorizontal,
+    marginVertical,
+    theme,
+    textAlign,
+  ];
 
   @override
   String toString() {

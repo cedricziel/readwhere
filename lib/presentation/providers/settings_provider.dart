@@ -107,16 +107,14 @@ class SettingsProvider extends ChangeNotifier {
     // Persist individual settings
     await Future.wait([
       _prefs?.setDouble(_fontSizeKey, settings.fontSize) ?? Future.value(),
-      _prefs?.setString(_fontFamilyKey, settings.fontFamily) ??
-          Future.value(),
+      _prefs?.setString(_fontFamilyKey, settings.fontFamily) ?? Future.value(),
       _prefs?.setDouble(_lineHeightKey, settings.lineHeight) ?? Future.value(),
       _prefs?.setDouble(_marginHorizontalKey, settings.marginHorizontal) ??
           Future.value(),
       _prefs?.setDouble(_marginVerticalKey, settings.marginVertical) ??
           Future.value(),
       _prefs?.setInt(_readingThemeKey, settings.theme.index) ?? Future.value(),
-      _prefs?.setInt(_textAlignKey, settings.textAlign.index) ??
-          Future.value(),
+      _prefs?.setInt(_textAlignKey, settings.textAlign.index) ?? Future.value(),
     ]);
 
     notifyListeners();
@@ -193,9 +191,7 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setReadingTheme(ReadingTheme theme) async {
     if (_defaultReadingSettings.theme == theme) return;
 
-    _defaultReadingSettings = _defaultReadingSettings.copyWith(
-      theme: theme,
-    );
+    _defaultReadingSettings = _defaultReadingSettings.copyWith(theme: theme);
     await _prefs?.setInt(_readingThemeKey, theme.index);
     notifyListeners();
   }

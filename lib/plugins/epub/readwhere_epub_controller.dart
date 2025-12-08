@@ -89,12 +89,14 @@ class ReadwhereEpubController implements ReaderController {
     final toc = <TocEntry>[];
     for (var i = 0; i < _reader.chapterCount; i++) {
       final chapter = _reader.getChapter(i);
-      toc.add(TocEntry(
-        id: chapter.id,
-        title: chapter.title ?? 'Chapter ${i + 1}',
-        href: chapter.href,
-        level: 0,
-      ));
+      toc.add(
+        TocEntry(
+          id: chapter.id,
+          title: chapter.title ?? 'Chapter ${i + 1}',
+          href: chapter.href,
+          level: 0,
+        ),
+      );
     }
     return toc;
   }
@@ -244,8 +246,10 @@ class ReadwhereEpubController implements ReaderController {
 
           // Extract context around the match
           final contextStart = (index - 100).clamp(0, plainText.length);
-          final contextEnd =
-              (index + searchTerm.length + 100).clamp(0, plainText.length);
+          final contextEnd = (index + searchTerm.length + 100).clamp(
+            0,
+            plainText.length,
+          );
           var context = plainText.substring(contextStart, contextEnd);
 
           if (contextStart > 0) context = '...$context';
@@ -253,12 +257,14 @@ class ReadwhereEpubController implements ReaderController {
 
           final cfi = 'epubcfi(/6/$i!/4/1:$index)';
 
-          results.add(SearchResult(
-            chapterId: chapter.id,
-            chapterTitle: chapter.title ?? 'Chapter ${i + 1}',
-            text: context,
-            cfi: cfi,
-          ));
+          results.add(
+            SearchResult(
+              chapterId: chapter.id,
+              chapterTitle: chapter.title ?? 'Chapter ${i + 1}',
+              text: context,
+              cfi: cfi,
+            ),
+          );
 
           startIndex = index + searchTerm.length;
         }
@@ -341,9 +347,9 @@ class ReadwhereEpubController implements ReaderController {
     for (final href in chapter.stylesheetHrefs) {
       try {
         final stylesheets = _reader.getStylesheets();
-        final stylesheet = stylesheets.where(
-          (s) => s.href.endsWith(href) || href.endsWith(s.href),
-        ).firstOrNull;
+        final stylesheet = stylesheets
+            .where((s) => s.href.endsWith(href) || href.endsWith(s.href))
+            .firstOrNull;
 
         if (stylesheet != null) {
           cssBuffer.writeln(stylesheet.content);
@@ -392,7 +398,11 @@ class ReadwhereEpubController implements ReaderController {
       final chapter = _reader.getChapter(index);
       return chapter.content;
     } catch (e, stackTrace) {
-      _logger.severe('Error getting chapter content for index $index', e, stackTrace);
+      _logger.severe(
+        'Error getting chapter content for index $index',
+        e,
+        stackTrace,
+      );
       rethrow;
     }
   }

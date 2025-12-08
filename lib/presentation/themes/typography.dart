@@ -321,10 +321,7 @@ class AppTypography {
   }
 
   /// Reading quote - Block quotes in reading content
-  static TextStyle readingQuote({
-    Color? color,
-    double fontSize = 16.0,
-  }) {
+  static TextStyle readingQuote({Color? color, double fontSize = 16.0}) {
     return TextStyle(
       fontFamily: _readingFontFamily,
       fontSize: fontSize,
@@ -337,10 +334,7 @@ class AppTypography {
   }
 
   /// Reading code - Code blocks in reading content
-  static TextStyle readingCode({
-    Color? color,
-    double fontSize = 14.0,
-  }) {
+  static TextStyle readingCode({Color? color, double fontSize = 14.0}) {
     return TextStyle(
       fontFamily: 'monospace',
       fontSize: fontSize,

@@ -5,11 +5,13 @@ void main() {
   group('PathUtils', () {
     group('normalize', () {
       test('normalizes simple paths', () {
-        expect(PathUtils.normalize('OEBPS/content.opf'), equals('OEBPS/content.opf'));
+        expect(PathUtils.normalize('OEBPS/content.opf'),
+            equals('OEBPS/content.opf'));
       });
 
       test('removes leading slash', () {
-        expect(PathUtils.normalize('/OEBPS/content.opf'), equals('OEBPS/content.opf'));
+        expect(PathUtils.normalize('/OEBPS/content.opf'),
+            equals('OEBPS/content.opf'));
       });
 
       test('resolves parent references', () {
@@ -35,19 +37,23 @@ void main() {
       });
 
       test('resolves parent reference', () {
-        expect(PathUtils.resolve('OEBPS/Text/chapter1.xhtml', '../Images/cover.jpg'),
+        expect(
+            PathUtils.resolve(
+                'OEBPS/Text/chapter1.xhtml', '../Images/cover.jpg'),
             equals('OEBPS/Images/cover.jpg'));
       });
 
       test('handles absolute path in EPUB', () {
-        expect(PathUtils.resolve('OEBPS/Text/chapter1.xhtml', '/Images/cover.jpg'),
+        expect(
+            PathUtils.resolve('OEBPS/Text/chapter1.xhtml', '/Images/cover.jpg'),
             equals('Images/cover.jpg'));
       });
     });
 
     group('dirname', () {
       test('returns directory for file path', () {
-        expect(PathUtils.dirname('OEBPS/Text/chapter1.xhtml'), equals('OEBPS/Text'));
+        expect(PathUtils.dirname('OEBPS/Text/chapter1.xhtml'),
+            equals('OEBPS/Text'));
       });
 
       test('returns directory for nested path', () {
@@ -61,7 +67,8 @@ void main() {
 
     group('basename', () {
       test('returns filename from path', () {
-        expect(PathUtils.basename('OEBPS/Text/chapter1.xhtml'), equals('chapter1.xhtml'));
+        expect(PathUtils.basename('OEBPS/Text/chapter1.xhtml'),
+            equals('chapter1.xhtml'));
       });
 
       test('returns filename for root-level file', () {
@@ -90,11 +97,13 @@ void main() {
       });
 
       test('removeFragment returns path if no fragment', () {
-        expect(PathUtils.removeFragment('chapter1.xhtml'), equals('chapter1.xhtml'));
+        expect(PathUtils.removeFragment('chapter1.xhtml'),
+            equals('chapter1.xhtml'));
       });
 
       test('getFragment returns fragment', () {
-        expect(PathUtils.getFragment('chapter1.xhtml#section1'), equals('section1'));
+        expect(PathUtils.getFragment('chapter1.xhtml#section1'),
+            equals('section1'));
       });
 
       test('getFragment returns null if no fragment', () {
@@ -104,12 +113,14 @@ void main() {
 
     group('urlDecode', () {
       test('decodes URL-encoded characters', () {
-        expect(PathUtils.urlDecode('chapter%201.xhtml'), equals('chapter 1.xhtml'));
+        expect(PathUtils.urlDecode('chapter%201.xhtml'),
+            equals('chapter 1.xhtml'));
       });
 
       test('preserves plus signs (not form encoding)', () {
         // Uri.decodeComponent doesn't convert + to space (that's form encoding)
-        expect(PathUtils.urlDecode('chapter+1.xhtml'), equals('chapter+1.xhtml'));
+        expect(
+            PathUtils.urlDecode('chapter+1.xhtml'), equals('chapter+1.xhtml'));
       });
     });
   });

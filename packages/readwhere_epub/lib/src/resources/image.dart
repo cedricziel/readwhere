@@ -74,8 +74,7 @@ class EpubImage extends EpubResource {
   }
 
   static bool _isImageMediaType(String mediaType) {
-    return mediaType.startsWith('image/') ||
-        mediaType == 'application/svg+xml';
+    return mediaType.startsWith('image/') || mediaType == 'application/svg+xml';
   }
 }
 

@@ -245,10 +245,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       itemCount: books.length,
       itemBuilder: (context, index) {
         final book = books[index];
-        return BookCard(
-          book: book,
-          onTap: () => _openBook(book.id),
-        );
+        return BookCard(book: book, onTap: () => _openBook(book.id));
       },
     );
   }
@@ -262,10 +259,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       itemCount: books.length,
       itemBuilder: (context, index) {
         final book = books[index];
-        return BookListTile(
-          book: book,
-          onTap: () => _openBook(book.id),
-        );
+        return BookListTile(book: book, onTap: () => _openBook(book.id));
       },
     );
   }
@@ -289,11 +283,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 24),
             const Text(
               'Error Loading Library',

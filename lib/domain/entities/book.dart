@@ -26,8 +26,11 @@ class Book extends Equatable {
     this.lastOpenedAt,
     this.isFavorite = false,
     this.readingProgress,
-  }) : assert(readingProgress == null || (readingProgress >= 0.0 && readingProgress <= 1.0),
-            'Reading progress must be between 0.0 and 1.0');
+  }) : assert(
+         readingProgress == null ||
+             (readingProgress >= 0.0 && readingProgress <= 1.0),
+         'Reading progress must be between 0.0 and 1.0',
+       );
 
   /// Creates a copy of this Book with the given fields replaced with new values
   Book copyWith({
@@ -60,18 +63,18 @@ class Book extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        author,
-        filePath,
-        coverPath,
-        format,
-        fileSize,
-        addedAt,
-        lastOpenedAt,
-        isFavorite,
-        readingProgress,
-      ];
+    id,
+    title,
+    author,
+    filePath,
+    coverPath,
+    format,
+    fileSize,
+    addedAt,
+    lastOpenedAt,
+    isFavorite,
+    readingProgress,
+  ];
 
   @override
   String toString() {

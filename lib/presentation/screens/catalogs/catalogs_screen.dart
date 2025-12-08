@@ -10,18 +10,12 @@ class CatalogsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Catalogs'),
-      ),
+      appBar: AppBar(title: const Text('Catalogs')),
       body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.public,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Icons.public, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'Catalogs Screen',

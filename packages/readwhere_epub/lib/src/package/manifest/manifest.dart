@@ -34,15 +34,13 @@ class ManifestItem extends Equatable {
 
   /// Whether this item is an XHTML content document.
   bool get isXhtml =>
-      mediaType == 'application/xhtml+xml' ||
-      mediaType == 'text/html';
+      mediaType == 'application/xhtml+xml' || mediaType == 'text/html';
 
   /// Whether this item is a CSS stylesheet.
   bool get isCss => mediaType == 'text/css';
 
   /// Whether this item is an image.
-  bool get isImage =>
-      mediaType.startsWith('image/');
+  bool get isImage => mediaType.startsWith('image/');
 
   /// Whether this item is a font.
   bool get isFont =>
@@ -91,7 +89,8 @@ class ManifestItem extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, href, mediaType, properties, fallback, mediaOverlay];
+  List<Object?> get props =>
+      [id, href, mediaType, properties, fallback, mediaOverlay];
 
   @override
   String toString() => 'ManifestItem($id: $href [$mediaType])';
@@ -203,9 +202,11 @@ class EpubManifest extends Equatable {
 
   /// The NCX document (EPUB 2), if present.
   ManifestItem? get ncx {
-    return items.where(
-      (item) => item.mediaType == 'application/x-dtbncx+xml',
-    ).firstOrNull;
+    return items
+        .where(
+          (item) => item.mediaType == 'application/x-dtbncx+xml',
+        )
+        .firstOrNull;
   }
 
   /// The cover image item, if declared with cover-image property.
@@ -217,7 +218,8 @@ class EpubManifest extends Equatable {
   bool containsId(String id) => _itemsById.containsKey(id);
 
   /// Checks if an item exists by href.
-  bool containsHref(String href) => _itemsByHref.containsKey(href.toLowerCase());
+  bool containsHref(String href) =>
+      _itemsByHref.containsKey(href.toLowerCase());
 
   @override
   List<Object?> get props => [_itemsById];

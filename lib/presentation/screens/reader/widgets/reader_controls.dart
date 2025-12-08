@@ -214,7 +214,11 @@ class _BottomBar extends StatelessWidget {
                   Expanded(
                     child: TextButton.icon(
                       onPressed: hasChapters ? onTableOfContents : null,
-                      icon: const Icon(Icons.list, color: Colors.white, size: 20),
+                      icon: const Icon(
+                        Icons.list,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       label: Text(
                         chapterText,
                         style: const TextStyle(
@@ -231,10 +235,9 @@ class _BottomBar extends StatelessWidget {
                   // Next chapter button
                   IconButton(
                     icon: const Icon(Icons.skip_next, color: Colors.white),
-                    onPressed:
-                        hasChapters && currentChapter < totalChapters - 1
-                            ? onNextChapter
-                            : null,
+                    onPressed: hasChapters && currentChapter < totalChapters - 1
+                        ? onNextChapter
+                        : null,
                     tooltip: 'Next chapter',
                   ),
                 ],

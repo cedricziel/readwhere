@@ -10,18 +10,12 @@ class FeedsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Feeds'),
-      ),
+      appBar: AppBar(title: const Text('Feeds')),
       body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.rss_feed,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Icons.rss_feed, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'Feeds Screen',

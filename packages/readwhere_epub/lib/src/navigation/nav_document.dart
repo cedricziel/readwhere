@@ -53,11 +53,13 @@ class NavDocumentParser {
 
     // Parse page-list
     final pageListNav = _findNavByType(navElements, 'page-list');
-    final pageList = pageListNav != null ? _parsePageList(pageListNav) : <PageEntry>[];
+    final pageList =
+        pageListNav != null ? _parsePageList(pageListNav) : <PageEntry>[];
 
     // Parse landmarks
     final landmarksNav = _findNavByType(navElements, 'landmarks');
-    final landmarks = landmarksNav != null ? _parseLandmarks(landmarksNav) : <Landmark>[];
+    final landmarks =
+        landmarksNav != null ? _parseLandmarks(landmarksNav) : <Landmark>[];
 
     return EpubNavigation(
       tableOfContents: tableOfContents,
@@ -87,8 +89,9 @@ class NavDocumentParser {
   /// Finds a nav element by epub:type.
   static XmlElement? _findNavByType(List<XmlElement> navElements, String type) {
     for (final nav in navElements) {
-      final epubType = nav.getAttribute('type', namespace: EpubNamespaces.epub) ??
-          nav.getAttribute('epub:type');
+      final epubType =
+          nav.getAttribute('type', namespace: EpubNamespaces.epub) ??
+              nav.getAttribute('epub:type');
 
       if (epubType != null) {
         // epub:type can contain multiple space-separated values
@@ -151,9 +154,8 @@ class NavDocumentParser {
 
     // Parse children (nested ol)
     final childOl = XmlUtils.findChildByLocalNameOrNull(li, 'ol');
-    final children = childOl != null
-        ? _parseOlEntries(childOl, level + 1)
-        : <TocEntry>[];
+    final children =
+        childOl != null ? _parseOlEntries(childOl, level + 1) : <TocEntry>[];
 
     return TocEntry(
       id: 'toc-$level-$index',
@@ -204,8 +206,9 @@ class NavDocumentParser {
 
       final href = anchor.getAttribute('href');
       final title = XmlUtils.extractPlainText(anchor).trim();
-      final epubType = anchor.getAttribute('type', namespace: EpubNamespaces.epub) ??
-          anchor.getAttribute('epub:type');
+      final epubType =
+          anchor.getAttribute('type', namespace: EpubNamespaces.epub) ??
+              anchor.getAttribute('epub:type');
 
       if (href != null && title.isNotEmpty && epubType != null) {
         landmarks.add(Landmark(

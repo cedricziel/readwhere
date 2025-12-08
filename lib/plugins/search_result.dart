@@ -37,12 +37,7 @@ class SearchResult extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        chapterId,
-        chapterTitle,
-        text,
-        cfi,
-      ];
+  List<Object?> get props => [chapterId, chapterTitle, text, cfi];
 
   @override
   String toString() {

@@ -79,11 +79,23 @@ void main() {
             href: 'chapter1.xhtml#s1',
             level: 1,
             children: [
-              TocEntry(id: 'ch1-1-1', title: 'Sub 1', href: 'chapter1.xhtml#s1-1', level: 2),
-              TocEntry(id: 'ch1-1-2', title: 'Sub 2', href: 'chapter1.xhtml#s1-2', level: 2),
+              TocEntry(
+                  id: 'ch1-1-1',
+                  title: 'Sub 1',
+                  href: 'chapter1.xhtml#s1-1',
+                  level: 2),
+              TocEntry(
+                  id: 'ch1-1-2',
+                  title: 'Sub 2',
+                  href: 'chapter1.xhtml#s1-2',
+                  level: 2),
             ],
           ),
-          TocEntry(id: 'ch1-2', title: 'Section 2', href: 'chapter1.xhtml#s2', level: 1),
+          TocEntry(
+              id: 'ch1-2',
+              title: 'Section 2',
+              href: 'chapter1.xhtml#s2',
+              level: 1),
         ],
       );
 
@@ -96,8 +108,16 @@ void main() {
         title: 'Chapter 1',
         href: 'chapter1.xhtml',
         children: [
-          TocEntry(id: 'ch1-1', title: 'Section 1', href: 'chapter1.xhtml#s1', level: 1),
-          TocEntry(id: 'ch1-2', title: 'Section 2', href: 'chapter1.xhtml#s2', level: 1),
+          TocEntry(
+              id: 'ch1-1',
+              title: 'Section 1',
+              href: 'chapter1.xhtml#s1',
+              level: 1),
+          TocEntry(
+              id: 'ch1-2',
+              title: 'Section 2',
+              href: 'chapter1.xhtml#s2',
+              level: 1),
         ],
       );
 
@@ -140,11 +160,13 @@ void main() {
     test('parses standard types', () {
       expect(LandmarkType.fromEpubType('cover'), equals(LandmarkType.cover));
       expect(LandmarkType.fromEpubType('toc'), equals(LandmarkType.toc));
-      expect(LandmarkType.fromEpubType('bodymatter'), equals(LandmarkType.bodymatter));
+      expect(LandmarkType.fromEpubType('bodymatter'),
+          equals(LandmarkType.bodymatter));
     });
 
     test('parses with hyphens removed', () {
-      expect(LandmarkType.fromEpubType('title-page'), equals(LandmarkType.titlePage));
+      expect(LandmarkType.fromEpubType('title-page'),
+          equals(LandmarkType.titlePage));
     });
 
     test('parses case insensitively', () {
@@ -176,7 +198,11 @@ void main() {
             title: 'Chapter 1',
             href: 'chapter1.xhtml',
             children: [
-              TocEntry(id: 'ch1-1', title: 'Section 1', href: 'chapter1.xhtml#s1', level: 1),
+              TocEntry(
+                  id: 'ch1-1',
+                  title: 'Section 1',
+                  href: 'chapter1.xhtml#s1',
+                  level: 1),
             ],
           ),
           TocEntry(id: 'ch2', title: 'Chapter 2', href: 'chapter2.xhtml'),
@@ -202,7 +228,11 @@ void main() {
                 href: 'chapter1.xhtml#s1',
                 level: 1,
                 children: [
-                  TocEntry(id: 'ch1-1-1', title: 'Sub 1', href: 'chapter1.xhtml#s1-1', level: 2),
+                  TocEntry(
+                      id: 'ch1-1-1',
+                      title: 'Sub 1',
+                      href: 'chapter1.xhtml#s1-1',
+                      level: 2),
                 ],
               ),
             ],
@@ -231,8 +261,12 @@ void main() {
       const nav = EpubNavigation(
         tableOfContents: [],
         landmarks: [
-          Landmark(href: 'cover.xhtml', title: 'Cover', type: LandmarkType.cover),
-          Landmark(href: 'toc.xhtml', title: 'Table of Contents', type: LandmarkType.toc),
+          Landmark(
+              href: 'cover.xhtml', title: 'Cover', type: LandmarkType.cover),
+          Landmark(
+              href: 'toc.xhtml',
+              title: 'Table of Contents',
+              type: LandmarkType.toc),
         ],
         source: NavigationSource.navDocument,
       );

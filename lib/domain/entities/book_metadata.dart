@@ -51,15 +51,15 @@ class BookMetadata extends Equatable {
 
   @override
   List<Object?> get props => [
-        title,
-        author,
-        description,
-        publisher,
-        language,
-        publishedDate,
-        coverImage,
-        tableOfContents,
-      ];
+    title,
+    author,
+    description,
+    publisher,
+    language,
+    publishedDate,
+    coverImage,
+    tableOfContents,
+  ];
 
   @override
   String toString() {

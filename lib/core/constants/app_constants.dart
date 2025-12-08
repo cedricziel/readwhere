@@ -60,8 +60,10 @@ class AppConstants {
   static const int apiTimeoutSeconds = 30;
 
   // Error Messages
-  static const String genericErrorMessage = 'Something went wrong. Please try again.';
-  static const String networkErrorMessage = 'Network error. Please check your connection.';
+  static const String genericErrorMessage =
+      'Something went wrong. Please try again.';
+  static const String networkErrorMessage =
+      'Network error. Please check your connection.';
   static const String fileNotFoundMessage = 'File not found.';
   static const String unsupportedFormatMessage = 'Unsupported file format.';
 }

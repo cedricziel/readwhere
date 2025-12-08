@@ -32,9 +32,9 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
 
   @override
   List<String> get supportedMimeTypes => [
-        'application/epub+zip',
-        'application/epub',
-      ];
+    'application/epub+zip',
+    'application/epub',
+  ];
 
   @override
   Future<bool> canHandle(String filePath) async {

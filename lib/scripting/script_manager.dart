@@ -59,9 +59,12 @@ class ScriptInfo {
         if (trimmed.startsWith('-- Description:')) {
           description = trimmed.substring('-- Description:'.length).trim();
           break;
-        } else if (trimmed.startsWith('--[[') && trimmed.contains('Description:')) {
+        } else if (trimmed.startsWith('--[[') &&
+            trimmed.contains('Description:')) {
           // Multi-line comment format
-          final match = RegExp(r'Description:\s*(.+?)(?:\]\]|$)').firstMatch(trimmed);
+          final match = RegExp(
+            r'Description:\s*(.+?)(?:\]\]|$)',
+          ).firstMatch(trimmed);
           if (match != null) {
             description = match.group(1)?.trim();
             break;
@@ -221,7 +224,10 @@ class ScriptManager {
             scripts.add(scriptInfo);
             _logger.fine('Found script: ${scriptInfo.name}');
           } catch (e) {
-            _logger.warning('Failed to load script info for: ${entity.path}', e);
+            _logger.warning(
+              'Failed to load script info for: ${entity.path}',
+              e,
+            );
           }
         }
       }

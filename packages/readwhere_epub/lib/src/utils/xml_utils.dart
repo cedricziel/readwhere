@@ -20,7 +20,8 @@ class EpubNamespaces {
   static const String epub = 'http://www.idpf.org/2007/ops';
 
   /// Container namespace
-  static const String container = 'urn:oasis:names:tc:opendocument:xmlns:container';
+  static const String container =
+      'urn:oasis:names:tc:opendocument:xmlns:container';
 
   /// Encryption namespace
   static const String encryption = 'http://www.w3.org/2001/04/xmlenc#';
@@ -211,9 +212,7 @@ extension XmlElementExtensions on XmlElement {
 
   /// Gets the first child element with the given local name.
   XmlElement? firstChildByLocalName(String localName) {
-    return childElements
-        .where((e) => e.localName == localName)
-        .firstOrNull;
+    return childElements.where((e) => e.localName == localName).firstOrNull;
   }
 
   /// Gets the text content trimmed.

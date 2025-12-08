@@ -104,7 +104,8 @@ class PathUtils {
   ///
   /// EPUB paths are case-sensitive per specification, but some EPUBs
   /// may have inconsistent casing.
-  static bool pathEquals(String path1, String path2, {bool ignoreCase = false}) {
+  static bool pathEquals(String path1, String path2,
+      {bool ignoreCase = false}) {
     final normalized1 = normalize(path1);
     final normalized2 = normalize(path2);
 
@@ -140,7 +141,8 @@ class PathUtils {
   /// Checks if a path has a specific extension (case-insensitive).
   static bool hasExtension(String path, String ext) {
     final pathExt = extension(path).toLowerCase();
-    final checkExt = ext.startsWith('.') ? ext.toLowerCase() : '.$ext'.toLowerCase();
+    final checkExt =
+        ext.startsWith('.') ? ext.toLowerCase() : '.$ext'.toLowerCase();
     return pathExt == checkExt;
   }
 
@@ -169,10 +171,7 @@ class PathUtils {
   /// Checks if a path is a font file.
   static bool isFont(String path) {
     final ext = extension(path).toLowerCase();
-    return ext == '.otf' ||
-        ext == '.ttf' ||
-        ext == '.woff' ||
-        ext == '.woff2';
+    return ext == '.otf' || ext == '.ttf' || ext == '.woff' || ext == '.woff2';
   }
 
   /// Gets the relative path from one path to another.

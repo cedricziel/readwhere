@@ -10,10 +10,7 @@ import '../../../providers/reader_provider.dart';
 class TableOfContentsSheet extends StatelessWidget {
   final ValueChanged<int> onChapterSelected;
 
-  const TableOfContentsSheet({
-    super.key,
-    required this.onChapterSelected,
-  });
+  const TableOfContentsSheet({super.key, required this.onChapterSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -100,26 +97,16 @@ class TableOfContentsSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.menu_book_outlined,
-            size: 64,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.menu_book_outlined, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'No table of contents available',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
           const SizedBox(height: 8),
           Text(
             'This book may not have chapter information',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             textAlign: TextAlign.center,
           ),
         ],
@@ -201,8 +188,8 @@ class TableOfContentsSheet extends StatelessWidget {
                         fontWeight: isCurrentChapter
                             ? FontWeight.w600
                             : (indentLevel == 0
-                                ? FontWeight.w500
-                                : FontWeight.normal),
+                                  ? FontWeight.w500
+                                  : FontWeight.normal),
                         color: isCurrentChapter
                             ? Theme.of(context).primaryColor
                             : Colors.black87,
