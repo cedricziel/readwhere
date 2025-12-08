@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../data/models/opds/cached_opds_feed_model.dart';
 import '../../data/services/book_import_service.dart';
 import '../../data/services/kavita_api_service.dart';
@@ -501,7 +502,18 @@ class CatalogsProvider extends ChangeNotifier {
       return null;
     }
 
-    final acquisitionLink = entry.bestAcquisitionLink;
+    // Check if the entry has any supported formats
+    if (entry.hasOnlyUnsupportedFormats) {
+      final formats = entry.unsupportedFormats.join(', ').toUpperCase();
+      _error =
+          'Format not supported: $formats. '
+          'Supported formats are: ${AppConstants.supportedBookFormats.join(', ').toUpperCase()}';
+      notifyListeners();
+      return null;
+    }
+
+    // Get the best supported acquisition link
+    final acquisitionLink = entry.bestSupportedAcquisitionLink;
     if (acquisitionLink == null) {
       _error = 'No download link available';
       notifyListeners();

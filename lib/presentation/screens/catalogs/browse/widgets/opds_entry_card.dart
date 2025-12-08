@@ -146,6 +146,7 @@ class OpdsEntryCard extends StatelessWidget {
   Widget _buildActionRow(BuildContext context) {
     final theme = Theme.of(context);
     final format = entry.preferredFormat;
+    final isUnsupported = entry.hasOnlyUnsupportedFormats;
 
     return Row(
       children: [
@@ -153,26 +154,36 @@ class OpdsEntryCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: theme.colorScheme.tertiaryContainer,
+              color: isUnsupported
+                  ? theme.colorScheme.errorContainer
+                  : theme.colorScheme.tertiaryContainer,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               format.toUpperCase(),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onTertiaryContainer,
+                color: isUnsupported
+                    ? theme.colorScheme.onErrorContainer
+                    : theme.colorScheme.onTertiaryContainer,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           const Spacer(),
         ],
-        DownloadIconButton(
-          isDownloading: isDownloading,
-          isDownloaded: isDownloaded,
-          progress: downloadProgress,
-          onDownload: onDownload,
-          onOpen: onOpen,
-        ),
+        if (isUnsupported)
+          Tooltip(
+            message: 'Format not supported',
+            child: Icon(Icons.block, size: 20, color: theme.colorScheme.error),
+          )
+        else
+          DownloadIconButton(
+            isDownloading: isDownloading,
+            isDownloaded: isDownloaded,
+            progress: downloadProgress,
+            onDownload: onDownload,
+            onOpen: onOpen,
+          ),
       ],
     );
   }
@@ -205,6 +216,7 @@ class OpdsEntryListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isNavigation = entry.isNavigation;
+    final isUnsupported = entry.hasOnlyUnsupportedFormats;
 
     return ListTile(
       onTap: onTap,
@@ -214,16 +226,14 @@ class OpdsEntryListTile extends StatelessWidget {
         child: _buildThumbnail(context, isNavigation),
       ),
       title: Text(entry.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-      subtitle: entry.author != null
-          ? Text(
-              entry.author!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: theme.colorScheme.outline),
-            )
-          : null,
+      subtitle: _buildSubtitle(context, isUnsupported),
       trailing: isNavigation
           ? const Icon(Icons.chevron_right)
+          : isUnsupported
+          ? Tooltip(
+              message: 'Format not supported',
+              child: Icon(Icons.block, color: theme.colorScheme.error),
+            )
           : DownloadIconButton(
               isDownloading: isDownloading,
               isDownloaded: isDownloaded,
@@ -232,6 +242,54 @@ class OpdsEntryListTile extends StatelessWidget {
               onOpen: onOpen,
             ),
     );
+  }
+
+  Widget? _buildSubtitle(BuildContext context, bool isUnsupported) {
+    final theme = Theme.of(context);
+    final format = entry.preferredFormat;
+
+    if (isUnsupported && format != null) {
+      return Row(
+        children: [
+          if (entry.author != null) ...[
+            Flexible(
+              child: Text(
+                entry.author!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: theme.colorScheme.outline),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer,
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: Text(
+              format.toUpperCase(),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onErrorContainer,
+                fontSize: 10,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (entry.author != null) {
+      return Text(
+        entry.author!,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: theme.colorScheme.outline),
+      );
+    }
+
+    return null;
   }
 
   Widget _buildThumbnail(BuildContext context, bool isNavigation) {

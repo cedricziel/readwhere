@@ -119,6 +119,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     final isDownloaded = provider.isBookInLibrary(entry.id);
     final isDownloading = provider.isDownloading(entry.id);
     final progress = provider.getDownloadProgress(entry.id);
+    final isUnsupported = entry.hasOnlyUnsupportedFormats;
 
     showModalBottomSheet(
       context: context,
@@ -151,6 +152,49 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
                 style: theme.textTheme.bodyMedium,
                 maxLines: 4,
                 overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            // Unsupported format warning
+            if (isUnsupported) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Format not supported',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: theme.colorScheme.onErrorContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'This book is only available as ${entry.preferredFormat?.toUpperCase() ?? "unknown format"}. '
+                            'Supported formats: EPUB, PDF, MOBI.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
             const SizedBox(height: 24),
@@ -186,6 +230,17 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
                       const SizedBox(width: 12),
                       Text('Downloading... ${(progress * 100).toInt()}%'),
                     ],
+                  ),
+                ),
+              )
+            else if (isUnsupported)
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: null,
+                  icon: const Icon(Icons.block),
+                  label: Text(
+                    'Cannot Download (${entry.preferredFormat?.toUpperCase() ?? "Unknown"})',
                   ),
                 ),
               )

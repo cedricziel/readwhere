@@ -91,6 +91,21 @@ class OpdsEntry extends Equatable {
     return links.where((l) => l.isAcquisition).toList();
   }
 
+  /// Get acquisition links for supported formats only
+  List<OpdsLink> get supportedAcquisitionLinks {
+    return acquisitionLinks.where((l) => l.isSupportedFormat).toList();
+  }
+
+  /// Whether this entry has at least one supported format
+  bool get hasSupportedFormat {
+    return acquisitionLinks.any((l) => l.isSupportedFormat);
+  }
+
+  /// Whether this entry only has unsupported formats (no supported options)
+  bool get hasOnlyUnsupportedFormats {
+    return isBook && !hasSupportedFormat;
+  }
+
   /// Get the best acquisition link (prefer EPUB, then PDF)
   OpdsLink? get bestAcquisitionLink {
     final acquisitions = acquisitionLinks;
@@ -108,9 +123,47 @@ class OpdsEntry extends Equatable {
     return acquisitions.first;
   }
 
+  /// Get the best supported acquisition link (prefer EPUB, then PDF, then other supported)
+  OpdsLink? get bestSupportedAcquisitionLink {
+    final supported = supportedAcquisitionLinks;
+    if (supported.isEmpty) return null;
+
+    // Prefer EPUB
+    final epub = supported.where((l) => l.isEpub).firstOrNull;
+    if (epub != null) return epub;
+
+    // Then PDF
+    final pdf = supported.where((l) => l.isPdf).firstOrNull;
+    if (pdf != null) return pdf;
+
+    // Return first supported format
+    return supported.first;
+  }
+
   /// Get available formats for this book
   List<String> get availableFormats {
     return acquisitionLinks
+        .map((l) => l.fileExtension)
+        .where((ext) => ext != null)
+        .cast<String>()
+        .toSet()
+        .toList();
+  }
+
+  /// Get available supported formats for this book
+  List<String> get supportedFormats {
+    return supportedAcquisitionLinks
+        .map((l) => l.fileExtension)
+        .where((ext) => ext != null)
+        .cast<String>()
+        .toSet()
+        .toList();
+  }
+
+  /// Get available unsupported formats for this book
+  List<String> get unsupportedFormats {
+    return acquisitionLinks
+        .where((l) => !l.isSupportedFormat)
         .map((l) => l.fileExtension)
         .where((ext) => ext != null)
         .cast<String>()

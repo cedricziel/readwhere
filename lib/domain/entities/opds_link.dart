@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../core/constants/app_constants.dart';
+
 /// OPDS link relation types
 class OpdsLinkRel {
   static const String self = 'self';
@@ -124,6 +126,13 @@ class OpdsLink extends Equatable {
       default:
         return null;
     }
+  }
+
+  /// Whether this link's format is supported by the app
+  bool get isSupportedFormat {
+    final ext = fileExtension;
+    if (ext == null) return false;
+    return AppConstants.supportedBookFormats.contains(ext);
   }
 
   OpdsLink copyWith({
