@@ -49,6 +49,7 @@ class ReaderProvider extends ChangeNotifier {
   ReaderController? _readerController;
   String _currentChapterHtml = '';
   String _currentChapterCss = '';
+  Map<String, Uint8List> _currentChapterImages = {};
 
   // Getters
 
@@ -90,6 +91,9 @@ class ReaderProvider extends ChangeNotifier {
 
   /// Current chapter CSS styles
   String get currentChapterCss => _currentChapterCss;
+
+  /// Current chapter images (href -> bytes)
+  Map<String, Uint8List> get currentChapterImages => _currentChapterImages;
 
   /// The reader controller (if EPUB)
   ReaderController? get readerController => _readerController;
@@ -202,12 +206,17 @@ class ReaderProvider extends ChangeNotifier {
           cssBuffer.writeln(entry.value);
         }
         _currentChapterCss = cssBuffer.toString();
+
+        // Get images for this chapter
+        _currentChapterImages = epubController.getChapterImages(chapterIndex);
       } else {
         _currentChapterHtml = '<p>Unsupported reader controller type</p>';
         _currentChapterCss = '';
+        _currentChapterImages = {};
       }
     } catch (e) {
       _currentChapterHtml = '<p>Error loading chapter: ${e.toString()}</p>';
+      _currentChapterImages = {};
     }
   }
 
@@ -252,6 +261,7 @@ class ReaderProvider extends ChangeNotifier {
     _currentChapterIndex = 0;
     _currentChapterHtml = '';
     _currentChapterCss = '';
+    _currentChapterImages = {};
     _error = null;
 
     notifyListeners();

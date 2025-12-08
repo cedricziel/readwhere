@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
@@ -205,47 +207,38 @@ class ReaderContentWidget extends StatelessWidget {
               }
             },
             // Handle images from EPUB resources
-            // TODO: Implement custom image provider for EPUB embedded images
             extensions: [
               TagExtension(
                 tagsToExtend: {'img'},
                 builder: (extensionContext) {
                   final src = extensionContext.attributes['src'];
                   if (src != null) {
-                    // TODO: Load image from EPUB resources
-                    // For now, show placeholder
-                    return Container(
-                      margin: EdgeInsets.symmetric(
-                        vertical: readingTheme.fontSize,
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: readingTheme.textColor.withValues(alpha: 0.2),
+                    // Try to find the image in the chapter images
+                    final images = readerProvider.currentChapterImages;
+                    final imageBytes = _findImageBytes(src, images);
+
+                    if (imageBytes != null) {
+                      // Render actual image from EPUB
+                      return Container(
+                        margin: EdgeInsets.symmetric(
+                          vertical: readingTheme.fontSize,
                         ),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.image_outlined,
-                            size: 48,
-                            color: readingTheme.textColor.withValues(
-                              alpha: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Image: $src',
-                            style: TextStyle(
-                              fontSize: readingTheme.fontSize * 0.75,
-                              color: readingTheme.textColor.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
+                        child: Image.memory(
+                          imageBytes,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildImagePlaceholder(
+                              src,
+                              readingTheme,
+                              error: 'Failed to load image',
+                            );
+                          },
+                        ),
+                      );
+                    }
+
+                    // Show placeholder if image not found
+                    return _buildImagePlaceholder(src, readingTheme);
                   }
                   return const SizedBox.shrink();
                 },
@@ -336,6 +329,87 @@ class ReaderContentWidget extends StatelessWidget {
         You are currently reading: <strong>$bookTitle</strong>
       </p>
     ''';
+  }
+
+  /// Find image bytes from the images map, handling path variations.
+  ///
+  /// EPUB images may be referenced with different path formats:
+  /// - Relative: "../images/cover.jpg"
+  /// - Absolute from root: "/OEBPS/images/cover.jpg"
+  /// - Just filename: "cover.jpg"
+  Uint8List? _findImageBytes(String src, Map<String, Uint8List> images) {
+    // Direct match
+    if (images.containsKey(src)) {
+      return images[src];
+    }
+
+    // Try matching by filename only
+    final srcFilename = src.split('/').last;
+    for (final entry in images.entries) {
+      final entryFilename = entry.key.split('/').last;
+      if (entryFilename == srcFilename) {
+        return entry.value;
+      }
+    }
+
+    // Try matching by normalized path (remove ../ and leading /)
+    final normalizedSrc = src
+        .replaceAll('../', '')
+        .replaceAll(RegExp(r'^/'), '');
+    for (final entry in images.entries) {
+      final normalizedKey = entry.key
+          .replaceAll('../', '')
+          .replaceAll(RegExp(r'^/'), '');
+      if (normalizedKey == normalizedSrc ||
+          normalizedKey.endsWith(normalizedSrc) ||
+          normalizedSrc.endsWith(normalizedKey)) {
+        return entry.value;
+      }
+    }
+
+    return null;
+  }
+
+  /// Build a placeholder widget for images that couldn't be loaded.
+  Widget _buildImagePlaceholder(
+    String src,
+    ReadingThemeData readingTheme, {
+    String? error,
+  }) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: readingTheme.fontSize),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: readingTheme.textColor.withValues(alpha: 0.2),
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.image_not_supported_outlined,
+            size: 48,
+            color: readingTheme.textColor.withValues(alpha: 0.3),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error ?? 'Image not found',
+            style: TextStyle(
+              fontSize: readingTheme.fontSize * 0.75,
+              color: readingTheme.textColor.withValues(alpha: 0.5),
+            ),
+          ),
+          Text(
+            src.split('/').last,
+            style: TextStyle(
+              fontSize: readingTheme.fontSize * 0.6,
+              color: readingTheme.textColor.withValues(alpha: 0.3),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Injects CSS styling to highlight the element with the given ID.

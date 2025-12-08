@@ -490,6 +490,26 @@ class ReadwhereEpubController implements ReaderController {
     }
   }
 
+  /// Get images for a specific chapter.
+  ///
+  /// Returns a map of image href to image bytes for all images
+  /// referenced in the chapter.
+  Map<String, Uint8List> getChapterImages(int index) {
+    _ensureInitialized();
+
+    if (index < 0 || index >= _reader.chapterCount) {
+      return {};
+    }
+
+    try {
+      final chapter = _reader.getChapter(index);
+      return _collectImages(chapter);
+    } catch (e) {
+      _logger.fine('Error getting chapter images for index $index: $e');
+      return {};
+    }
+  }
+
   /// Get all CSS stylesheets as a map of href to content.
   ///
   /// This method provides direct access to stylesheets for backward
