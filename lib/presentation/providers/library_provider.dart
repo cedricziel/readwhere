@@ -97,6 +97,7 @@ class LibraryProvider extends ChangeNotifier {
   ///
   /// Fetches books from the database and applies current sort order.
   /// Sets loading state and handles errors appropriately.
+  /// Automatically attempts to extract covers for books missing them.
   Future<void> loadBooks() async {
     _isLoading = true;
     _error = null;
@@ -106,12 +107,89 @@ class LibraryProvider extends ChangeNotifier {
       _books = await _bookRepository.getAll();
       _applySorting();
       _applySearch();
+
+      // Extract covers for books that don't have them (in background)
+      _extractMissingCovers();
     } catch (e) {
       _error = 'Failed to load books: ${e.toString()}';
       _books = [];
       _filteredBooks = [];
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Extract covers for books that don't have them
+  ///
+  /// Runs in the background without blocking the UI.
+  /// Updates books as covers are extracted.
+  Future<void> _extractMissingCovers() async {
+    final booksWithoutCovers = _books
+        .where((book) => book.coverPath == null || book.coverPath!.isEmpty)
+        .toList();
+
+    if (booksWithoutCovers.isEmpty) {
+      debugPrint('All books have covers');
+      return;
+    }
+
+    debugPrint('Found ${booksWithoutCovers.length} books without covers, extracting...');
+
+    for (final book in booksWithoutCovers) {
+      try {
+        final coverPath = await _importService.extractCover(book);
+        if (coverPath != null) {
+          // Update the book with the new cover path
+          final updatedBook = book.copyWith(coverPath: coverPath);
+          await _bookRepository.update(updatedBook);
+
+          // Update in local list
+          final index = _books.indexWhere((b) => b.id == book.id);
+          if (index != -1) {
+            _books[index] = updatedBook;
+          }
+
+          final filteredIndex = _filteredBooks.indexWhere((b) => b.id == book.id);
+          if (filteredIndex != -1) {
+            _filteredBooks[filteredIndex] = updatedBook;
+          }
+
+          notifyListeners();
+          debugPrint('Updated cover for: ${book.title}');
+        }
+      } catch (e) {
+        debugPrint('Failed to extract cover for ${book.title}: $e');
+      }
+    }
+  }
+
+  /// Manually refresh metadata for a specific book
+  ///
+  /// Re-extracts cover and metadata from the book file.
+  /// [id] The unique identifier of the book to refresh
+  Future<void> refreshBookMetadata(String id) async {
+    final book = _books.firstWhere(
+      (b) => b.id == id,
+      orElse: () => throw Exception('Book not found'),
+    );
+
+    try {
+      final coverPath = await _importService.extractCover(book);
+      if (coverPath != null) {
+        final updatedBook = book.copyWith(coverPath: coverPath);
+        await _bookRepository.update(updatedBook);
+
+        // Update in local list
+        final index = _books.indexWhere((b) => b.id == id);
+        if (index != -1) {
+          _books[index] = updatedBook;
+        }
+
+        notifyListeners();
+      }
+    } catch (e) {
+      _error = 'Failed to refresh metadata: ${e.toString()}';
       notifyListeners();
     }
   }

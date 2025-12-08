@@ -96,17 +96,29 @@ class BookCard extends StatelessWidget {
 
   /// Builds the book cover widget
   Widget _buildCover(ColorScheme colorScheme) {
+    debugPrint('BookCard - Building cover for "${book.title}"');
+    debugPrint('BookCard - coverPath: ${book.coverPath}');
+
     if (book.coverPath != null && book.coverPath!.isNotEmpty) {
       final coverFile = File(book.coverPath!);
-      if (coverFile.existsSync()) {
+      final exists = coverFile.existsSync();
+      debugPrint('BookCard - File exists: $exists');
+
+      if (exists) {
+        debugPrint('BookCard - Loading cover image from file');
         return Image.file(
           coverFile,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
+            debugPrint('BookCard - Image.file error: $error');
             return _buildPlaceholderCover(colorScheme);
           },
         );
+      } else {
+        debugPrint('BookCard - Cover file does not exist at path');
       }
+    } else {
+      debugPrint('BookCard - No coverPath set');
     }
 
     return _buildPlaceholderCover(colorScheme);

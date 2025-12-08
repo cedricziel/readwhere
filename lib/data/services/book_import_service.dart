@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../domain/entities/book.dart';
+import '../../plugins/epub/epub_fallback_reader.dart';
 import '../../plugins/epub/epub_parser.dart';
 
 /// Service for importing books into the library
@@ -125,30 +126,45 @@ class BookImportService {
     }
   }
 
-  /// Save cover image to app's cache directory
+  /// Save cover image to app's support directory
   ///
   /// Returns the path where the cover was saved
   Future<String?> _saveCoverImage(String bookId, Uint8List imageData) async {
     try {
-      final appDir = await getApplicationDocumentsDirectory();
+      // Use Application Support directory for cached/generated content
+      // On macOS sandboxed: ~/Library/Containers/{bundle-id}/Data/Library/Application Support/{app}
+      final appDir = await getApplicationSupportDirectory();
+      debugPrint('Cover save - App support dir: ${appDir.path}');
+
       final coversDir = Directory(p.join(appDir.path, 'covers'));
+      debugPrint('Cover save - Covers dir: ${coversDir.path}');
 
       // Create covers directory if it doesn't exist
       if (!await coversDir.exists()) {
         await coversDir.create(recursive: true);
+        debugPrint('Cover save - Created covers directory');
       }
 
       // Determine image format from magic bytes
       final extension = _getImageExtension(imageData);
       final coverPath = p.join(coversDir.path, '$bookId$extension');
+      debugPrint('Cover save - Cover path: $coverPath');
+      debugPrint('Cover save - Image data size: ${imageData.length} bytes');
 
       // Write cover image to file
       final coverFile = File(coverPath);
       await coverFile.writeAsBytes(imageData);
 
+      // Verify the file was written
+      final exists = await coverFile.exists();
+      final size = exists ? await coverFile.length() : 0;
+      debugPrint('Cover save - File exists: $exists, size: $size bytes');
+
       return coverPath;
-    } catch (e) {
-      // Return null if cover saving fails - not critical
+    } catch (e, stackTrace) {
+      // Log the error for debugging
+      debugPrint('Cover save - Error: $e');
+      debugPrint('Cover save - Stack: $stackTrace');
       return null;
     }
   }
@@ -218,5 +234,68 @@ class BookImportService {
     } catch (e) {
       // Ignore errors when deleting covers
     }
+  }
+
+  /// Re-extract cover image for an existing book
+  ///
+  /// Attempts to extract and save the cover from the book file.
+  /// Uses the main EPUB parser first, falls back to direct archive extraction.
+  /// Returns the new cover path if successful, null otherwise.
+  ///
+  /// [book] The book to extract cover for
+  Future<String?> extractCover(Book book) async {
+    debugPrint('extractCover - Attempting to extract cover for: ${book.title}');
+    debugPrint('extractCover - Book file path: ${book.filePath}');
+
+    // Only support EPUB for now
+    if (book.format.toLowerCase() != 'epub') {
+      debugPrint('extractCover - Unsupported format: ${book.format}');
+      return null;
+    }
+
+    final file = File(book.filePath);
+    if (!await file.exists()) {
+      debugPrint('extractCover - Book file does not exist');
+      return null;
+    }
+
+    Uint8List? coverImage;
+
+    // Try main parser first
+    try {
+      debugPrint('extractCover - Trying main EPUB parser...');
+      final epubBook = await EpubParser.parseBook(book.filePath);
+      final metadata = EpubParser.extractMetadata(epubBook);
+      coverImage = metadata.coverImage;
+      if (coverImage != null && coverImage.isNotEmpty) {
+        debugPrint('extractCover - Found cover via main parser (${coverImage.length} bytes)');
+      }
+    } catch (e) {
+      debugPrint('extractCover - Main parser failed: $e');
+    }
+
+    // Fallback to direct archive extraction if main parser failed or found no cover
+    if (coverImage == null || coverImage.isEmpty) {
+      try {
+        debugPrint('extractCover - Trying fallback reader...');
+        final fallbackReader = await EpubFallbackReader.parse(book.filePath);
+        coverImage = fallbackReader.getCover();
+        if (coverImage != null && coverImage.isNotEmpty) {
+          debugPrint('extractCover - Found cover via fallback reader (${coverImage.length} bytes)');
+        }
+      } catch (e) {
+        debugPrint('extractCover - Fallback reader failed: $e');
+      }
+    }
+
+    // Save the cover if we found one
+    if (coverImage != null && coverImage.isNotEmpty) {
+      final coverPath = await _saveCoverImage(book.id, coverImage);
+      debugPrint('extractCover - Cover saved to: $coverPath');
+      return coverPath;
+    }
+
+    debugPrint('extractCover - No cover image found in EPUB');
+    return null;
   }
 }
