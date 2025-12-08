@@ -38,6 +38,21 @@ export 'src/package/spine/spine.dart';
 export 'src/navigation/toc.dart';
 export 'src/content/content_document.dart';
 
+// Security
+export 'src/content/html_sanitizer.dart';
+
+// Validation
+export 'src/validation/epub_validator.dart';
+
+// CFI (Canonical Fragment Identifier)
+export 'src/cfi/epub_cfi.dart';
+export 'src/cfi/cfi_step.dart';
+
+// Search
+export 'src/search/search_engine.dart';
+export 'src/search/search_options.dart';
+export 'src/search/search_result.dart';
+
 // Resources
 export 'src/resources/resource.dart';
 export 'src/resources/stylesheet.dart';

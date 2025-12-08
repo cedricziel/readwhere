@@ -4,6 +4,7 @@ import 'package:html/dom.dart' as html_dom;
 
 import '../package/manifest/manifest.dart';
 import '../utils/path_utils.dart';
+import 'html_sanitizer.dart';
 
 /// Represents a parsed EPUB content document (chapter).
 class EpubChapter extends Equatable {
@@ -54,6 +55,24 @@ class EpubChapter extends Equatable {
     final body = document.body;
     if (body == null) return content;
     return body.innerHtml;
+  }
+
+  /// Extracts sanitized body content, safe for rendering.
+  ///
+  /// Removes potentially dangerous elements like scripts, iframes, and
+  /// event handlers to prevent XSS attacks.
+  String get sanitizedBodyContent {
+    return HtmlSanitizer.sanitizeBody(content);
+  }
+
+  /// Extracts sanitized body content with custom options.
+  String getSanitizedBodyContent({SanitizeOptions? options}) {
+    return HtmlSanitizer.sanitizeBody(content, options: options);
+  }
+
+  /// Check if this chapter contains potentially dangerous content.
+  bool get containsDangerousContent {
+    return HtmlSanitizer.containsDangerousContent(content);
   }
 
   /// Gets the document title from the <title> element.
