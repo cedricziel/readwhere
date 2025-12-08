@@ -162,6 +162,20 @@ class CbzContainer {
   /// Checks if a file exists in the archive.
   bool hasFile(String path) => _reader.hasFile(path);
 
+  /// Reads a page by its path.
+  ///
+  /// Returns null if the file doesn't exist.
+  Uint8List? readPageByPath(String path) {
+    if (!hasFile(path)) return null;
+    return readImageBytes(path);
+  }
+
+  /// Closes the container and releases resources.
+  void close() {
+    // Clear cached data
+    _sortedImagePaths = null;
+  }
+
   /// Extracts just the filename from a path.
   static String _getFilename(String path) {
     final lastSlash = path.lastIndexOf('/');

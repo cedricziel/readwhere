@@ -28,6 +28,10 @@
 /// ```
 library;
 
+// Reader - Main entry point
+export 'src/reader/cbz_book.dart';
+export 'src/reader/cbz_reader.dart';
+
 // Errors
 export 'src/errors/cbz_exception.dart';
 
@@ -43,6 +47,18 @@ export 'src/metadata/reading_direction.dart';
 // Metadata - ComicInfo.xml
 export 'src/metadata/comic_info/comic_info.dart';
 export 'src/metadata/comic_info/comic_info_parser.dart';
+
+// Metadata - MetronInfo.xml
+export 'src/metadata/metron_info/metron_info.dart';
+export 'src/metadata/metron_info/metron_info_parser.dart';
+export 'src/metadata/metron_info/metron_models.dart';
+
+// Thumbnails
+export 'src/thumbnails/thumbnail_generator.dart';
+export 'src/thumbnails/thumbnail_options.dart';
+
+// Validation
+export 'src/validation/cbz_validator.dart';
 
 // Utils
 export 'src/utils/image_utils.dart' show ImageFormat, ImageDimensions;

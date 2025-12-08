@@ -24,6 +24,7 @@ class AgeRating extends Equatable {
   static const r18 = AgeRating('R18+');
   static const ratingPending = AgeRating('Rating Pending');
   static const teen = AgeRating('Teen');
+  static const teenPlus = AgeRating('Teen Plus');
   static const x18 = AgeRating('X18+');
 
   /// All predefined ratings.
@@ -42,6 +43,7 @@ class AgeRating extends Equatable {
     r18,
     ratingPending,
     teen,
+    teenPlus,
     x18,
   ];
 
