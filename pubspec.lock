@@ -5,18 +5,18 @@ packages:
     dependency: transitive
     description:
       name: _fe_analyzer_shared
-      sha256: da0d9209ca76bde579f2da330aeb9df62b6319c834fa7baae052021b0462401f
+      sha256: c209688d9f5a5f26b2fb47a188131a6fb9e876ae9e47af3737c0b4f58a93470d
       url: "https://pub.dev"
     source: hosted
-    version: "85.0.0"
+    version: "91.0.0"
   analyzer:
     dependency: transitive
     description:
       name: analyzer
-      sha256: "974859dc0ff5f37bc4313244b3218c791810d03ab3470a579580279ba971a48d"
+      sha256: f51c8499b35f9b26820cfe914828a6a98a94efd5cc78b37bb7d03debae3a1d08
       url: "https://pub.dev"
     source: hosted
-    version: "7.7.1"
+    version: "8.4.1"
   appkit_ui_element_colors:
     dependency: transitive
     description:
@@ -261,10 +261,10 @@ packages:
     dependency: "direct dev"
     description:
       name: dart_pre_commit
-      sha256: fa7f50fd430cdfd43a2c82bbe68eee9d4db0e18c2f322ae242de6230afec0e04
+      sha256: "80a8108ebbced8e118a03de2daa0dd3721b55fa47c2249d83268d4ca6d9e26ff"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.3"
+    version: "6.1.0"
   dart_rss:
     dependency: "direct main"
     description:
@@ -277,10 +277,10 @@ packages:
     dependency: transitive
     description:
       name: dart_style
-      sha256: "8a0e5fba27e8ee025d2ffb4ee820b4e6e2cf5e4246a6b1a477eb66866947e0bb"
+      sha256: a9c30492da18ff84efe2422ba2d319a89942d93e58eb0b73d32abe822ef54b7b
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.1"
+    version: "3.1.3"
   dbus:
     dependency: transitive
     description:
@@ -412,10 +412,10 @@ packages:
     dependency: transitive
     description:
       name: freezed_annotation
-      sha256: "1be037f901137bf2b9a0c309e9bf2694d6ec77687645211218191ade4f41a4b8"
+      sha256: "7294967ff0a6d98638e7acb774aac3af2550777accd8149c90af5b014e6d44d8"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "3.1.0"
   frontend_server_client:
     dependency: transitive
     description:
@@ -504,6 +504,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
+  injectable:
+    dependency: transitive
+    description:
+      name: injectable
+      sha256: "8fc24421cfeff76d1d38484d8b9617beeb54a58b6edfd002b10cc896b8b8f3fe"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.7.1+2"
   intl:
     dependency: transitive
     description:
@@ -668,10 +676,10 @@ packages:
     dependency: "direct dev"
     description:
       name: mockito
-      sha256: "2314cbe9165bcd16106513df9cf3c3224713087f09723b128928dc11a4379f99"
+      sha256: dac24d461418d363778d53198d9ac0510b9d073869f078450f195766ec48d05e
       url: "https://pub.dev"
     source: hosted
-    version: "5.5.0"
+    version: "5.6.1"
   nested:
     dependency: transitive
     description:
@@ -888,14 +896,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
-  riverpod:
-    dependency: transitive
-    description:
-      name: riverpod
-      sha256: "98f9ac5421833f6aa3c44bc6f2f586d72dc241e03b3da1618cde8124d83e4485"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.3+1"
   rxdart:
     dependency: transitive
     description:
@@ -1085,14 +1085,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.12.1"
-  state_notifier:
-    dependency: transitive
-    description:
-      name: state_notifier
-      sha256: "8fe42610f179b843b12371e40db58c9444f8757f8b69d181c97e50787caed289"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.7.2+1"
   stream_channel:
     dependency: transitive
     description:
