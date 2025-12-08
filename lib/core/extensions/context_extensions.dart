@@ -65,13 +65,13 @@ extension ContextExtensions on BuildContext {
   /// ```
   double get devicePixelRatio => MediaQuery.of(this).devicePixelRatio;
 
-  /// Returns the current text scale factor.
+  /// Returns the current text scaler.
   ///
   /// Example:
   /// ```dart
-  /// final textScale = context.textScaleFactor;
+  /// final textScaler = context.textScaler;
   /// ```
-  double get textScaleFactor => MediaQuery.of(this).textScaleFactor;
+  TextScaler get textScaler => MediaQuery.of(this).textScaler;
 
   /// Returns the safe area padding (notch, status bar, etc.).
   ///

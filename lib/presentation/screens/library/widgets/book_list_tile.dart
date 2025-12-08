@@ -54,7 +54,7 @@ class BookListTile extends StatelessWidget {
                     Text(
                       book.author,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.60),
+                        color: colorScheme.onSurface.withValues(alpha: 0.60),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -89,7 +89,9 @@ class BookListTile extends StatelessWidget {
                           Text(
                             'Last read: ${_formatDate(book.lastOpenedAt!)}',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.50),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.50,
+                              ),
                             ),
                           ),
                         ],
@@ -203,7 +205,7 @@ class BookListTile extends StatelessWidget {
               '${(progress * 100).toStringAsFixed(0)}%',
               style: TextStyle(
                 fontSize: 12,
-                color: colorScheme.onSurface.withOpacity(0.60),
+                color: colorScheme.onSurface.withValues(alpha: 0.60),
                 fontWeight: FontWeight.w500,
               ),
             ),

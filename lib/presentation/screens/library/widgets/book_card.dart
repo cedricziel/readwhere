@@ -54,7 +54,7 @@ class BookCard extends StatelessWidget {
                     Text(
                       book.author,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.60),
+                        color: colorScheme.onSurface.withValues(alpha: 0.60),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

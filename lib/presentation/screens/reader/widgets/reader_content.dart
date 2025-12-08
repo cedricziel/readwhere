@@ -28,13 +28,13 @@ class ReaderContentWidget extends StatelessWidget {
                 Icon(
                   Icons.book_outlined,
                   size: 64,
-                  color: readingTheme.textColor.withOpacity(0.3),
+                  color: readingTheme.textColor.withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No content available',
                   style: TextStyle(
-                    color: readingTheme.textColor.withOpacity(0.5),
+                    color: readingTheme.textColor.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -109,7 +109,7 @@ class ReaderContentWidget extends StatelessWidget {
                 padding: HtmlPaddings.only(left: readingTheme.fontSize),
                 border: Border(
                   left: BorderSide(
-                    color: readingTheme.textColor.withOpacity(0.3),
+                    color: readingTheme.textColor.withValues(alpha: 0.3),
                     width: 3,
                   ),
                 ),
@@ -137,13 +137,13 @@ class ReaderContentWidget extends StatelessWidget {
               'code': Style(
                 fontFamily: 'monospace',
                 fontSize: FontSize(readingTheme.fontSize * 0.9),
-                backgroundColor: readingTheme.textColor.withOpacity(0.08),
+                backgroundColor: readingTheme.textColor.withValues(alpha: 0.08),
                 padding: HtmlPaddings.symmetric(horizontal: 4, vertical: 2),
               ),
               'pre': Style(
                 fontFamily: 'monospace',
                 fontSize: FontSize(readingTheme.fontSize * 0.85),
-                backgroundColor: readingTheme.textColor.withOpacity(0.06),
+                backgroundColor: readingTheme.textColor.withValues(alpha: 0.06),
                 padding: HtmlPaddings.all(readingTheme.fontSize * 0.75),
                 margin: Margins.symmetric(vertical: readingTheme.fontSize),
                 lineHeight: const LineHeight(1.4),
@@ -155,9 +155,9 @@ class ReaderContentWidget extends StatelessWidget {
               'kbd': Style(
                 fontFamily: 'monospace',
                 fontSize: FontSize(readingTheme.fontSize * 0.85),
-                backgroundColor: readingTheme.textColor.withOpacity(0.1),
+                backgroundColor: readingTheme.textColor.withValues(alpha: 0.1),
                 border: Border.all(
-                  color: readingTheme.textColor.withOpacity(0.2),
+                  color: readingTheme.textColor.withValues(alpha: 0.2),
                   width: 1,
                 ),
                 padding: HtmlPaddings.symmetric(horizontal: 6, vertical: 2),
@@ -177,7 +177,7 @@ class ReaderContentWidget extends StatelessWidget {
               'th': Style(
                 fontWeight: FontWeight.bold,
                 padding: HtmlPaddings.all(8),
-                backgroundColor: readingTheme.textColor.withOpacity(0.05),
+                backgroundColor: readingTheme.textColor.withValues(alpha: 0.05),
               ),
               'td': Style(padding: HtmlPaddings.all(8)),
             },
@@ -208,7 +208,7 @@ class ReaderContentWidget extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: readingTheme.textColor.withOpacity(0.2),
+                          color: readingTheme.textColor.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Column(
@@ -216,14 +216,18 @@ class ReaderContentWidget extends StatelessWidget {
                           Icon(
                             Icons.image_outlined,
                             size: 48,
-                            color: readingTheme.textColor.withOpacity(0.3),
+                            color: readingTheme.textColor.withValues(
+                              alpha: 0.3,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Image: $src',
                             style: TextStyle(
                               fontSize: readingTheme.fontSize * 0.75,
-                              color: readingTheme.textColor.withOpacity(0.5),
+                              color: readingTheme.textColor.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                           ),
                         ],

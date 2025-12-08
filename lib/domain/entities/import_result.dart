@@ -35,18 +35,11 @@ class ImportResult extends Equatable {
     required Book book,
     List<String> warnings = const [],
   }) {
-    return ImportResult._(
-      success: true,
-      book: book,
-      warnings: warnings,
-    );
+    return ImportResult._(success: true, book: book, warnings: warnings);
   }
 
   /// Create a failed import result.
-  factory ImportResult.failed({
-    required String reason,
-    String? details,
-  }) {
+  factory ImportResult.failed({required String reason, String? details}) {
     return ImportResult._(
       success: false,
       errorReason: reason,
@@ -58,5 +51,11 @@ class ImportResult extends Equatable {
   bool get hasWarnings => warnings.isNotEmpty;
 
   @override
-  List<Object?> get props => [success, book, errorReason, errorDetails, warnings];
+  List<Object?> get props => [
+    success,
+    book,
+    errorReason,
+    errorDetails,
+    warnings,
+  ];
 }

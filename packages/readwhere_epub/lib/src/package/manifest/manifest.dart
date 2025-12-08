@@ -133,6 +133,7 @@ class EpubManifest extends Equatable {
   final Map<String, ManifestItem> _itemsById;
   final Map<String, ManifestItem> _itemsByHref;
 
+  // ignore: prefer_const_constructors_in_immutables
   EpubManifest._(this._itemsById, this._itemsByHref);
 
   /// Creates a manifest from a list of items.

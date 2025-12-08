@@ -25,7 +25,7 @@
 ///   }
 /// }
 /// ```
-library readwhere_epub;
+library;
 
 // Core API
 export 'src/reader/epub_reader.dart';

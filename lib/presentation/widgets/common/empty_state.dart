@@ -56,13 +56,13 @@ class EmptyState extends StatelessWidget {
             Icon(
               icon,
               size: iconSize ?? 64,
-              color: iconColor ?? colorScheme.onSurface.withOpacity(0.38),
+              color: iconColor ?? colorScheme.onSurface.withValues(alpha: 0.38),
             ),
             const SizedBox(height: 24),
             Text(
               title,
               style: theme.textTheme.headlineSmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.87),
+                color: colorScheme.onSurface.withValues(alpha: 0.87),
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -72,7 +72,7 @@ class EmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.60),
+                  color: colorScheme.onSurface.withValues(alpha: 0.60),
                 ),
                 textAlign: TextAlign.center,
               ),

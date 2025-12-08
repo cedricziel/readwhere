@@ -1,8 +1,10 @@
-/// Example usage of the plugin system
-///
-/// This file demonstrates how to use the plugin system to read books
-/// in various formats. This is not meant to be imported, but rather
-/// serves as documentation and reference.
+// Example usage of the plugin system
+//
+// This file demonstrates how to use the plugin system to read books
+// in various formats. This is not meant to be imported, but rather
+// serves as documentation and reference.
+
+// ignore_for_file: avoid_print
 
 import 'package:logging/logging.dart';
 

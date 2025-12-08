@@ -255,10 +255,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     totalChapters: readerProvider.tableOfContents.length,
                     progress: readerProvider.progressPercentage,
                     onClose: () async {
+                      final navigator = Navigator.of(context);
                       await readerProvider.saveProgress();
                       await readerProvider.closeBook();
                       if (mounted) {
-                        Navigator.of(context).pop();
+                        navigator.pop();
                       }
                     },
                     onBookmark: _handleBookmark,

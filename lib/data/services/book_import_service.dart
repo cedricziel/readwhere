@@ -39,9 +39,7 @@ class BookImportService {
     }
 
     // Collect warnings
-    final warnings = validation.warnings
-        .map((w) => w.message)
-        .toList();
+    final warnings = validation.warnings.map((w) => w.message).toList();
 
     // Proceed with import
     try {

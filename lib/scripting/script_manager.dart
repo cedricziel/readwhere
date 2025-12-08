@@ -151,9 +151,9 @@ class ScriptManager {
   /// Creates the directory if it doesn't exist.
   ///
   /// The directory is located at:
-  /// - iOS/macOS: <Application Support>/scripts/
-  /// - Android: <App Data>/scripts/
-  /// - Linux/Windows: <Documents>/ReadWhere/scripts/
+  /// - iOS/macOS: `<Application Support>/scripts/`
+  /// - Android: `<App Data>/scripts/`
+  /// - Linux/Windows: `<Documents>/ReadWhere/scripts/`
   Future<Directory> getScriptsDirectory() async {
     try {
       final appDir = await getApplicationDocumentsDirectory();

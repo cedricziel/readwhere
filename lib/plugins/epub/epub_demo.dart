@@ -1,7 +1,9 @@
-/// Demonstration of EPUB plugin usage
-///
-/// This file provides practical examples of how to use the EPUB plugin
-/// to read and navigate EPUB books in the readwhere app.
+// Demonstration of EPUB plugin usage
+//
+// This file provides practical examples of how to use the EPUB plugin
+// to read and navigate EPUB books in the readwhere app.
+
+// ignore_for_file: avoid_print
 
 import 'package:logging/logging.dart';
 

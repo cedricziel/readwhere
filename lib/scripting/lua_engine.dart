@@ -73,7 +73,7 @@ class LuaEngine {
 
       // Load and execute the script using doString which handles both loading and execution
       final status = _state!.doString(script);
-      if (status != 0) {
+      if (status == false) {
         final error = _state!.toStr(-1) ?? 'Unknown error';
         _state!.pop(1);
         throw LuaException('Script execution failed: $error');
@@ -167,7 +167,7 @@ class LuaEngine {
 
       // Call the function
       final pcallStatus = _state!.pCall(args.length, 1, 0);
-      if (pcallStatus != 0) {
+      if (pcallStatus != ThreadStatus.luaOk) {
         final error = _state!.toStr(-1) ?? 'Unknown error';
         _state!.pop(1);
         throw LuaException('Function call failed: $error');

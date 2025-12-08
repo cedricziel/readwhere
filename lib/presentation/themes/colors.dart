@@ -252,7 +252,7 @@ class AppColors {
 
   /// Returns a color with the specified opacity (0.0 to 1.0).
   static Color withOpacity(Color color, double opacity) {
-    return color.withOpacity(opacity.clamp(0.0, 1.0));
+    return color.withValues(alpha: opacity.clamp(0.0, 1.0));
   }
 
   /// Returns a lighter version of the given color.

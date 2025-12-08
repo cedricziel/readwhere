@@ -17,7 +17,7 @@
 ///   final controller = await plugin.openBook('/path/to/book.epub');
 /// }
 /// ```
-library plugins;
+library;
 
 export 'epub/epub.dart';
 export 'plugin_registry.dart';

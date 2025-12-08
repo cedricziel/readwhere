@@ -119,13 +119,6 @@ class ReaderBindings {
       _setTableField(state, 'filePath', book.filePath);
       _setTableField(state, 'format', book.format);
 
-      if (book.description != null) {
-        _setTableField(state, 'description', book.description!);
-      }
-      if (book.publisher != null) {
-        _setTableField(state, 'publisher', book.publisher!);
-      }
-
       return 1;
     } catch (e) {
       _logger.severe('Error in getCurrentBook', e);
@@ -187,8 +180,8 @@ class ReaderBindings {
         return 1;
       }
 
-      final cfi = state.toString(1) ?? '';
-      final progress = state.toNumber(2) ?? 0.0;
+      final cfi = state.toStr(1) ?? '';
+      final progress = state.toNumber(2);
 
       // Validate progress value
       final clampedProgress = progress.clamp(0.0, 1.0);
@@ -216,7 +209,7 @@ class ReaderBindings {
   /// Returns the bookmark ID if successful, nil otherwise
   int _addBookmark(LuaState state) {
     try {
-      final title = state.toString(1) ?? 'Untitled Bookmark';
+      final title = state.toStr(1) ?? 'Untitled Bookmark';
 
       // Note: This is an async operation, but Lua bindings are sync
       // We'll trigger the operation and return immediately
@@ -293,9 +286,9 @@ class ReaderBindings {
   /// Returns true if successful, false otherwise
   int _removeBookmark(LuaState state) {
     try {
-      final id = state.toString(1);
+      final id = state.toStr(1) ?? '';
 
-      if (id == null) {
+      if (id.isEmpty) {
         state.pushBoolean(false);
         return 1;
       }
@@ -328,7 +321,7 @@ class ReaderBindings {
     try {
       final index = state.toInteger(1);
 
-      if (index == null || index < 0) {
+      if (index < 0) {
         state.pushBoolean(false);
         return 1;
       }
@@ -428,23 +421,17 @@ class ReaderBindings {
         return 1;
       }
 
-      // Get current settings as base
-      var settings = _settingsProvider.defaultReadingSettings;
-
       // Update fontSize if provided
       state.getField(1, 'fontSize');
       if (state.isNumber(-1)) {
-        final fontSize = state.toNumber(-1);
-        if (fontSize != null) {
-          _settingsProvider.setFontSize(fontSize);
-        }
+        _settingsProvider.setFontSize(state.toNumber(-1));
       }
       state.pop(1);
 
       // Update fontFamily if provided
       state.getField(1, 'fontFamily');
       if (state.isString(-1)) {
-        final fontFamily = state.toString(-1);
+        final fontFamily = state.toStr(-1);
         if (fontFamily != null) {
           _settingsProvider.setFontFamily(fontFamily);
         }
@@ -454,30 +441,21 @@ class ReaderBindings {
       // Update lineHeight if provided
       state.getField(1, 'lineHeight');
       if (state.isNumber(-1)) {
-        final lineHeight = state.toNumber(-1);
-        if (lineHeight != null) {
-          _settingsProvider.setLineHeight(lineHeight);
-        }
+        _settingsProvider.setLineHeight(state.toNumber(-1));
       }
       state.pop(1);
 
       // Update marginHorizontal if provided
       state.getField(1, 'marginHorizontal');
       if (state.isNumber(-1)) {
-        final margin = state.toNumber(-1);
-        if (margin != null) {
-          _settingsProvider.setMarginHorizontal(margin);
-        }
+        _settingsProvider.setMarginHorizontal(state.toNumber(-1));
       }
       state.pop(1);
 
       // Update marginVertical if provided
       state.getField(1, 'marginVertical');
       if (state.isNumber(-1)) {
-        final margin = state.toNumber(-1);
-        if (margin != null) {
-          _settingsProvider.setMarginVertical(margin);
-        }
+        _settingsProvider.setMarginVertical(state.toNumber(-1));
       }
       state.pop(1);
 

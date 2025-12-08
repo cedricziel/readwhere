@@ -132,8 +132,8 @@ class ReadingThemes {
       lineHeight: 1.6,
       marginHorizontal: 16.0,
       marginVertical: 24.0,
-      selectionColor: AppColors.selectionLight.withOpacity(0.5),
-      highlightColor: AppColors.highlightYellow.withOpacity(0.3),
+      selectionColor: AppColors.selectionLight.withValues(alpha: 0.5),
+      highlightColor: AppColors.highlightYellow.withValues(alpha: 0.3),
     );
   }
 
@@ -148,8 +148,8 @@ class ReadingThemes {
       lineHeight: 1.6,
       marginHorizontal: 16.0,
       marginVertical: 24.0,
-      selectionColor: AppColors.selectionDark.withOpacity(0.5),
-      highlightColor: AppColors.highlightYellow.withOpacity(0.3),
+      selectionColor: AppColors.selectionDark.withValues(alpha: 0.5),
+      highlightColor: AppColors.highlightYellow.withValues(alpha: 0.3),
     );
   }
 
@@ -164,8 +164,8 @@ class ReadingThemes {
       lineHeight: 1.6,
       marginHorizontal: 16.0,
       marginVertical: 24.0,
-      selectionColor: AppColors.selectionSepia.withOpacity(0.5),
-      highlightColor: AppColors.highlightYellow.withOpacity(0.3),
+      selectionColor: AppColors.selectionSepia.withValues(alpha: 0.5),
+      highlightColor: AppColors.highlightYellow.withValues(alpha: 0.3),
     );
   }
 
@@ -180,8 +180,8 @@ class ReadingThemes {
       lineHeight: 1.6,
       marginHorizontal: 16.0,
       marginVertical: 24.0,
-      selectionColor: AppColors.selectionAmoled.withOpacity(0.5),
-      highlightColor: AppColors.highlightYellow.withOpacity(0.3),
+      selectionColor: AppColors.selectionAmoled.withValues(alpha: 0.5),
+      highlightColor: AppColors.highlightYellow.withValues(alpha: 0.3),
     );
   }
 

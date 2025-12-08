@@ -97,8 +97,8 @@ class _TopBar extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withOpacity(0.7),
-            Colors.black.withOpacity(0.5),
+            Colors.black.withValues(alpha: 0.7),
+            Colors.black.withValues(alpha: 0.5),
             Colors.transparent,
           ],
           stops: const [0.0, 0.7, 1.0],
@@ -183,8 +183,8 @@ class _BottomBar extends StatelessWidget {
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            Colors.black.withOpacity(0.7),
-            Colors.black.withOpacity(0.5),
+            Colors.black.withValues(alpha: 0.7),
+            Colors.black.withValues(alpha: 0.5),
             Colors.transparent,
           ],
           stops: const [0.0, 0.7, 1.0],
@@ -252,9 +252,9 @@ class _BottomBar extends StatelessWidget {
                     child: SliderTheme(
                       data: SliderThemeData(
                         activeTrackColor: Colors.white,
-                        inactiveTrackColor: Colors.white.withOpacity(0.3),
+                        inactiveTrackColor: Colors.white.withValues(alpha: 0.3),
                         thumbColor: Colors.white,
-                        overlayColor: Colors.white.withOpacity(0.2),
+                        overlayColor: Colors.white.withValues(alpha: 0.2),
                         trackHeight: 3,
                       ),
                       child: Slider(

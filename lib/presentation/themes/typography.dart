@@ -12,15 +12,6 @@ class AppTypography {
   // Font Families
   // ============================================
 
-  /// Primary UI font family (Nunito)
-  static String get _uiFontFamily {
-    try {
-      return GoogleFonts.nunito().fontFamily ?? 'Roboto';
-    } catch (e) {
-      return 'Roboto';
-    }
-  }
-
   /// Reading content font family (Literata)
   static String get _readingFontFamily {
     try {
