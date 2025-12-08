@@ -1,6 +1,7 @@
 import 'package:xml/xml.dart';
 
 import '../../../domain/entities/opds_entry.dart';
+import '../../../domain/entities/opds_link.dart';
 import 'opds_link_model.dart';
 
 /// Data model for OpdsEntry with XML parsing support
@@ -50,10 +51,12 @@ class OpdsEntryModel extends OpdsEntry {
         ? DateTime.tryParse(updatedStr) ?? DateTime.now()
         : DateTime.now();
 
-    // Parse links
+    // Parse links - cast to List<OpdsLink> to avoid type issues with firstWhere
     final linkElements = element.findElements('link');
-    final links = linkElements
-        .map((e) => OpdsLinkModel.fromXmlElement(e, baseUrl: baseUrl))
+    final List<OpdsLink> links = linkElements
+        .map(
+          (e) => OpdsLinkModel.fromXmlElement(e, baseUrl: baseUrl) as OpdsLink,
+        )
         .toList();
 
     // Parse categories
