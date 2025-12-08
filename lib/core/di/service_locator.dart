@@ -1,12 +1,14 @@
 import 'package:get_it/get_it.dart';
+
 import '../../data/database/database_helper.dart';
 import '../../data/repositories/book_repository_impl.dart';
-import '../../data/repositories/reading_progress_repository_impl.dart';
 import '../../data/repositories/bookmark_repository_impl.dart';
+import '../../data/repositories/reading_progress_repository_impl.dart';
 import '../../data/services/book_import_service.dart';
 import '../../domain/repositories/book_repository.dart';
-import '../../domain/repositories/reading_progress_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
+import '../../domain/repositories/reading_progress_repository.dart';
+import '../../presentation/providers/audio_provider.dart';
 import '../../presentation/providers/library_provider.dart';
 import '../../presentation/providers/reader_provider.dart';
 import '../../presentation/providers/settings_provider.dart';
@@ -67,6 +69,8 @@ Future<void> setupServiceLocator() async {
       bookmarkRepository: sl(),
     ),
   );
+
+  sl.registerLazySingleton<AudioProvider>(() => AudioProvider());
 }
 
 /// Resets the service locator (useful for testing).

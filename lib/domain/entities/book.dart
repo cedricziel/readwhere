@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'book_metadata.dart';
+
 /// Represents a book in the library
 class Book extends Equatable {
   final String id;
@@ -14,6 +16,15 @@ class Book extends Equatable {
   final bool isFavorite;
   final double? readingProgress; // 0.0 to 1.0
 
+  /// Encryption type for EPUB books
+  final EpubEncryptionType encryptionType;
+
+  /// Whether this book is a fixed-layout EPUB
+  final bool isFixedLayout;
+
+  /// Whether this EPUB has media overlays (audio sync)
+  final bool hasMediaOverlays;
+
   const Book({
     required this.id,
     required this.title,
@@ -26,11 +37,19 @@ class Book extends Equatable {
     this.lastOpenedAt,
     this.isFavorite = false,
     this.readingProgress,
+    this.encryptionType = EpubEncryptionType.none,
+    this.isFixedLayout = false,
+    this.hasMediaOverlays = false,
   }) : assert(
          readingProgress == null ||
              (readingProgress >= 0.0 && readingProgress <= 1.0),
          'Reading progress must be between 0.0 and 1.0',
        );
+
+  /// Whether this book has DRM that prevents reading.
+  bool get hasDrm =>
+      encryptionType != EpubEncryptionType.none &&
+      encryptionType != EpubEncryptionType.fontObfuscation;
 
   /// Creates a copy of this Book with the given fields replaced with new values
   Book copyWith({
@@ -45,6 +64,9 @@ class Book extends Equatable {
     DateTime? lastOpenedAt,
     bool? isFavorite,
     double? readingProgress,
+    EpubEncryptionType? encryptionType,
+    bool? isFixedLayout,
+    bool? hasMediaOverlays,
   }) {
     return Book(
       id: id ?? this.id,
@@ -58,6 +80,9 @@ class Book extends Equatable {
       lastOpenedAt: lastOpenedAt ?? this.lastOpenedAt,
       isFavorite: isFavorite ?? this.isFavorite,
       readingProgress: readingProgress ?? this.readingProgress,
+      encryptionType: encryptionType ?? this.encryptionType,
+      isFixedLayout: isFixedLayout ?? this.isFixedLayout,
+      hasMediaOverlays: hasMediaOverlays ?? this.hasMediaOverlays,
     );
   }
 
@@ -74,6 +99,9 @@ class Book extends Equatable {
     lastOpenedAt,
     isFavorite,
     readingProgress,
+    encryptionType,
+    isFixedLayout,
+    hasMediaOverlays,
   ];
 
   @override

@@ -13,6 +13,9 @@ class BooksTable {
   static const String columnAddedAt = 'added_at';
   static const String columnLastOpenedAt = 'last_opened_at';
   static const String columnIsFavorite = 'is_favorite';
+  static const String columnEncryptionType = 'encryption_type';
+  static const String columnIsFixedLayout = 'is_fixed_layout';
+  static const String columnHasMediaOverlays = 'has_media_overlays';
 
   /// Map of column names for easy reference
   static const Map<String, String> columns = {
@@ -26,6 +29,9 @@ class BooksTable {
     'addedAt': columnAddedAt,
     'lastOpenedAt': columnLastOpenedAt,
     'isFavorite': columnIsFavorite,
+    'encryptionType': columnEncryptionType,
+    'isFixedLayout': columnIsFixedLayout,
+    'hasMediaOverlays': columnHasMediaOverlays,
   };
 
   /// Returns the SQL query to create the books table
@@ -41,9 +47,21 @@ class BooksTable {
         $columnFileSize INTEGER,
         $columnAddedAt INTEGER NOT NULL,
         $columnLastOpenedAt INTEGER,
-        $columnIsFavorite INTEGER NOT NULL DEFAULT 0
+        $columnIsFavorite INTEGER NOT NULL DEFAULT 0,
+        $columnEncryptionType TEXT DEFAULT 'none',
+        $columnIsFixedLayout INTEGER NOT NULL DEFAULT 0,
+        $columnHasMediaOverlays INTEGER NOT NULL DEFAULT 0
       )
     ''';
+  }
+
+  /// Migration queries for version 2 (adds encryption and EPUB feature columns)
+  static List<String> migrationV2() {
+    return [
+      'ALTER TABLE $tableName ADD COLUMN $columnEncryptionType TEXT DEFAULT \'none\'',
+      'ALTER TABLE $tableName ADD COLUMN $columnIsFixedLayout INTEGER NOT NULL DEFAULT 0',
+      'ALTER TABLE $tableName ADD COLUMN $columnHasMediaOverlays INTEGER NOT NULL DEFAULT 0',
+    ];
   }
 
   /// Returns indices to improve query performance

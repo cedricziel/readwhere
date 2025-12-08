@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
+import '../../../providers/audio_provider.dart';
 import '../../../providers/reader_provider.dart';
 import '../../../themes/reading_themes.dart';
 
@@ -17,8 +18,8 @@ class ReaderContentWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final readingTheme = context.readingTheme;
 
-    return Consumer<ReaderProvider>(
-      builder: (context, readerProvider, child) {
+    return Consumer2<ReaderProvider, AudioProvider>(
+      builder: (context, readerProvider, audioProvider, child) {
         // Placeholder content when no book is open or loading
         if (!readerProvider.hasOpenBook || readerProvider.isLoading) {
           return Center(
@@ -42,13 +43,25 @@ class ReaderContentWidget extends StatelessWidget {
           );
         }
 
+        // Get the current highlighted element ID from audio playback
+        final highlightedElementId = audioProvider.highlightedElementId;
+
         // Get the actual chapter HTML content from the provider
-        final htmlContent = readerProvider.currentChapterHtml.isNotEmpty
+        var htmlContent = readerProvider.currentChapterHtml.isNotEmpty
             ? readerProvider.currentChapterHtml
             : _generatePlaceholderContent(
                 'Loading...',
                 readerProvider.currentBook?.title ?? 'Book Title',
               );
+
+        // Inject highlighting CSS for media overlay sync
+        if (highlightedElementId != null) {
+          htmlContent = _injectHighlightStyle(
+            htmlContent,
+            highlightedElementId,
+            readingTheme.linkColor,
+          );
+        }
 
         return SingleChildScrollView(
           controller: scrollController,
@@ -323,5 +336,44 @@ class ReaderContentWidget extends StatelessWidget {
         You are currently reading: <strong>$bookTitle</strong>
       </p>
     ''';
+  }
+
+  /// Injects CSS styling to highlight the element with the given ID.
+  ///
+  /// This is used for media overlay synchronization to highlight the
+  /// currently spoken text element during audio playback.
+  String _injectHighlightStyle(
+    String html,
+    String elementId,
+    Color highlightColor,
+  ) {
+    // Convert color to CSS rgba format
+    final r = highlightColor.r.toInt();
+    final g = highlightColor.g.toInt();
+    final b = highlightColor.b.toInt();
+    final cssColor = 'rgba($r, $g, $b, 0.3)';
+
+    // Create CSS style for the highlighted element
+    final highlightCss =
+        '''
+<style>
+#$elementId {
+  background-color: $cssColor;
+  border-radius: 4px;
+  padding: 2px 4px;
+  transition: background-color 0.2s ease-in-out;
+}
+</style>
+''';
+
+    // Inject the style at the beginning of the HTML
+    // Check if there's a <head> tag to inject into, otherwise prepend
+    if (html.contains('<head>')) {
+      return html.replaceFirst('<head>', '<head>$highlightCss');
+    } else if (html.contains('<body>')) {
+      return html.replaceFirst('<body>', '<body>$highlightCss');
+    } else {
+      return highlightCss + html;
+    }
   }
 }

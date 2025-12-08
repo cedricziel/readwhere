@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/book.dart';
+import '../../domain/entities/book_metadata.dart';
 import '../../domain/entities/reading_progress.dart';
 import '../../domain/entities/bookmark.dart';
 import '../../domain/entities/reading_settings.dart';
@@ -20,6 +21,7 @@ import '../../plugins/reader_controller.dart';
 /// - Bookmarks management
 /// - Reading settings
 /// - Table of contents
+/// - DRM detection and blocking
 class ReaderProvider extends ChangeNotifier {
   final ReadingProgressRepository _readingProgressRepository;
   final BookmarkRepository _bookmarkRepository;
@@ -41,6 +43,7 @@ class ReaderProvider extends ChangeNotifier {
   String? _error;
   int _currentChapterIndex = 0;
   List<TocEntry> _tableOfContents = [];
+  bool _isDrmBlocked = false;
 
   // Reader controller (using ReadwhereEpubController)
   ReaderController? _readerController;
@@ -66,6 +69,9 @@ class ReaderProvider extends ChangeNotifier {
 
   /// Error message if an operation failed
   String? get error => _error;
+
+  /// Whether opening was blocked due to DRM
+  bool get isDrmBlocked => _isDrmBlocked;
 
   /// Current chapter index
   int get currentChapterIndex => _currentChapterIndex;
@@ -94,12 +100,23 @@ class ReaderProvider extends ChangeNotifier {
   ///
   /// Loads the book content, reading progress, bookmarks, and table of contents.
   /// If the book was previously opened, it will resume from the last position.
+  /// Books with DRM protection will be blocked from opening.
   ///
   /// [book] The book to open
   Future<void> openBook(Book book) async {
     _isLoading = true;
     _error = null;
+    _isDrmBlocked = false;
     notifyListeners();
+
+    // Check for DRM before attempting to open
+    if (book.hasDrm) {
+      _isDrmBlocked = true;
+      _isLoading = false;
+      _error = _getDrmErrorMessage(book);
+      notifyListeners();
+      return;
+    }
 
     try {
       _currentBook = book;
@@ -146,6 +163,24 @@ class ReaderProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Get a human-readable DRM error message based on encryption type
+  String _getDrmErrorMessage(Book book) {
+    switch (book.encryptionType) {
+      case EpubEncryptionType.adobeDrm:
+        return 'This book is protected by Adobe DRM and cannot be read in ReadWhere. '
+            'Please use Adobe Digital Editions or another DRM-compatible reader.';
+      case EpubEncryptionType.appleFairPlay:
+        return 'This book is protected by Apple FairPlay DRM and can only be read in Apple Books.';
+      case EpubEncryptionType.lcp:
+        return 'This book is protected by Readium LCP. '
+            'A future version of ReadWhere may support LCP decryption.';
+      case EpubEncryptionType.unknown:
+        return 'This book is protected by an unknown DRM system and cannot be read.';
+      default:
+        return 'This book has DRM protection and cannot be read.';
     }
   }
 

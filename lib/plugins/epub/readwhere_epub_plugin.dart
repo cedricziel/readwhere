@@ -90,15 +90,44 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
       // Build table of contents
       final toc = _convertTocEntries(reader.navigation.tableOfContents);
 
+      // Extract encryption info
+      final encryptionInfo = reader.encryptionInfo;
+      final encryptionType = _convertEncryptionType(encryptionInfo.type);
+      final encryptionDescription = encryptionInfo.hasDrm
+          ? encryptionInfo.description
+          : null;
+
+      // Check for fixed-layout
+      final isFixedLayout = reader.book.isFixedLayout;
+
+      // Check for media overlays
+      final hasMediaOverlays = reader.hasMediaOverlays;
+
+      if (encryptionInfo.hasDrm) {
+        _logger.warning(
+          'Book has DRM: ${encryptionInfo.description} (${encryptionInfo.encryptedResourceCount} encrypted resources)',
+        );
+      }
+      if (isFixedLayout) {
+        _logger.info('Book is fixed-layout EPUB');
+      }
+      if (hasMediaOverlays) {
+        _logger.info('Book has media overlays (audio sync)');
+      }
+
       final bookMetadata = BookMetadata(
         title: metadata.title,
         author: metadata.author ?? 'Unknown Author',
         description: metadata.description,
         publisher: metadata.publisher,
         language: metadata.language,
-        publishedDate: metadata.date, // Already DateTime?
+        publishedDate: metadata.date,
         coverImage: coverImage,
         tableOfContents: toc,
+        encryptionType: encryptionType,
+        encryptionDescription: encryptionDescription,
+        isFixedLayout: isFixedLayout,
+        hasMediaOverlays: hasMediaOverlays,
       );
 
       _logger.info('Parsed metadata: ${bookMetadata.title}');
@@ -106,6 +135,24 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
     } catch (e, stackTrace) {
       _logger.severe('Error parsing metadata from $filePath', e, stackTrace);
       rethrow;
+    }
+  }
+
+  /// Convert library encryption type to app encryption type.
+  EpubEncryptionType _convertEncryptionType(epub.EncryptionType type) {
+    switch (type) {
+      case epub.EncryptionType.none:
+        return EpubEncryptionType.none;
+      case epub.EncryptionType.adobeDrm:
+        return EpubEncryptionType.adobeDrm;
+      case epub.EncryptionType.appleFairPlay:
+        return EpubEncryptionType.appleFairPlay;
+      case epub.EncryptionType.lcp:
+        return EpubEncryptionType.lcp;
+      case epub.EncryptionType.fontObfuscation:
+        return EpubEncryptionType.fontObfuscation;
+      case epub.EncryptionType.unknown:
+        return EpubEncryptionType.unknown;
     }
   }
 

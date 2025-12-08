@@ -12,7 +12,8 @@ import '../search_result.dart';
 /// Reader controller using the readwhere_epub library.
 ///
 /// Implements [ReaderController] to provide chapter navigation,
-/// content streaming, and search functionality.
+/// content streaming, search functionality, and support for
+/// fixed-layout EPUBs and media overlays.
 class ReadwhereEpubController implements ReaderController {
   static final _logger = Logger('ReadwhereEpubController');
 
@@ -31,6 +32,11 @@ class ReadwhereEpubController implements ReaderController {
 
   bool _isInitialized = false;
   bool _isClosed = false;
+
+  // Fixed-layout and media overlay state
+  late bool _isFixedLayout;
+  late bool _hasMediaOverlays;
+  epub.ViewportDimensions? _viewport;
 
   ReadwhereEpubController._({
     required epub.EpubReader reader,
@@ -72,6 +78,18 @@ class ReadwhereEpubController implements ReaderController {
       // If no TOC, create one from spine
       if (_tableOfContents.isEmpty) {
         _tableOfContents = _buildTocFromSpine();
+      }
+
+      // Initialize fixed-layout and media overlay state
+      _isFixedLayout = _reader.book.isFixedLayout;
+      _hasMediaOverlays = _reader.hasMediaOverlays;
+      _viewport = _reader.book.renditionProperties.viewport;
+
+      if (_isFixedLayout) {
+        _logger.info('Fixed-layout EPUB detected with viewport: $_viewport');
+      }
+      if (_hasMediaOverlays) {
+        _logger.info('Media overlays detected');
       }
 
       _isInitialized = true;
@@ -145,6 +163,57 @@ class ReadwhereEpubController implements ReaderController {
   double get progress {
     _ensureInitialized();
     return _progress;
+  }
+
+  /// Whether this EPUB is a fixed-layout (pre-paginated) book.
+  bool get isFixedLayout {
+    _ensureInitialized();
+    return _isFixedLayout;
+  }
+
+  /// Whether this EPUB has media overlays (audio synchronization).
+  bool get hasMediaOverlays {
+    _ensureInitialized();
+    return _hasMediaOverlays;
+  }
+
+  /// The viewport dimensions for fixed-layout EPUBs.
+  ///
+  /// Returns null for reflowable EPUBs or if no viewport is specified.
+  epub.ViewportDimensions? get viewport {
+    _ensureInitialized();
+    return _viewport;
+  }
+
+  /// Get the viewport width in logical pixels.
+  ///
+  /// Returns null if no viewport is specified.
+  int? get viewportWidth => _viewport?.width;
+
+  /// Get the viewport height in logical pixels.
+  ///
+  /// Returns null if no viewport is specified.
+  int? get viewportHeight => _viewport?.height;
+
+  /// Get the rendition properties for the current spine item.
+  ///
+  /// This allows checking per-item rendition overrides.
+  epub.SpineItemRendition? getSpineItemRendition(int index) {
+    _ensureInitialized();
+    if (index < 0 || index >= _reader.chapterCount) {
+      return null;
+    }
+    return _reader.book.spine[index].rendition;
+  }
+
+  /// Get the media overlay for a specific chapter, if available.
+  epub.MediaOverlay? getMediaOverlay(int chapterIndex) {
+    _ensureInitialized();
+    if (!_hasMediaOverlays) return null;
+    if (chapterIndex < 0 || chapterIndex >= _reader.chapterCount) {
+      return null;
+    }
+    return _reader.getMediaOverlayBySpineIndex(chapterIndex);
   }
 
   @override

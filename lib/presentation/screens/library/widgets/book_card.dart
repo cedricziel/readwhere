@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../domain/entities/book.dart';
 import '../../../providers/library_provider.dart';
+import 'encryption_badge.dart';
 
 /// A card widget displaying a book in grid view.
 ///
@@ -85,10 +86,12 @@ class BookCard extends StatelessWidget {
     );
   }
 
-  /// Builds the book cover widget
+  /// Builds the book cover widget with optional encryption badge
   Widget _buildCover(ColorScheme colorScheme) {
     debugPrint('BookCard - Building cover for "${book.title}"');
     debugPrint('BookCard - coverPath: ${book.coverPath}');
+
+    Widget coverImage;
 
     if (book.coverPath != null && book.coverPath!.isNotEmpty) {
       final coverFile = File(book.coverPath!);
@@ -97,7 +100,7 @@ class BookCard extends StatelessWidget {
 
       if (exists) {
         debugPrint('BookCard - Loading cover image from file');
-        return Image.file(
+        coverImage = Image.file(
           coverFile,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
@@ -107,12 +110,29 @@ class BookCard extends StatelessWidget {
         );
       } else {
         debugPrint('BookCard - Cover file does not exist at path');
+        coverImage = _buildPlaceholderCover(colorScheme);
       }
     } else {
       debugPrint('BookCard - No coverPath set');
+      coverImage = _buildPlaceholderCover(colorScheme);
     }
 
-    return _buildPlaceholderCover(colorScheme);
+    // Wrap with encryption badge if DRM is present
+    if (book.hasDrm) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          coverImage,
+          Positioned(
+            top: 8,
+            right: 8,
+            child: EncryptionBadge(encryptionType: book.encryptionType),
+          ),
+        ],
+      );
+    }
+
+    return coverImage;
   }
 
   /// Builds a placeholder cover with the book title
@@ -243,6 +263,18 @@ class BookCard extends StatelessWidget {
                   'Progress',
                   '${(book.readingProgress! * 100).toStringAsFixed(0)}%',
                 ),
+              // EPUB-specific details
+              if (book.format.toLowerCase() == 'epub') ...[
+                const Divider(height: 16),
+                _buildDetailRow(
+                  'Protection',
+                  EncryptionBadge.getDescription(book.encryptionType),
+                ),
+                if (book.isFixedLayout)
+                  _buildDetailRow('Layout', 'Fixed-layout (pre-paginated)'),
+                if (book.hasMediaOverlays)
+                  _buildDetailRow('Audio', 'Has read-aloud narration'),
+              ],
             ],
           ),
         ),

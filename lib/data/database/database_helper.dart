@@ -20,7 +20,8 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   /// Current database version
-  static const int _databaseVersion = 1;
+  /// Version 2: Added encryption_type, is_fixed_layout, has_media_overlays
+  static const int _databaseVersion = 2;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -84,13 +85,15 @@ class DatabaseHelper {
 
   /// Handle database upgrades
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Migration logic will be added here as the schema evolves
-    // Example:
-    // if (oldVersion < 2) {
-    //   await db.execute('ALTER TABLE books ADD COLUMN new_column TEXT');
-    // }
+    // Version 2: Add encryption, fixed-layout, and media overlay columns
+    if (oldVersion < 2) {
+      for (final query in BooksTable.migrationV2()) {
+        await db.execute(query);
+      }
+    }
+    // Future migrations:
     // if (oldVersion < 3) {
-    //   await db.execute('CREATE TABLE new_table (...)');
+    //   await db.execute('...');
     // }
   }
 

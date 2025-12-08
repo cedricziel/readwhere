@@ -1,4 +1,5 @@
 import '../../domain/entities/book.dart';
+import '../../domain/entities/book_metadata.dart';
 import '../database/tables/books_table.dart';
 
 /// Data model for Book entity with database serialization support
@@ -18,6 +19,9 @@ class BookModel extends Book {
     super.lastOpenedAt,
     super.isFavorite,
     super.readingProgress,
+    super.encryptionType,
+    super.isFixedLayout,
+    super.hasMediaOverlays,
   });
 
   /// Create a BookModel from a Map (SQLite row)
@@ -25,6 +29,7 @@ class BookModel extends Book {
   /// Converts database column types to Dart types:
   /// - INTEGER timestamps to DateTime
   /// - INTEGER boolean (0/1) to bool
+  /// - TEXT encryption type to EpubEncryptionType enum
   factory BookModel.fromMap(Map<String, dynamic> map) {
     return BookModel(
       id: map[BooksTable.columnId] as String,
@@ -44,7 +49,31 @@ class BookModel extends Book {
           : null,
       isFavorite: (map[BooksTable.columnIsFavorite] as int) == 1,
       readingProgress: null, // Reading progress is stored separately
+      encryptionType: _parseEncryptionType(
+        map[BooksTable.columnEncryptionType] as String?,
+      ),
+      isFixedLayout: (map[BooksTable.columnIsFixedLayout] as int?) == 1,
+      hasMediaOverlays: (map[BooksTable.columnHasMediaOverlays] as int?) == 1,
     );
+  }
+
+  /// Parse encryption type string to enum
+  static EpubEncryptionType _parseEncryptionType(String? value) {
+    switch (value) {
+      case 'adobeDrm':
+        return EpubEncryptionType.adobeDrm;
+      case 'appleFairPlay':
+        return EpubEncryptionType.appleFairPlay;
+      case 'lcp':
+        return EpubEncryptionType.lcp;
+      case 'fontObfuscation':
+        return EpubEncryptionType.fontObfuscation;
+      case 'unknown':
+        return EpubEncryptionType.unknown;
+      case 'none':
+      default:
+        return EpubEncryptionType.none;
+    }
   }
 
   /// Create a BookModel from a domain entity
@@ -61,6 +90,9 @@ class BookModel extends Book {
       lastOpenedAt: book.lastOpenedAt,
       isFavorite: book.isFavorite,
       readingProgress: book.readingProgress,
+      encryptionType: book.encryptionType,
+      isFixedLayout: book.isFixedLayout,
+      hasMediaOverlays: book.hasMediaOverlays,
     );
   }
 
@@ -69,6 +101,7 @@ class BookModel extends Book {
   /// Converts Dart types to database column types:
   /// - DateTime to INTEGER (milliseconds since epoch)
   /// - bool to INTEGER (0 or 1)
+  /// - EpubEncryptionType enum to TEXT
   Map<String, dynamic> toMap() {
     return {
       BooksTable.columnId: id,
@@ -81,6 +114,9 @@ class BookModel extends Book {
       BooksTable.columnAddedAt: addedAt.millisecondsSinceEpoch,
       BooksTable.columnLastOpenedAt: lastOpenedAt?.millisecondsSinceEpoch,
       BooksTable.columnIsFavorite: isFavorite ? 1 : 0,
+      BooksTable.columnEncryptionType: encryptionType.name,
+      BooksTable.columnIsFixedLayout: isFixedLayout ? 1 : 0,
+      BooksTable.columnHasMediaOverlays: hasMediaOverlays ? 1 : 0,
     };
   }
 
@@ -98,6 +134,9 @@ class BookModel extends Book {
       lastOpenedAt: lastOpenedAt,
       isFavorite: isFavorite,
       readingProgress: readingProgress,
+      encryptionType: encryptionType,
+      isFixedLayout: isFixedLayout,
+      hasMediaOverlays: hasMediaOverlays,
     );
   }
 }

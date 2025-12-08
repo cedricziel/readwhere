@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/audio_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/reader_provider.dart';
 import '../../themes/reading_themes.dart';
+import '../../../plugins/epub/readwhere_epub_controller.dart';
+import 'widgets/audio_controls.dart';
 import 'widgets/reader_content.dart';
 import 'widgets/reader_controls.dart';
+import 'widgets/fixed_layout_reader.dart';
 import 'widgets/table_of_contents_sheet.dart';
 import 'widgets/reading_settings_sheet.dart';
 
@@ -26,6 +30,7 @@ class ReaderScreen extends StatefulWidget {
 
 class _ReaderScreenState extends State<ReaderScreen> {
   bool _showControls = false;
+  bool _showAudioControls = false;
   final ScrollController _scrollController = ScrollController();
   double _scrollPosition = 0.0;
 
@@ -52,6 +57,35 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
 
     await readerProvider.openBook(book);
+
+    // Initialize audio for the current chapter if available
+    if (mounted) {
+      await _initializeAudioForChapter();
+    }
+  }
+
+  Future<void> _initializeAudioForChapter() async {
+    final readerProvider = context.read<ReaderProvider>();
+    final audioProvider = context.read<AudioProvider>();
+
+    final controller = readerProvider.readerController;
+    if (controller is ReadwhereEpubController && controller.hasMediaOverlays) {
+      final hasAudio = await audioProvider.initializeForChapter(
+        controller,
+        readerProvider.currentChapterIndex,
+      );
+      if (hasAudio && mounted) {
+        setState(() {
+          _showAudioControls = true;
+        });
+      }
+    }
+  }
+
+  void _toggleAudioControls() {
+    setState(() {
+      _showAudioControls = !_showAudioControls;
+    });
   }
 
   @override
@@ -151,6 +185,20 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
   }
 
+  /// Build the appropriate content widget based on whether
+  /// the EPUB is fixed-layout or reflowable.
+  Widget _buildContentWidget(ReaderProvider readerProvider) {
+    final controller = readerProvider.readerController;
+
+    // Check if this is a fixed-layout EPUB
+    if (controller is ReadwhereEpubController && controller.isFixedLayout) {
+      return const FixedLayoutReader();
+    }
+
+    // Default to reflowable reader
+    return ReaderContentWidget(scrollController: _scrollController);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ReaderProvider>(
@@ -242,9 +290,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         }
                       }
                     },
-                    child: ReaderContentWidget(
-                      scrollController: _scrollController,
-                    ),
+                    child: _buildContentWidget(readerProvider),
                   ),
 
                   // Overlay controls (top and bottom bars)
@@ -256,6 +302,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     progress: readerProvider.progressPercentage,
                     onClose: () async {
                       final navigator = Navigator.of(context);
+                      final audioProvider = context.read<AudioProvider>();
+                      await audioProvider.reset();
                       await readerProvider.saveProgress();
                       await readerProvider.closeBook();
                       if (mounted) {
@@ -265,6 +313,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     onBookmark: _handleBookmark,
                     onSettings: _showReadingSettings,
                     onTableOfContents: _showTableOfContents,
+                    onAudio: _toggleAudioControls,
                     onProgressChanged: (value) {
                       // Update progress slider
                       final totalChapters =
@@ -295,6 +344,21 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         _scrollController.jumpTo(0);
                       }
                     },
+                  ),
+
+                  // Audio controls (floating bottom bar)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: AudioControls(
+                      visible: _showAudioControls,
+                      onDismiss: () {
+                        setState(() {
+                          _showAudioControls = false;
+                        });
+                      },
+                    ),
                   ),
                 ],
               ),

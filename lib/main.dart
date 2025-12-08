@@ -6,6 +6,7 @@ import 'core/di/service_locator.dart';
 import 'core/utils/logger.dart';
 import 'plugins/plugin_registry.dart';
 import 'plugins/epub/readwhere_epub_plugin.dart';
+import 'presentation/providers/audio_provider.dart';
 import 'presentation/providers/library_provider.dart';
 import 'presentation/providers/reader_provider.dart';
 import 'presentation/providers/settings_provider.dart';
@@ -34,6 +35,7 @@ Future<void> main() async {
   final settingsProvider = sl<SettingsProvider>();
   final libraryProvider = sl<LibraryProvider>();
   final readerProvider = sl<ReaderProvider>();
+  final audioProvider = sl<AudioProvider>();
 
   // Initialize settings (loads from SharedPreferences)
   await settingsProvider.initialize();
@@ -48,6 +50,7 @@ Future<void> main() async {
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
         ChangeNotifierProvider<LibraryProvider>.value(value: libraryProvider),
         ChangeNotifierProvider<ReaderProvider>.value(value: readerProvider),
+        ChangeNotifierProvider<AudioProvider>.value(value: audioProvider),
       ],
       child: const ReadWhereApp(),
     ),

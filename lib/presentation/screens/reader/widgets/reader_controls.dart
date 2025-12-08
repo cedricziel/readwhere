@@ -14,6 +14,7 @@ class ReaderControls extends StatelessWidget {
   final VoidCallback onBookmark;
   final VoidCallback onSettings;
   final VoidCallback onTableOfContents;
+  final VoidCallback? onAudio;
   final ValueChanged<double> onProgressChanged;
   final VoidCallback onPreviousChapter;
   final VoidCallback onNextChapter;
@@ -29,6 +30,7 @@ class ReaderControls extends StatelessWidget {
     required this.onBookmark,
     required this.onSettings,
     required this.onTableOfContents,
+    this.onAudio,
     required this.onProgressChanged,
     required this.onPreviousChapter,
     required this.onNextChapter,
@@ -50,6 +52,7 @@ class ReaderControls extends StatelessWidget {
             onClose: onClose,
             onBookmark: onBookmark,
             onSettings: onSettings,
+            onAudio: onAudio,
           ),
         ),
 
@@ -81,12 +84,14 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback onBookmark;
   final VoidCallback onSettings;
+  final VoidCallback? onAudio;
 
   const _TopBar({
     required this.bookTitle,
     required this.onClose,
     required this.onBookmark,
     required this.onSettings,
+    this.onAudio,
   });
 
   @override
@@ -132,6 +137,12 @@ class _TopBar extends StatelessWidget {
               ),
 
               // Action buttons
+              if (onAudio != null)
+                IconButton(
+                  icon: const Icon(Icons.headphones, color: Colors.white),
+                  onPressed: onAudio,
+                  tooltip: 'Audio controls',
+                ),
               IconButton(
                 icon: const Icon(Icons.bookmark_border, color: Colors.white),
                 onPressed: onBookmark,
