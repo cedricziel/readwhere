@@ -16,6 +16,8 @@ class BooksTable {
   static const String columnEncryptionType = 'encryption_type';
   static const String columnIsFixedLayout = 'is_fixed_layout';
   static const String columnHasMediaOverlays = 'has_media_overlays';
+  static const String columnSourceCatalogId = 'source_catalog_id';
+  static const String columnSourceEntryId = 'source_entry_id';
 
   /// Map of column names for easy reference
   static const Map<String, String> columns = {
@@ -32,6 +34,8 @@ class BooksTable {
     'encryptionType': columnEncryptionType,
     'isFixedLayout': columnIsFixedLayout,
     'hasMediaOverlays': columnHasMediaOverlays,
+    'sourceCatalogId': columnSourceCatalogId,
+    'sourceEntryId': columnSourceEntryId,
   };
 
   /// Returns the SQL query to create the books table
@@ -50,7 +54,9 @@ class BooksTable {
         $columnIsFavorite INTEGER NOT NULL DEFAULT 0,
         $columnEncryptionType TEXT DEFAULT 'none',
         $columnIsFixedLayout INTEGER NOT NULL DEFAULT 0,
-        $columnHasMediaOverlays INTEGER NOT NULL DEFAULT 0
+        $columnHasMediaOverlays INTEGER NOT NULL DEFAULT 0,
+        $columnSourceCatalogId TEXT,
+        $columnSourceEntryId TEXT
       )
     ''';
   }
@@ -61,6 +67,14 @@ class BooksTable {
       'ALTER TABLE $tableName ADD COLUMN $columnEncryptionType TEXT DEFAULT \'none\'',
       'ALTER TABLE $tableName ADD COLUMN $columnIsFixedLayout INTEGER NOT NULL DEFAULT 0',
       'ALTER TABLE $tableName ADD COLUMN $columnHasMediaOverlays INTEGER NOT NULL DEFAULT 0',
+    ];
+  }
+
+  /// Migration queries for version 3 (adds source catalog tracking)
+  static List<String> migrationV3() {
+    return [
+      'ALTER TABLE $tableName ADD COLUMN $columnSourceCatalogId TEXT',
+      'ALTER TABLE $tableName ADD COLUMN $columnSourceEntryId TEXT',
     ];
   }
 

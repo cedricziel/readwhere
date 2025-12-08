@@ -11,6 +11,7 @@ import '../../domain/repositories/bookmark_repository.dart';
 import '../../plugins/epub/readwhere_epub_plugin.dart';
 import '../../plugins/epub/readwhere_epub_controller.dart';
 import '../../plugins/reader_controller.dart';
+import 'catalogs_provider.dart';
 
 /// Provider for managing reader state and reading operations
 ///
@@ -25,14 +26,17 @@ import '../../plugins/reader_controller.dart';
 class ReaderProvider extends ChangeNotifier {
   final ReadingProgressRepository _readingProgressRepository;
   final BookmarkRepository _bookmarkRepository;
+  final CatalogsProvider? _catalogsProvider;
   final Uuid _uuid = const Uuid();
   final ReadwhereEpubPlugin _epubPlugin = ReadwhereEpubPlugin();
 
   ReaderProvider({
     required ReadingProgressRepository readingProgressRepository,
     required BookmarkRepository bookmarkRepository,
+    CatalogsProvider? catalogsProvider,
   }) : _readingProgressRepository = readingProgressRepository,
-       _bookmarkRepository = bookmarkRepository;
+       _bookmarkRepository = bookmarkRepository,
+       _catalogsProvider = catalogsProvider;
 
   // State
   Book? _currentBook;
@@ -135,6 +139,9 @@ class ReaderProvider extends ChangeNotifier {
             progress: 0.0,
             updatedAt: DateTime.now(),
           );
+
+      // Try to fetch progress from Kavita if this book came from a Kavita server
+      await _fetchKavitaProgress(book);
 
       // Load bookmarks
       _bookmarks = await _bookmarkRepository.getBookmarksForBook(book.id);
@@ -239,13 +246,19 @@ class ReaderProvider extends ChangeNotifier {
   /// Close the currently open book
   ///
   /// Saves the current reading progress before closing.
+  /// Syncs progress to Kavita if applicable.
   /// Clears all reader state.
   Future<void> closeBook() async {
     if (_currentBook == null) return;
 
+    final bookToClose = _currentBook!;
+
     // Save progress before closing
     if (_progress != null) {
       await saveProgress();
+
+      // Sync progress to Kavita if this book came from a Kavita server
+      await _syncKavitaProgress(bookToClose);
     }
 
     // Dispose the reader controller
@@ -520,5 +533,68 @@ class ReaderProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // Kavita Progress Sync Methods
+
+  /// Fetch reading progress from Kavita server if applicable
+  ///
+  /// If the book came from a Kavita catalog and the server progress is more
+  /// recent than the local progress, updates the local progress.
+  Future<void> _fetchKavitaProgress(Book book) async {
+    final catalogsProvider = _catalogsProvider;
+    if (catalogsProvider == null || !book.isFromCatalog) return;
+
+    try {
+      final kavitaProgress = await catalogsProvider.fetchProgressFromKavita(
+        book,
+      );
+
+      if (kavitaProgress != null && kavitaProgress.pageNum > 0) {
+        // Convert Kavita page number to progress (0-100 scale)
+        final kavitaProgressValue = kavitaProgress.pageNum / 100.0;
+
+        // Use Kavita progress if it's further along (simple heuristic)
+        if (kavitaProgressValue > (_progress?.progress ?? 0)) {
+          debugPrint('Using Kavita progress: page ${kavitaProgress.pageNum}');
+          _progress = _progress?.copyWith(
+            progress: kavitaProgressValue.clamp(0.0, 1.0),
+            updatedAt: DateTime.now(),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch Kavita progress: $e');
+      // Non-fatal error, continue with local progress
+    }
+  }
+
+  /// Sync reading progress to Kavita server if applicable
+  ///
+  /// Sends the current reading progress to the Kavita server for books
+  /// that were downloaded from a Kavita catalog.
+  Future<void> _syncKavitaProgress(Book book) async {
+    final catalogsProvider = _catalogsProvider;
+    final progress = _progress;
+
+    if (catalogsProvider == null || !book.isFromCatalog || progress == null) {
+      return;
+    }
+
+    try {
+      // Calculate page number from progress (0-100 scale for Kavita)
+      final pageNum = (progress.progress * 100).round();
+
+      await catalogsProvider.syncProgressToKavita(
+        book: book,
+        progress: progress.progress,
+        pageNum: pageNum,
+      );
+
+      debugPrint('Synced progress to Kavita: page $pageNum');
+    } catch (e) {
+      debugPrint('Failed to sync progress to Kavita: $e');
+      // Non-fatal error, progress is still saved locally
+    }
   }
 }

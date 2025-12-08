@@ -21,7 +21,9 @@ class DatabaseHelper {
 
   /// Current database version
   /// Version 2: Added encryption_type, is_fixed_layout, has_media_overlays
-  static const int _databaseVersion = 2;
+  /// Version 3: Added source_catalog_id, source_entry_id for remote book tracking
+  ///            Added api_key, type, server_version to catalogs table
+  static const int _databaseVersion = 3;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -91,10 +93,15 @@ class DatabaseHelper {
         await db.execute(query);
       }
     }
-    // Future migrations:
-    // if (oldVersion < 3) {
-    //   await db.execute('...');
-    // }
+    // Version 3: Add source tracking for remote books and catalog enhancements
+    if (oldVersion < 3) {
+      for (final query in BooksTable.migrationV3()) {
+        await db.execute(query);
+      }
+      for (final query in CatalogsTable.migrateFromV2()) {
+        await db.execute(query);
+      }
+    }
   }
 
   /// Close the database connection

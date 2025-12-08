@@ -25,6 +25,12 @@ class Book extends Equatable {
   /// Whether this EPUB has media overlays (audio sync)
   final bool hasMediaOverlays;
 
+  /// ID of the catalog this book was downloaded from (null for local imports)
+  final String? sourceCatalogId;
+
+  /// Entry ID in the source catalog (for tracking remote books)
+  final String? sourceEntryId;
+
   const Book({
     required this.id,
     required this.title,
@@ -40,6 +46,8 @@ class Book extends Equatable {
     this.encryptionType = EpubEncryptionType.none,
     this.isFixedLayout = false,
     this.hasMediaOverlays = false,
+    this.sourceCatalogId,
+    this.sourceEntryId,
   }) : assert(
          readingProgress == null ||
              (readingProgress >= 0.0 && readingProgress <= 1.0),
@@ -50,6 +58,10 @@ class Book extends Equatable {
   bool get hasDrm =>
       encryptionType != EpubEncryptionType.none &&
       encryptionType != EpubEncryptionType.fontObfuscation;
+
+  /// Whether this book was downloaded from a remote catalog
+  bool get isFromCatalog =>
+      sourceCatalogId != null && sourceCatalogId!.isNotEmpty;
 
   /// Creates a copy of this Book with the given fields replaced with new values
   Book copyWith({
@@ -67,6 +79,8 @@ class Book extends Equatable {
     EpubEncryptionType? encryptionType,
     bool? isFixedLayout,
     bool? hasMediaOverlays,
+    String? sourceCatalogId,
+    String? sourceEntryId,
   }) {
     return Book(
       id: id ?? this.id,
@@ -83,6 +97,8 @@ class Book extends Equatable {
       encryptionType: encryptionType ?? this.encryptionType,
       isFixedLayout: isFixedLayout ?? this.isFixedLayout,
       hasMediaOverlays: hasMediaOverlays ?? this.hasMediaOverlays,
+      sourceCatalogId: sourceCatalogId ?? this.sourceCatalogId,
+      sourceEntryId: sourceEntryId ?? this.sourceEntryId,
     );
   }
 
@@ -102,6 +118,8 @@ class Book extends Equatable {
     encryptionType,
     isFixedLayout,
     hasMediaOverlays,
+    sourceCatalogId,
+    sourceEntryId,
   ];
 
   @override

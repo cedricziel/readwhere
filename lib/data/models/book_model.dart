@@ -22,6 +22,8 @@ class BookModel extends Book {
     super.encryptionType,
     super.isFixedLayout,
     super.hasMediaOverlays,
+    super.sourceCatalogId,
+    super.sourceEntryId,
   });
 
   /// Create a BookModel from a Map (SQLite row)
@@ -54,6 +56,8 @@ class BookModel extends Book {
       ),
       isFixedLayout: (map[BooksTable.columnIsFixedLayout] as int?) == 1,
       hasMediaOverlays: (map[BooksTable.columnHasMediaOverlays] as int?) == 1,
+      sourceCatalogId: map[BooksTable.columnSourceCatalogId] as String?,
+      sourceEntryId: map[BooksTable.columnSourceEntryId] as String?,
     );
   }
 
@@ -93,6 +97,8 @@ class BookModel extends Book {
       encryptionType: book.encryptionType,
       isFixedLayout: book.isFixedLayout,
       hasMediaOverlays: book.hasMediaOverlays,
+      sourceCatalogId: book.sourceCatalogId,
+      sourceEntryId: book.sourceEntryId,
     );
   }
 
@@ -117,6 +123,8 @@ class BookModel extends Book {
       BooksTable.columnEncryptionType: encryptionType.name,
       BooksTable.columnIsFixedLayout: isFixedLayout ? 1 : 0,
       BooksTable.columnHasMediaOverlays: hasMediaOverlays ? 1 : 0,
+      BooksTable.columnSourceCatalogId: sourceCatalogId,
+      BooksTable.columnSourceEntryId: sourceEntryId,
     };
   }
 
@@ -137,6 +145,8 @@ class BookModel extends Book {
       encryptionType: encryptionType,
       isFixedLayout: isFixedLayout,
       hasMediaOverlays: hasMediaOverlays,
+      sourceCatalogId: sourceCatalogId,
+      sourceEntryId: sourceEntryId,
     );
   }
 }
