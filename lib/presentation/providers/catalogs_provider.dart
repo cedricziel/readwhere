@@ -73,6 +73,7 @@ class CatalogsProvider extends ChangeNotifier {
   String _searchQuery = '';
   final Map<String, double> _downloadProgress = {};
   final Set<String> _downloadedEntryIds = {};
+  final Map<String, String> _entryIdToBookId = {};
 
   // Cache state
   bool _isFromCache = false;
@@ -167,14 +168,23 @@ class CatalogsProvider extends ChangeNotifier {
     try {
       final books = await _bookRepository.getAll();
       _downloadedEntryIds.clear();
+      _entryIdToBookId.clear();
       for (final book in books) {
         if (book.sourceEntryId != null) {
           _downloadedEntryIds.add(book.sourceEntryId!);
+          _entryIdToBookId[book.sourceEntryId!] = book.id;
         }
       }
     } catch (e) {
       debugPrint('Failed to load downloaded entry IDs: $e');
     }
+  }
+
+  /// Get the book ID for a downloaded entry
+  ///
+  /// Returns the book ID if the entry has been downloaded, null otherwise.
+  String? getBookIdForEntry(String entryId) {
+    return _entryIdToBookId[entryId];
   }
 
   /// Validate a catalog URL and optionally authenticate
@@ -578,6 +588,7 @@ class CatalogsProvider extends ChangeNotifier {
 
       // Update local tracking
       _downloadedEntryIds.add(entry.id);
+      _entryIdToBookId[entry.id] = savedBook.id;
 
       // Clean up temp file (the import service copies it)
       try {
@@ -745,7 +756,9 @@ class CatalogsProvider extends ChangeNotifier {
     String? booksFolder,
     String? serverVersion,
   }) async {
-    debugPrint('addNextcloudCatalog called: name=$name, url=$url, username=$username');
+    debugPrint(
+      'addNextcloudCatalog called: name=$name, url=$url, username=$username',
+    );
 
     if (_secureStorage == null) {
       debugPrint('addNextcloudCatalog: Secure storage is null!');
@@ -774,9 +787,13 @@ class CatalogsProvider extends ChangeNotifier {
 
       debugPrint('addNextcloudCatalog: Inserting catalog into repository...');
       await _catalogRepository.insert(catalog);
-      debugPrint('addNextcloudCatalog: Catalog inserted, reloading catalogs...');
+      debugPrint(
+        'addNextcloudCatalog: Catalog inserted, reloading catalogs...',
+      );
       _catalogs = await _catalogRepository.getAll();
-      debugPrint('addNextcloudCatalog: Success! Total catalogs: ${_catalogs.length}');
+      debugPrint(
+        'addNextcloudCatalog: Success! Total catalogs: ${_catalogs.length}',
+      );
       notifyListeners();
 
       return catalog;

@@ -106,8 +106,18 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     }
   }
 
-  void _handleOpenBook(String bookId) {
-    context.push(AppRoutes.readerPath(bookId));
+  void _handleOpenBook(CatalogsProvider provider, String entryId) {
+    final bookId = provider.getBookIdForEntry(entryId);
+    if (bookId != null) {
+      context.push(AppRoutes.readerPath(bookId));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Book not found in library'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   void _showBookOptionsSheet(
@@ -438,7 +448,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
           onTap: () => _handleEntryTap(provider, entry),
           onDownload: () => _handleDownload(provider, entry),
           onOpen: provider.isBookInLibrary(entry.id)
-              ? () => _handleOpenBook(entry.id)
+              ? () => _handleOpenBook(provider, entry.id)
               : null,
         );
       },
@@ -463,7 +473,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
           onTap: () => _handleEntryTap(provider, entry),
           onDownload: () => _handleDownload(provider, entry),
           onOpen: provider.isBookInLibrary(entry.id)
-              ? () => _handleOpenBook(entry.id)
+              ? () => _handleOpenBook(provider, entry.id)
               : null,
         );
       },
