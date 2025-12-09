@@ -10,6 +10,7 @@ ReadWhere is a cross-platform e-reader Flutter application for open formats. It 
 
 @docs/0-setup/development.md contains setup instructions.
 @docs/0-setup/ux.md contains UX guidelines.
+@docs/0-setup/plugins-packages.md describes the plugin/package architecture.
 
 ## Development Commands
 
