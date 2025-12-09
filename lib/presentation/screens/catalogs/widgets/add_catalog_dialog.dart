@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../domain/entities/catalog.dart';
-import '../../../../domain/entities/opds_feed.dart';
 import '../../../providers/catalogs_provider.dart';
 
 /// Dialog for adding a new catalog (server) connection

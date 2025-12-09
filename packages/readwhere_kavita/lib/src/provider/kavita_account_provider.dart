@@ -1,16 +1,16 @@
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
-import '../../data/services/kavita_api_service.dart';
+import '../api/kavita_api_client.dart';
 
 /// Kavita implementation of [AccountProvider].
 ///
 /// Kavita uses API key authentication. The API key can be
 /// obtained from the user's settings page in the Kavita web UI.
 class KavitaAccountProvider implements AccountProvider {
-  /// Creates an account provider with the given Kavita API service.
-  KavitaAccountProvider(this._apiService);
+  /// Creates an account provider with the given Kavita API client.
+  KavitaAccountProvider(this._apiClient);
 
-  final KavitaApiService _apiService;
+  final KavitaApiClient _apiClient;
 
   @override
   String get id => 'kavita';
@@ -27,12 +27,12 @@ class KavitaAccountProvider implements AccountProvider {
       throw ArgumentError('Kavita requires API key authentication');
     }
 
-    final serverInfo = await _apiService.authenticate(
+    final serverInfo = await _apiClient.authenticate(
       serverUrl,
       credentials.apiKey,
     );
 
-    return _KavitaAccountInfo(
+    return KavitaAccountInfo(
       serverUrl: serverUrl,
       serverName: serverInfo.serverName,
       serverVersion: serverInfo.version,
@@ -77,17 +77,25 @@ class KavitaAccountProvider implements AccountProvider {
 }
 
 /// AccountInfo implementation for Kavita servers.
-class _KavitaAccountInfo implements AccountInfo {
-  const _KavitaAccountInfo({
+class KavitaAccountInfo implements AccountInfo {
+  /// Creates a Kavita account info.
+  const KavitaAccountInfo({
     required this.serverUrl,
     required this.serverName,
     required this.serverVersion,
     required this.apiKey,
   });
 
+  /// The Kavita server URL.
   final String serverUrl;
+
+  /// The server name/install ID.
   final String serverName;
+
+  /// The Kavita server version.
   final String serverVersion;
+
+  /// The user's API key.
   final String apiKey;
 
   @override

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import '../../../domain/entities/opds_entry.dart';
-import '../../../domain/entities/opds_link.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
+
 import '../../database/tables/cached_opds_entries_table.dart';
 
 /// Model for cached OPDS entries with SQLite serialization

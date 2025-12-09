@@ -3,10 +3,13 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i5;
 
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:readwhere/data/services/kavita_api_service.dart' as _i2;
+import 'package:mockito/src/dummies.dart' as _i4;
+import 'package:readwhere_kavita/src/api/kavita_api_client.dart' as _i3;
+import 'package:readwhere_kavita/src/models/kavita_progress.dart' as _i6;
+import 'package:readwhere_kavita/src/models/kavita_server_info.dart' as _i2;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -23,63 +26,87 @@ import 'package:readwhere/data/services/kavita_api_service.dart' as _i2;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
-class _FakeKavitaServerInfo_0 extends _i1.SmartFake
-    implements _i2.KavitaServerInfo {
-  _FakeKavitaServerInfo_0(Object parent, Invocation parentInvocation)
+class _FakeDuration_0 extends _i1.SmartFake implements Duration {
+  _FakeDuration_0(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-/// A class which mocks [KavitaApiService].
+class _FakeKavitaServerInfo_1 extends _i1.SmartFake
+    implements _i2.KavitaServerInfo {
+  _FakeKavitaServerInfo_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+/// A class which mocks [KavitaApiClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockKavitaApiService extends _i1.Mock implements _i2.KavitaApiService {
-  MockKavitaApiService() {
+class MockKavitaApiClient extends _i1.Mock implements _i3.KavitaApiClient {
+  MockKavitaApiClient() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<_i2.KavitaServerInfo> authenticate(
+  Duration get timeout =>
+      (super.noSuchMethod(
+            Invocation.getter(#timeout),
+            returnValue: _FakeDuration_0(this, Invocation.getter(#timeout)),
+          )
+          as Duration);
+
+  @override
+  String get userAgent =>
+      (super.noSuchMethod(
+            Invocation.getter(#userAgent),
+            returnValue: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#userAgent),
+            ),
+          )
+          as String);
+
+  @override
+  _i5.Future<_i2.KavitaServerInfo> authenticate(
     String? serverUrl,
     String? apiKey,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#authenticate, [serverUrl, apiKey]),
-            returnValue: _i3.Future<_i2.KavitaServerInfo>.value(
-              _FakeKavitaServerInfo_0(
+            returnValue: _i5.Future<_i2.KavitaServerInfo>.value(
+              _FakeKavitaServerInfo_1(
                 this,
                 Invocation.method(#authenticate, [serverUrl, apiKey]),
               ),
             ),
           )
-          as _i3.Future<_i2.KavitaServerInfo>);
+          as _i5.Future<_i2.KavitaServerInfo>);
 
   @override
-  _i3.Future<_i2.KavitaProgress?> getProgress(
+  _i5.Future<_i6.KavitaProgress?> getProgress(
     String? serverUrl,
     String? apiKey,
     int? chapterId,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getProgress, [serverUrl, apiKey, chapterId]),
-            returnValue: _i3.Future<_i2.KavitaProgress?>.value(),
+            returnValue: _i5.Future<_i6.KavitaProgress?>.value(),
           )
-          as _i3.Future<_i2.KavitaProgress?>);
+          as _i5.Future<_i6.KavitaProgress?>);
 
   @override
-  _i3.Future<void> updateProgress(
+  _i5.Future<void> updateProgress(
     String? serverUrl,
     String? apiKey,
-    _i2.KavitaProgress? progress,
+    _i6.KavitaProgress? progress,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#updateProgress, [serverUrl, apiKey, progress]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i5.Future<void>);
 
   @override
-  _i3.Future<void> markChapterRead(
+  _i5.Future<void> markChapterRead(
     String? serverUrl,
     String? apiKey, {
     required int? seriesId,
@@ -92,10 +119,10 @@ class MockKavitaApiService extends _i1.Mock implements _i2.KavitaApiService {
               [serverUrl, apiKey],
               {#seriesId: seriesId, #volumeId: volumeId, #chapterId: chapterId},
             ),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i5.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(

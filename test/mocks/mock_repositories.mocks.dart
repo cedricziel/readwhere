@@ -569,6 +569,11 @@ class MockReaderController extends _i1.Mock implements _i8.ReaderController {
           as _i9.Stream<_i19.ReaderContent>);
 
   @override
+  bool get isFixedLayout =>
+      (super.noSuchMethod(Invocation.getter(#isFixedLayout), returnValue: false)
+          as bool);
+
+  @override
   _i9.Future<void> goToChapter(int? index) =>
       (super.noSuchMethod(
             Invocation.method(#goToChapter, [index]),

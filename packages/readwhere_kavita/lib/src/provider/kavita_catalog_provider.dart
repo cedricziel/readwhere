@@ -1,10 +1,10 @@
+import 'dart:io';
+
+import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
-import '../../data/services/kavita_api_service.dart';
-import '../../data/services/opds_cache_service.dart';
-import '../../data/services/opds_client_service.dart';
-import '../../domain/adapters/opds_adapters.dart';
-import '../../domain/entities/opds_link.dart';
+import '../api/kavita_api_client.dart';
+import '../api/kavita_exception.dart';
 
 /// Kavita implementation of [CatalogProvider].
 ///
@@ -12,15 +12,23 @@ import '../../domain/entities/opds_link.dart';
 /// additional API endpoints for authentication and progress sync.
 class KavitaCatalogProvider implements CatalogProvider {
   /// Creates a catalog provider with the given services.
+  ///
+  /// [kavitaApiClient] handles Kavita REST API operations (auth, progress sync).
+  /// [opdsClient] handles OPDS operations (browse, search, download).
+  /// [cache] is an optional cache implementation for OPDS feeds.
+  /// [downloadDirectory] is a function that returns the download directory for a catalog.
   KavitaCatalogProvider(
-    this._kavitaApiService,
-    this._opdsClientService,
-    this._cacheService,
-  );
+    this._kavitaApiClient,
+    this._opdsClient, {
+    OpdsCacheInterface? cache,
+    Future<Directory> Function(String catalogId)? downloadDirectory,
+  }) : _cache = cache,
+       _downloadDirectory = downloadDirectory;
 
-  final KavitaApiService _kavitaApiService;
-  final OpdsClientService _opdsClientService;
-  final OpdsCacheService _cacheService;
+  final KavitaApiClient _kavitaApiClient;
+  final OpdsClient _opdsClient;
+  final OpdsCacheInterface? _cache;
+  final Future<Directory> Function(String catalogId)? _downloadDirectory;
 
   @override
   String get id => 'kavita';
@@ -59,14 +67,14 @@ class KavitaCatalogProvider implements CatalogProvider {
 
     try {
       // Use Kavita API to validate the API key
-      final serverInfo = await _kavitaApiService.authenticate(
+      final serverInfo = await _kavitaApiClient.authenticate(
         catalog.url,
         apiKey,
       );
 
       // Also validate the OPDS endpoint
       final opdsUrl = _getOpdsUrl(catalog.url, apiKey);
-      final feed = await _opdsClientService.validateCatalog(opdsUrl);
+      final feed = await _opdsClient.validateCatalog(opdsUrl);
 
       return ValidationResult.success(
         serverName: serverInfo.serverName,
@@ -108,23 +116,29 @@ class KavitaCatalogProvider implements CatalogProvider {
     final opdsUrl = _getOpdsUrl(catalog.url, apiKey ?? '');
     final url = path ?? opdsUrl;
 
-    // Use cache service with network-first strategy
-    final cachedResult = await _cacheService.fetchFeed(
-      catalogId: catalog.id,
-      url: url,
-      strategy: FetchStrategy.networkFirst,
-    );
+    // Use cache if available, otherwise fetch directly
+    if (_cache != null) {
+      final cachedResult = await _cache.fetchFeed(
+        catalogId: catalog.id,
+        url: url,
+        strategy: FetchStrategy.networkFirst,
+      );
 
-    return cachedResult.feed.toBrowseResult().copyWith(
-      properties: {
-        ...cachedResult.feed.toBrowseResult().properties,
-        'isFromCache': cachedResult.isFromCache,
-        if (cachedResult.cachedAt != null)
-          'cachedAt': cachedResult.cachedAt!.toIso8601String(),
-        if (cachedResult.expiresAt != null)
-          'expiresAt': cachedResult.expiresAt!.toIso8601String(),
-      },
-    );
+      return cachedResult.feed.toBrowseResult().copyWith(
+        properties: {
+          ...cachedResult.feed.toBrowseResult().properties,
+          'isFromCache': cachedResult.isFromCache,
+          if (cachedResult.cachedAt != null)
+            'cachedAt': cachedResult.cachedAt!.toIso8601String(),
+          if (cachedResult.expiresAt != null)
+            'expiresAt': cachedResult.expiresAt!.toIso8601String(),
+        },
+      );
+    }
+
+    // No cache, fetch directly
+    final feed = await _opdsClient.fetchFeed(url);
+    return feed.toBrowseResult();
   }
 
   @override
@@ -137,13 +151,13 @@ class KavitaCatalogProvider implements CatalogProvider {
     final opdsUrl = _getOpdsUrl(catalog.url, apiKey ?? '');
 
     // First get the root feed to find the search link
-    final rootFeed = await _opdsClientService.fetchFeed(opdsUrl);
+    final rootFeed = await _opdsClient.fetchFeed(opdsUrl);
 
     if (!rootFeed.hasSearch) {
       throw UnsupportedError('This Kavita catalog does not support search');
     }
 
-    final searchResult = await _opdsClientService.search(rootFeed, query);
+    final searchResult = await _opdsClient.search(rootFeed, query);
     return searchResult.toBrowseResult();
   }
 
@@ -167,9 +181,18 @@ class KavitaCatalogProvider implements CatalogProvider {
       currency: file.properties['currency'] as String?,
     );
 
-    await _opdsClientService.downloadBook(
+    // Determine download directory
+    Directory downloadDir;
+    if (_downloadDirectory != null) {
+      downloadDir = await _downloadDirectory(catalog.id);
+    } else {
+      // Default to a temp directory
+      downloadDir = Directory.systemTemp;
+    }
+
+    await _opdsClient.downloadBook(
       link,
-      catalog.id,
+      downloadDir,
       onProgress: onProgress != null
           ? (progress) {
               // Convert from 0.0-1.0 double to received/total int format

@@ -1,81 +1,13 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-/// Exception thrown when Kavita API operations fail
-class KavitaApiException implements Exception {
-  final String message;
-  final int? statusCode;
-  final dynamic cause;
+import '../models/kavita_progress.dart';
+import '../models/kavita_server_info.dart';
+import 'kavita_exception.dart';
 
-  KavitaApiException(this.message, {this.statusCode, this.cause});
-
-  @override
-  String toString() =>
-      'KavitaApiException: $message${statusCode != null ? ' (HTTP $statusCode)' : ''}';
-}
-
-/// Server information from Kavita
-class KavitaServerInfo {
-  final String serverName;
-  final String version;
-
-  KavitaServerInfo({required this.serverName, required this.version});
-
-  factory KavitaServerInfo.fromJson(Map<String, dynamic> json) {
-    return KavitaServerInfo(
-      serverName: json['installId'] as String? ?? 'Kavita Server',
-      version: json['kavitaVersion'] as String? ?? 'Unknown',
-    );
-  }
-}
-
-/// Reading progress from Kavita
-class KavitaProgress {
-  final int chapterId;
-  final int pageNum;
-  final int volumeId;
-  final int seriesId;
-  final int libraryId;
-  final String? bookScrollId;
-  final DateTime? lastModified;
-
-  KavitaProgress({
-    required this.chapterId,
-    required this.pageNum,
-    required this.volumeId,
-    required this.seriesId,
-    required this.libraryId,
-    this.bookScrollId,
-    this.lastModified,
-  });
-
-  factory KavitaProgress.fromJson(Map<String, dynamic> json) {
-    return KavitaProgress(
-      chapterId: json['chapterId'] as int? ?? 0,
-      pageNum: json['pageNum'] as int? ?? 0,
-      volumeId: json['volumeId'] as int? ?? 0,
-      seriesId: json['seriesId'] as int? ?? 0,
-      libraryId: json['libraryId'] as int? ?? 0,
-      bookScrollId: json['bookScrollId'] as String?,
-      lastModified: json['lastModified'] != null
-          ? DateTime.tryParse(json['lastModified'] as String)
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'chapterId': chapterId,
-      'pageNum': pageNum,
-      'volumeId': volumeId,
-      'seriesId': seriesId,
-      'libraryId': libraryId,
-      if (bookScrollId != null) 'bookScrollId': bookScrollId,
-    };
-  }
-}
+/// Callback for logging messages
+typedef LogCallback = void Function(String message);
 
 /// Service for interacting with Kavita's REST API
 ///
@@ -83,16 +15,37 @@ class KavitaProgress {
 /// - Server authentication validation
 /// - Reading progress sync (get and update)
 /// - Server information retrieval
-class KavitaApiService {
+class KavitaApiClient {
   final http.Client _httpClient;
 
+  /// Optional logging callback
+  final LogCallback? onLog;
+
   /// Request timeout duration
-  static const Duration _timeout = Duration(seconds: 30);
+  static const Duration defaultTimeout = Duration(seconds: 30);
+
+  /// Timeout to use for requests
+  final Duration timeout;
 
   /// User agent for requests
-  static const String _userAgent = 'ReadWhere/1.0 (Kavita Client)';
+  final String userAgent;
 
-  KavitaApiService(this._httpClient);
+  /// Creates a Kavita API client
+  ///
+  /// [httpClient] is the HTTP client to use for requests.
+  /// [userAgent] is the user agent string to send with requests.
+  /// [timeout] is the timeout for HTTP requests.
+  /// [onLog] is an optional callback for logging messages.
+  KavitaApiClient(
+    this._httpClient, {
+    this.userAgent = 'ReadWhere/1.0 (Kavita Client)',
+    this.timeout = defaultTimeout,
+    this.onLog,
+  });
+
+  void _log(String message) {
+    onLog?.call(message);
+  }
 
   /// Validate API key and get server info
   ///
@@ -125,11 +78,11 @@ class KavitaApiService {
           Uri.parse('$baseUrl/api/Account/login-with-apikey'),
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': _userAgent,
+            'User-Agent': userAgent,
           },
           body: jsonEncode({'apiKey': apiKey}),
         )
-        .timeout(_timeout);
+        .timeout(timeout);
 
     if (response.statusCode != 200) {
       throw KavitaApiException(
@@ -147,9 +100,9 @@ class KavitaApiService {
     final response = await _httpClient
         .get(
           Uri.parse('$baseUrl/api/Server/server-info'),
-          headers: {'Authorization': 'Bearer $token', 'User-Agent': _userAgent},
+          headers: {'Authorization': 'Bearer $token', 'User-Agent': userAgent},
         )
-        .timeout(_timeout);
+        .timeout(timeout);
 
     if (response.statusCode != 200) {
       throw KavitaApiException(
@@ -182,10 +135,10 @@ class KavitaApiService {
             Uri.parse('$baseUrl/api/Reader/get-progress?chapterId=$chapterId'),
             headers: {
               'Authorization': 'Bearer $token',
-              'User-Agent': _userAgent,
+              'User-Agent': userAgent,
             },
           )
-          .timeout(_timeout);
+          .timeout(timeout);
 
       if (response.statusCode == 404) {
         return null; // No progress recorded yet
@@ -201,7 +154,7 @@ class KavitaApiService {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return KavitaProgress.fromJson(json);
     } catch (e) {
-      debugPrint('KavitaApiService: Error getting progress: $e');
+      _log('KavitaApiClient: Error getting progress: $e');
       if (e is KavitaApiException) rethrow;
       throw KavitaApiException('Failed to get progress: $e', cause: e);
     }
@@ -228,11 +181,11 @@ class KavitaApiService {
             headers: {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
-              'User-Agent': _userAgent,
+              'User-Agent': userAgent,
             },
             body: jsonEncode(progress.toJson()),
           )
-          .timeout(_timeout);
+          .timeout(timeout);
 
       if (response.statusCode != 200) {
         throw KavitaApiException(
@@ -241,11 +194,11 @@ class KavitaApiService {
         );
       }
 
-      debugPrint(
-        'KavitaApiService: Progress updated for chapter ${progress.chapterId}',
+      _log(
+        'KavitaApiClient: Progress updated for chapter ${progress.chapterId}',
       );
     } catch (e) {
-      debugPrint('KavitaApiService: Error updating progress: $e');
+      _log('KavitaApiClient: Error updating progress: $e');
       if (e is KavitaApiException) rethrow;
       throw KavitaApiException('Failed to update progress: $e', cause: e);
     }
@@ -276,7 +229,7 @@ class KavitaApiService {
             headers: {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
-              'User-Agent': _userAgent,
+              'User-Agent': userAgent,
             },
             body: jsonEncode({
               'seriesId': seriesId,
@@ -284,7 +237,7 @@ class KavitaApiService {
               'chapterId': chapterId,
             }),
           )
-          .timeout(_timeout);
+          .timeout(timeout);
 
       if (response.statusCode != 200) {
         throw KavitaApiException(

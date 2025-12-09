@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
 
-import '../../../../../domain/entities/opds_entry.dart';
 import 'download_button.dart';
 
 /// Card widget for displaying an OPDS entry (book or navigation item)

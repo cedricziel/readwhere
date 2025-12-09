@@ -1,38 +1,49 @@
+import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
-import '../../domain/entities/opds_feed.dart';
-import '../../domain/entities/opds_link.dart';
-import '../models/opds/opds_feed_model.dart';
+import '../entities/opds_feed.dart';
+import '../entities/opds_link.dart';
+import '../models/opds_feed_model.dart';
+import 'opds_exception.dart';
 
-/// Exception thrown when OPDS operations fail
-class OpdsException implements Exception {
-  final String message;
-  final int? statusCode;
-  final dynamic cause;
-
-  OpdsException(this.message, {this.statusCode, this.cause});
-
-  @override
-  String toString() =>
-      'OpdsException: $message${statusCode != null ? ' (HTTP $statusCode)' : ''}';
-}
+/// Callback for logging messages
+typedef LogCallback = void Function(String message);
 
 /// Service for fetching and parsing OPDS feeds
-class OpdsClientService {
+class OpdsClient {
   final http.Client _httpClient;
 
+  /// Optional logging callback
+  final LogCallback? onLog;
+
   /// Request timeout duration
-  static const Duration _timeout = Duration(seconds: 30);
+  static const Duration defaultTimeout = Duration(seconds: 30);
+
+  /// Timeout to use for requests
+  final Duration timeout;
 
   /// User agent for requests
-  static const String _userAgent = 'ReadWhere/1.0 (OPDS Client)';
+  final String userAgent;
 
-  OpdsClientService(this._httpClient);
+  /// Creates an OPDS client
+  ///
+  /// [httpClient] is the HTTP client to use for requests.
+  /// [userAgent] is the user agent string to send with requests.
+  /// [timeout] is the timeout for HTTP requests.
+  /// [onLog] is an optional callback for logging messages.
+  OpdsClient(
+    this._httpClient, {
+    this.userAgent = 'ReadWhere/1.0 (OPDS Client)',
+    this.timeout = defaultTimeout,
+    this.onLog,
+  });
+
+  void _log(String message) {
+    onLog?.call(message);
+  }
 
   /// Validate an OPDS catalog URL and return the root feed
   ///
@@ -57,19 +68,19 @@ class OpdsClientService {
   /// Throws [OpdsException] on network or parsing errors
   Future<OpdsFeed> fetchFeed(String url) async {
     try {
-      debugPrint('OpdsClientService: Fetching feed from $url');
+      _log('OpdsClient: Fetching feed from $url');
 
       final response = await _httpClient
           .get(
             Uri.parse(url),
             headers: {
               'Accept': 'application/atom+xml, application/xml, text/xml, */*',
-              'User-Agent': _userAgent,
+              'User-Agent': userAgent,
             },
           )
-          .timeout(_timeout);
+          .timeout(timeout);
 
-      debugPrint('OpdsClientService: Response status ${response.statusCode}');
+      _log('OpdsClient: Response status ${response.statusCode}');
 
       if (response.statusCode != 200) {
         throw OpdsException(
@@ -81,15 +92,13 @@ class OpdsClientService {
       // Check content type
       final contentType = response.headers['content-type'] ?? '';
       if (!_isValidContentType(contentType)) {
-        debugPrint(
-          'OpdsClientService: Warning - Unexpected content type: $contentType',
-        );
+        _log('OpdsClient: Warning - Unexpected content type: $contentType');
       }
 
       // Parse the XML response
       final feed = OpdsFeedModel.fromXmlString(response.body, baseUrl: url);
-      debugPrint(
-        'OpdsClientService: Parsed feed "${feed.title}" with ${feed.entries.length} entries',
+      _log(
+        'OpdsClient: Parsed feed "${feed.title}" with ${feed.entries.length} entries',
       );
 
       return feed;
@@ -170,21 +179,23 @@ class OpdsClientService {
   /// Download a book from an acquisition link
   ///
   /// [link] The acquisition link
-  /// [catalogId] ID of the source catalog (for organizing downloads)
+  /// [downloadDir] Directory where downloaded files should be saved
+  /// [filename] Optional custom filename (without extension)
   /// [onProgress] Optional callback for download progress (0.0 to 1.0)
   /// Returns the path to the downloaded file
   Future<String> downloadBook(
     OpdsLink link,
-    String catalogId, {
+    Directory downloadDir, {
+    String? filename,
     void Function(double progress)? onProgress,
   }) async {
-    debugPrint('OpdsClientService: Downloading book from ${link.href}');
+    _log('OpdsClient: Downloading book from ${link.href}');
 
     try {
       final request = http.Request('GET', Uri.parse(link.href));
-      request.headers['User-Agent'] = _userAgent;
+      request.headers['User-Agent'] = userAgent;
 
-      final response = await _httpClient.send(request).timeout(_timeout);
+      final response = await _httpClient.send(request).timeout(timeout);
 
       if (response.statusCode != 200) {
         throw OpdsException(
@@ -196,19 +207,16 @@ class OpdsClientService {
       // Get expected content length
       final contentLength = response.contentLength ?? 0;
 
-      // Get downloads directory
-      final appDir = await getApplicationDocumentsDirectory();
-      final downloadsDir = Directory(
-        p.join(appDir.path, 'downloads', catalogId),
-      );
-      if (!await downloadsDir.exists()) {
-        await downloadsDir.create(recursive: true);
+      // Ensure download directory exists
+      if (!await downloadDir.exists()) {
+        await downloadDir.create(recursive: true);
       }
 
       // Generate filename
       final extension = link.fileExtension ?? 'epub';
-      final filename = '${DateTime.now().millisecondsSinceEpoch}.$extension';
-      final filePath = p.join(downloadsDir.path, filename);
+      final finalFilename =
+          filename ?? DateTime.now().millisecondsSinceEpoch.toString();
+      final filePath = p.join(downloadDir.path, '$finalFilename.$extension');
 
       // Stream download to file
       final file = File(filePath);
@@ -226,9 +234,7 @@ class OpdsClientService {
 
       await sink.close();
 
-      debugPrint(
-        'OpdsClientService: Downloaded $bytesReceived bytes to $filePath',
-      );
+      _log('OpdsClient: Downloaded $bytesReceived bytes to $filePath');
       return filePath;
     } catch (e) {
       if (e is OpdsException) rethrow;
@@ -252,7 +258,7 @@ class OpdsClientService {
 
   /// Check if content type is valid for OPDS
   bool _isValidContentType(String contentType) {
-    final validTypes = [
+    const validTypes = [
       'application/atom+xml',
       'application/xml',
       'text/xml',
@@ -265,8 +271,8 @@ class OpdsClientService {
   Future<String> _getOpenSearchUrl(String descriptionUrl, String query) async {
     try {
       final response = await _httpClient
-          .get(Uri.parse(descriptionUrl), headers: {'User-Agent': _userAgent})
-          .timeout(_timeout);
+          .get(Uri.parse(descriptionUrl), headers: {'User-Agent': userAgent})
+          .timeout(timeout);
 
       if (response.statusCode != 200) {
         throw OpdsException('Failed to fetch OpenSearch description');

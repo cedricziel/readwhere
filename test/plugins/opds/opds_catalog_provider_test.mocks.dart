@@ -4,16 +4,16 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i6;
+import 'dart:io' as _i8;
 
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i8;
-import 'package:readwhere/data/models/opds/cached_opds_feed_model.dart' as _i3;
+import 'package:mockito/src/dummies.dart' as _i5;
 import 'package:readwhere/data/services/opds_cache_service.dart' as _i9;
-import 'package:readwhere/data/services/opds_client_service.dart' as _i5;
-import 'package:readwhere/domain/entities/opds_feed.dart' as _i2;
-import 'package:readwhere/domain/entities/opds_link.dart' as _i7;
 import 'package:readwhere/domain/repositories/opds_cache_repository.dart'
     as _i4;
+import 'package:readwhere_opds/readwhere_opds.dart' as _i3;
+import 'package:readwhere_opds/src/entities/opds_feed.dart' as _i2;
+import 'package:readwhere_opds/src/entities/opds_link.dart' as _i7;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -30,36 +30,60 @@ import 'package:readwhere/domain/repositories/opds_cache_repository.dart'
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
-class _FakeOpdsFeed_0 extends _i1.SmartFake implements _i2.OpdsFeed {
-  _FakeOpdsFeed_0(Object parent, Invocation parentInvocation)
+class _FakeDuration_0 extends _i1.SmartFake implements Duration {
+  _FakeDuration_0(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeCachedFeedResult_1 extends _i1.SmartFake
+class _FakeOpdsFeed_1 extends _i1.SmartFake implements _i2.OpdsFeed {
+  _FakeOpdsFeed_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeCachedFeedResult_2 extends _i1.SmartFake
     implements _i3.CachedFeedResult {
-  _FakeCachedFeedResult_1(Object parent, Invocation parentInvocation)
+  _FakeCachedFeedResult_2(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeCacheStats_2 extends _i1.SmartFake implements _i4.CacheStats {
-  _FakeCacheStats_2(Object parent, Invocation parentInvocation)
+class _FakeCacheStats_3 extends _i1.SmartFake implements _i4.CacheStats {
+  _FakeCacheStats_3(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-/// A class which mocks [OpdsClientService].
+/// A class which mocks [OpdsClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockOpdsClientService extends _i1.Mock implements _i5.OpdsClientService {
-  MockOpdsClientService() {
+class MockOpdsClient extends _i1.Mock implements _i3.OpdsClient {
+  MockOpdsClient() {
     _i1.throwOnMissingStub(this);
   }
+
+  @override
+  Duration get timeout =>
+      (super.noSuchMethod(
+            Invocation.getter(#timeout),
+            returnValue: _FakeDuration_0(this, Invocation.getter(#timeout)),
+          )
+          as Duration);
+
+  @override
+  String get userAgent =>
+      (super.noSuchMethod(
+            Invocation.getter(#userAgent),
+            returnValue: _i5.dummyValue<String>(
+              this,
+              Invocation.getter(#userAgent),
+            ),
+          )
+          as String);
 
   @override
   _i6.Future<_i2.OpdsFeed> validateCatalog(String? url) =>
       (super.noSuchMethod(
             Invocation.method(#validateCatalog, [url]),
             returnValue: _i6.Future<_i2.OpdsFeed>.value(
-              _FakeOpdsFeed_0(this, Invocation.method(#validateCatalog, [url])),
+              _FakeOpdsFeed_1(this, Invocation.method(#validateCatalog, [url])),
             ),
           )
           as _i6.Future<_i2.OpdsFeed>);
@@ -69,7 +93,7 @@ class MockOpdsClientService extends _i1.Mock implements _i5.OpdsClientService {
       (super.noSuchMethod(
             Invocation.method(#fetchFeed, [url]),
             returnValue: _i6.Future<_i2.OpdsFeed>.value(
-              _FakeOpdsFeed_0(this, Invocation.method(#fetchFeed, [url])),
+              _FakeOpdsFeed_1(this, Invocation.method(#fetchFeed, [url])),
             ),
           )
           as _i6.Future<_i2.OpdsFeed>);
@@ -79,7 +103,7 @@ class MockOpdsClientService extends _i1.Mock implements _i5.OpdsClientService {
       (super.noSuchMethod(
             Invocation.method(#fetchFeedPage, [url], {#page: page}),
             returnValue: _i6.Future<_i2.OpdsFeed>.value(
-              _FakeOpdsFeed_0(
+              _FakeOpdsFeed_1(
                 this,
                 Invocation.method(#fetchFeedPage, [url], {#page: page}),
               ),
@@ -92,7 +116,7 @@ class MockOpdsClientService extends _i1.Mock implements _i5.OpdsClientService {
       (super.noSuchMethod(
             Invocation.method(#search, [rootFeed, query]),
             returnValue: _i6.Future<_i2.OpdsFeed>.value(
-              _FakeOpdsFeed_0(
+              _FakeOpdsFeed_1(
                 this,
                 Invocation.method(#search, [rootFeed, query]),
               ),
@@ -109,7 +133,7 @@ class MockOpdsClientService extends _i1.Mock implements _i5.OpdsClientService {
       (super.noSuchMethod(
             Invocation.method(#searchWithUrl, [catalogUrl, searchPath, query]),
             returnValue: _i6.Future<_i2.OpdsFeed>.value(
-              _FakeOpdsFeed_0(
+              _FakeOpdsFeed_1(
                 this,
                 Invocation.method(#searchWithUrl, [
                   catalogUrl,
@@ -124,22 +148,23 @@ class MockOpdsClientService extends _i1.Mock implements _i5.OpdsClientService {
   @override
   _i6.Future<String> downloadBook(
     _i7.OpdsLink? link,
-    String? catalogId, {
+    _i8.Directory? downloadDir, {
+    String? filename,
     void Function(double)? onProgress,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
               #downloadBook,
-              [link, catalogId],
-              {#onProgress: onProgress},
+              [link, downloadDir],
+              {#filename: filename, #onProgress: onProgress},
             ),
             returnValue: _i6.Future<String>.value(
-              _i8.dummyValue<String>(
+              _i5.dummyValue<String>(
                 this,
                 Invocation.method(
                   #downloadBook,
-                  [link, catalogId],
-                  {#onProgress: onProgress},
+                  [link, downloadDir],
+                  {#filename: filename, #onProgress: onProgress},
                 ),
               ),
             ),
@@ -150,7 +175,7 @@ class MockOpdsClientService extends _i1.Mock implements _i5.OpdsClientService {
   String resolveCoverUrl(String? baseUrl, String? coverPath) =>
       (super.noSuchMethod(
             Invocation.method(#resolveCoverUrl, [baseUrl, coverPath]),
-            returnValue: _i8.dummyValue<String>(
+            returnValue: _i5.dummyValue<String>(
               this,
               Invocation.method(#resolveCoverUrl, [baseUrl, coverPath]),
             ),
@@ -176,7 +201,7 @@ class MockOpdsCacheService extends _i1.Mock implements _i9.OpdsCacheService {
   _i6.Future<_i3.CachedFeedResult> fetchFeed({
     required String? catalogId,
     required String? url,
-    _i9.FetchStrategy? strategy = _i9.FetchStrategy.networkFirst,
+    required _i3.FetchStrategy? strategy,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#fetchFeed, [], {
@@ -185,7 +210,7 @@ class MockOpdsCacheService extends _i1.Mock implements _i9.OpdsCacheService {
               #strategy: strategy,
             }),
             returnValue: _i6.Future<_i3.CachedFeedResult>.value(
-              _FakeCachedFeedResult_1(
+              _FakeCachedFeedResult_2(
                 this,
                 Invocation.method(#fetchFeed, [], {
                   #catalogId: catalogId,
@@ -214,7 +239,7 @@ class MockOpdsCacheService extends _i1.Mock implements _i9.OpdsCacheService {
       (super.noSuchMethod(
             Invocation.method(#refreshFeed, [catalogId, url]),
             returnValue: _i6.Future<_i3.CachedFeedResult>.value(
-              _FakeCachedFeedResult_1(
+              _FakeCachedFeedResult_2(
                 this,
                 Invocation.method(#refreshFeed, [catalogId, url]),
               ),
@@ -235,7 +260,7 @@ class MockOpdsCacheService extends _i1.Mock implements _i9.OpdsCacheService {
       (super.noSuchMethod(
             Invocation.method(#getCacheStats, [catalogId]),
             returnValue: _i6.Future<_i4.CacheStats>.value(
-              _FakeCacheStats_2(
+              _FakeCacheStats_3(
                 this,
                 Invocation.method(#getCacheStats, [catalogId]),
               ),
@@ -248,7 +273,7 @@ class MockOpdsCacheService extends _i1.Mock implements _i9.OpdsCacheService {
       (super.noSuchMethod(
             Invocation.method(#getAllCacheStats, []),
             returnValue: _i6.Future<_i4.CacheStats>.value(
-              _FakeCacheStats_2(this, Invocation.method(#getAllCacheStats, [])),
+              _FakeCacheStats_3(this, Invocation.method(#getAllCacheStats, [])),
             ),
           )
           as _i6.Future<_i4.CacheStats>);
@@ -262,18 +287,18 @@ class MockOpdsCacheService extends _i1.Mock implements _i9.OpdsCacheService {
           as _i6.Future<int>);
 
   @override
-  _i6.Future<void> clearCatalogCache(String? catalogId) =>
+  _i6.Future<void> clearCache(String? catalogId) =>
       (super.noSuchMethod(
-            Invocation.method(#clearCatalogCache, [catalogId]),
+            Invocation.method(#clearCache, [catalogId]),
             returnValue: _i6.Future<void>.value(),
             returnValueForMissingStub: _i6.Future<void>.value(),
           )
           as _i6.Future<void>);
 
   @override
-  _i6.Future<void> clearAllCache() =>
+  _i6.Future<void> clearAllCaches() =>
       (super.noSuchMethod(
-            Invocation.method(#clearAllCache, []),
+            Invocation.method(#clearAllCaches, []),
             returnValue: _i6.Future<void>.value(),
             returnValueForMissingStub: _i6.Future<void>.value(),
           )

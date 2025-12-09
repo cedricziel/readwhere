@@ -1,20 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../data/models/opds/cached_opds_feed_model.dart';
 import '../../data/services/book_import_service.dart';
-import '../../data/services/kavita_api_service.dart';
 import '../../data/services/opds_cache_service.dart';
-import '../../data/services/opds_client_service.dart';
 import '../../domain/entities/book.dart';
 import '../../domain/entities/catalog.dart';
-import '../../domain/entities/opds_entry.dart';
-import '../../domain/entities/opds_feed.dart';
-import '../../domain/entities/opds_link.dart';
 import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
 
@@ -27,9 +23,9 @@ import '../../domain/repositories/catalog_repository.dart';
 /// - Progress sync with Kavita servers
 class CatalogsProvider extends ChangeNotifier {
   final CatalogRepository _catalogRepository;
-  final OpdsClientService _opdsClientService;
+  final OpdsClient _opdsClient;
   final OpdsCacheService _cacheService;
-  final KavitaApiService _kavitaApiService;
+  final KavitaApiClient _kavitaApiClient;
   final BookImportService _importService;
   final BookRepository _bookRepository;
 
@@ -39,17 +35,17 @@ class CatalogsProvider extends ChangeNotifier {
 
   CatalogsProvider({
     required CatalogRepository catalogRepository,
-    required OpdsClientService opdsClientService,
+    required OpdsClient opdsClient,
     required OpdsCacheService cacheService,
-    required KavitaApiService kavitaApiService,
+    required KavitaApiClient kavitaApiClient,
     required BookImportService importService,
     required BookRepository bookRepository,
     NextcloudProvider? nextcloudProvider,
     NextcloudCredentialStorage? credentialStorage,
   }) : _catalogRepository = catalogRepository,
-       _opdsClientService = opdsClientService,
+       _opdsClient = opdsClient,
        _cacheService = cacheService,
-       _kavitaApiService = kavitaApiService,
+       _kavitaApiClient = kavitaApiClient,
        _importService = importService,
        _bookRepository = bookRepository,
        _nextcloudProvider = nextcloudProvider,
@@ -202,7 +198,7 @@ class CatalogsProvider extends ChangeNotifier {
       }
 
       // Validate by fetching the root feed
-      final feed = await _opdsClientService.validateCatalog(opdsUrl);
+      final feed = await _opdsClient.validateCatalog(opdsUrl);
       return feed;
     } catch (e) {
       _error = 'Validation failed: $e';
@@ -366,7 +362,7 @@ class CatalogsProvider extends ChangeNotifier {
 
       // Resolve URL and fetch new feed
       final baseUrl = _selectedCatalog?.opdsUrl ?? '';
-      final url = _opdsClientService.resolveCoverUrl(baseUrl, link.href);
+      final url = _opdsClient.resolveCoverUrl(baseUrl, link.href);
       final resolvedUrl = url.isNotEmpty ? url : link.href;
 
       final result = await _cacheService.fetchFeed(
@@ -453,7 +449,7 @@ class CatalogsProvider extends ChangeNotifier {
 
     try {
       final nextLink = _currentFeed!.nextPageLink!;
-      final nextFeed = await _opdsClientService.fetchFeed(nextLink.href);
+      final nextFeed = await _opdsClient.fetchFeed(nextLink.href);
 
       // Merge entries
       final mergedEntries = [..._currentFeed!.entries, ...nextFeed.entries];
@@ -484,7 +480,7 @@ class CatalogsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final searchFeed = await _opdsClientService.search(_currentFeed!, query);
+      final searchFeed = await _opdsClient.search(_currentFeed!, query);
       _navigationStack.add(_currentFeed!);
       _currentFeed = searchFeed;
     } catch (e) {
@@ -555,10 +551,10 @@ class CatalogsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Download the book file
-      final filePath = await _opdsClientService.downloadBook(
+      // Download the book file to temp directory
+      final filePath = await _opdsClient.downloadBook(
         acquisitionLink,
-        _selectedCatalog!.id,
+        Directory.systemTemp,
         onProgress: (progress) {
           _downloadProgress[entry.id] = progress;
           notifyListeners();
@@ -632,7 +628,7 @@ class CatalogsProvider extends ChangeNotifier {
         pageNum: pageNum,
       );
 
-      await _kavitaApiService.updateProgress(
+      await _kavitaApiClient.updateProgress(
         catalog.url,
         catalog.apiKey!,
         kavitaProgress,
@@ -661,7 +657,7 @@ class CatalogsProvider extends ChangeNotifier {
       final chapterId = int.tryParse(parts[1]) ?? 0;
       if (chapterId == 0) return null;
 
-      return await _kavitaApiService.getProgress(
+      return await _kavitaApiClient.getProgress(
         catalog.url,
         catalog.apiKey!,
         chapterId,

@@ -1,7 +1,7 @@
 import 'package:xml/xml.dart';
 
-import '../../../domain/entities/opds_entry.dart';
-import '../../../domain/entities/opds_link.dart';
+import '../entities/opds_entry.dart';
+import '../entities/opds_link.dart';
 import 'opds_link_model.dart';
 
 /// Data model for OpdsEntry with XML parsing support

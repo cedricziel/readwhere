@@ -1,20 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:readwhere/data/services/kavita_api_service.dart';
-import 'package:readwhere/plugins/kavita/kavita_account_provider.dart';
+import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
-@GenerateMocks([KavitaApiService])
+@GenerateMocks([KavitaApiClient])
 import 'kavita_account_provider_test.mocks.dart';
 
 void main() {
   late KavitaAccountProvider provider;
-  late MockKavitaApiService mockApiService;
+  late MockKavitaApiClient mockApiClient;
 
   setUp(() {
-    mockApiService = MockKavitaApiService();
-    provider = KavitaAccountProvider(mockApiService);
+    mockApiClient = MockKavitaApiClient();
+    provider = KavitaAccountProvider(mockApiClient);
   });
 
   group('KavitaAccountProvider', () {
@@ -55,7 +54,7 @@ void main() {
         );
 
         when(
-          mockApiService.authenticate(any, any),
+          mockApiClient.authenticate(any, any),
         ).thenAnswer((_) async => serverInfo);
 
         final credentials = ApiKeyCredentials(apiKey: 'test-api-key');
@@ -72,7 +71,7 @@ void main() {
         expect(result.providerData['apiKey'], 'test-api-key');
 
         verify(
-          mockApiService.authenticate(
+          mockApiClient.authenticate(
             'https://kavita.example.com',
             'test-api-key',
           ),

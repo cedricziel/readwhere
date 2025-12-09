@@ -1,42 +1,7 @@
+import 'package:readwhere_opds/readwhere_opds.dart';
+
 import '../../../core/constants/app_constants.dart';
-import '../../../domain/entities/opds_entry.dart';
-import '../../../domain/entities/opds_feed.dart';
-import '../../../domain/entities/opds_link.dart';
 import '../../database/tables/cached_opds_feeds_table.dart';
-
-/// Result containing feed data and its cache status
-class CachedFeedResult {
-  /// The feed data
-  final OpdsFeed feed;
-
-  /// Whether this data came from cache
-  final bool isFromCache;
-
-  /// When the data was cached (null if not from cache)
-  final DateTime? cachedAt;
-
-  /// When the cache expires (null if not from cache)
-  final DateTime? expiresAt;
-
-  const CachedFeedResult({
-    required this.feed,
-    required this.isFromCache,
-    this.cachedAt,
-    this.expiresAt,
-  });
-
-  /// Whether the cached data is still fresh (not expired)
-  bool get isFresh =>
-      !isFromCache ||
-      (expiresAt != null && DateTime.now().isBefore(expiresAt!));
-
-  /// Whether the cached data is stale (expired)
-  bool get isStale => isFromCache && !isFresh;
-
-  /// Age of the cached data
-  Duration? get age =>
-      cachedAt != null ? DateTime.now().difference(cachedAt!) : null;
-}
 
 /// Model for cached OPDS feeds with SQLite serialization
 class CachedOpdsFeedModel {

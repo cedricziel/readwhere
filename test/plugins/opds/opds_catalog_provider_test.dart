@@ -2,23 +2,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readwhere/data/services/opds_cache_service.dart';
-import 'package:readwhere/data/services/opds_client_service.dart';
-import 'package:readwhere/domain/entities/opds_feed.dart';
-import 'package:readwhere/plugins/opds/opds_catalog_provider.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
-@GenerateMocks([OpdsClientService, OpdsCacheService])
+@GenerateMocks([OpdsClient, OpdsCacheService])
 import 'opds_catalog_provider_test.mocks.dart';
 
 void main() {
   late OpdsCatalogProvider provider;
-  late MockOpdsClientService mockClientService;
+  late MockOpdsClient mockOpdsClient;
   late MockOpdsCacheService mockCacheService;
 
   setUp(() {
-    mockClientService = MockOpdsClientService();
+    mockOpdsClient = MockOpdsClient();
     mockCacheService = MockOpdsCacheService();
-    provider = OpdsCatalogProvider(mockClientService, mockCacheService);
+    provider = OpdsCatalogProvider(mockOpdsClient, cache: mockCacheService);
   });
 
   group('OpdsCatalogProvider', () {
@@ -77,7 +75,7 @@ void main() {
         );
 
         when(
-          mockClientService.validateCatalog(any),
+          mockOpdsClient.validateCatalog(any),
         ).thenAnswer((_) async => mockFeed);
 
         final catalog = _TestCatalogInfo(
@@ -94,7 +92,7 @@ void main() {
 
       test('returns failure when validation throws OpdsException', () async {
         when(
-          mockClientService.validateCatalog(any),
+          mockOpdsClient.validateCatalog(any),
         ).thenThrow(OpdsException('Invalid feed', statusCode: 404));
 
         final catalog = _TestCatalogInfo(
@@ -111,7 +109,7 @@ void main() {
 
       test('returns auth_failed when status is 401', () async {
         when(
-          mockClientService.validateCatalog(any),
+          mockOpdsClient.validateCatalog(any),
         ).thenThrow(OpdsException('Unauthorized', statusCode: 401));
 
         final catalog = _TestCatalogInfo(

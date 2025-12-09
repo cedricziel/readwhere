@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
 
 import '../../../../core/di/service_locator.dart';
-import '../../../../domain/entities/opds_entry.dart';
-import '../../../../domain/entities/opds_link.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../providers/library_provider.dart';
 import '../../../router/routes.dart';

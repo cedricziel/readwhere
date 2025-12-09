@@ -1,4 +1,5 @@
-import '../../../domain/entities/opds_link.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
+
 import '../../database/tables/cached_opds_links_table.dart';
 
 /// Model for cached OPDS links with SQLite serialization

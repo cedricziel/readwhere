@@ -1,21 +1,6 @@
+import 'package:readwhere_opds/readwhere_opds.dart';
+
 import '../../domain/repositories/opds_cache_repository.dart';
-import '../models/opds/cached_opds_feed_model.dart';
-import 'opds_client_service.dart';
-
-/// Strategy for fetching OPDS feeds
-enum FetchStrategy {
-  /// Try network first, fall back to cache on failure (default)
-  networkFirst,
-
-  /// Use cache if available and fresh, otherwise network
-  cacheFirst,
-
-  /// Only use cache, never network (offline mode)
-  cacheOnly,
-
-  /// Only use network, bypass cache entirely
-  networkOnly,
-}
 
 /// Exception thrown when cache is required but not available
 class CacheNotFoundException implements Exception {
@@ -30,25 +15,35 @@ class CacheNotFoundException implements Exception {
 }
 
 /// Service for cache-aware OPDS feed fetching
-class OpdsCacheService {
-  final OpdsClientService _opdsClient;
+///
+/// Implements [OpdsCacheInterface] from the readwhere_opds package.
+class OpdsCacheService implements OpdsCacheInterface {
+  final OpdsClient _opdsClient;
   final OpdsCacheRepository _cacheRepository;
 
   OpdsCacheService({
-    required OpdsClientService opdsClient,
+    required OpdsClient opdsClient,
     required OpdsCacheRepository cacheRepository,
   }) : _opdsClient = opdsClient,
        _cacheRepository = cacheRepository;
+
+  /// Check if a cached result is still fresh (not expired)
+  bool _isFresh(CachedFeedResult cached) {
+    if (!cached.isFromCache) return true;
+    if (cached.expiresAt == null) return false;
+    return DateTime.now().isBefore(cached.expiresAt!);
+  }
 
   /// Fetch feed with configurable strategy
   ///
   /// [catalogId] - The ID of the catalog
   /// [url] - The URL of the feed to fetch
   /// [strategy] - The caching strategy to use (default: networkFirst)
+  @override
   Future<CachedFeedResult> fetchFeed({
     required String catalogId,
     required String url,
-    FetchStrategy strategy = FetchStrategy.networkFirst,
+    required FetchStrategy strategy,
   }) async {
     switch (strategy) {
       case FetchStrategy.cacheFirst:
@@ -72,7 +67,7 @@ class OpdsCacheService {
   ) async {
     // Check if we have fresh cache
     final cached = await _cacheRepository.getCachedFeed(catalogId, url);
-    if (cached != null && cached.isFresh) {
+    if (cached != null && _isFresh(cached)) {
       return cached;
     }
 
@@ -168,13 +163,15 @@ class OpdsCacheService {
     return _cacheRepository.deleteExpiredCache();
   }
 
-  /// Clear all cache for a catalog
-  Future<void> clearCatalogCache(String catalogId) async {
+  /// Clear all cache for a catalog (implements OpdsCacheInterface)
+  @override
+  Future<void> clearCache(String catalogId) async {
     await _cacheRepository.deleteCatalogCache(catalogId);
   }
 
-  /// Clear all cache
-  Future<void> clearAllCache() async {
+  /// Clear all caches (implements OpdsCacheInterface)
+  @override
+  Future<void> clearAllCaches() async {
     await _cacheRepository.clearAllCache();
   }
 }

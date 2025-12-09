@@ -7,9 +7,9 @@ export 'book_metadata.dart';
 export 'bookmark.dart';
 export 'catalog.dart';
 export 'feed.dart';
-export 'opds_entry.dart';
-export 'opds_feed.dart';
-export 'opds_link.dart';
 export 'reading_progress.dart';
 export 'reading_settings.dart';
 export 'toc_entry.dart';
+
+// OPDS entities are now in readwhere_opds package
+// import 'package:readwhere_opds/readwhere_opds.dart' for OpdsFeed, OpdsEntry, OpdsLink

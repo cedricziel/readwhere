@@ -1,6 +1,6 @@
 import 'package:xml/xml.dart';
 
-import '../../../domain/entities/opds_link.dart';
+import '../entities/opds_link.dart';
 
 /// Data model for OpdsLink with XML parsing support
 class OpdsLinkModel extends OpdsLink {
@@ -33,10 +33,10 @@ class OpdsLinkModel extends OpdsLink {
     }
 
     // Get rel attribute, default to 'alternate'
-    var rel = element.getAttribute('rel') ?? 'alternate';
+    final rel = element.getAttribute('rel') ?? 'alternate';
 
     // Get type attribute
-    var type = element.getAttribute('type') ?? 'application/atom+xml';
+    final type = element.getAttribute('type') ?? 'application/atom+xml';
 
     // Get optional attributes
     final title = element.getAttribute('title');

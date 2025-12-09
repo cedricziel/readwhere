@@ -1,6 +1,6 @@
+import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../domain/entities/opds_feed.dart';
 import '../../domain/repositories/opds_cache_repository.dart';
 import '../database/database_helper.dart';
 import '../database/tables/cached_opds_entries_table.dart';

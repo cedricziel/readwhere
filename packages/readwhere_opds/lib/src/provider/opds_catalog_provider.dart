@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
-import '../../data/services/opds_cache_service.dart';
-import '../../data/services/opds_client_service.dart';
-import '../../domain/adapters/opds_adapters.dart';
-import '../../domain/entities/opds_link.dart';
+import '../adapters/opds_adapters.dart';
+import '../cache/opds_cache_interface.dart';
+import '../client/opds_client.dart';
+import '../client/opds_exception.dart';
+import '../entities/opds_link.dart';
 
 /// OPDS implementation of [CatalogProvider].
 ///
@@ -11,10 +14,23 @@ import '../../domain/entities/opds_link.dart';
 /// searching, and downloading ebooks.
 class OpdsCatalogProvider implements CatalogProvider {
   /// Creates a catalog provider with the given services.
-  OpdsCatalogProvider(this._clientService, this._cacheService);
+  ///
+  /// [client] is the OPDS HTTP client for fetching feeds.
+  /// [cache] is an optional cache implementation. If not provided,
+  /// a [NoOpCache] is used which fetches directly from network.
+  /// [downloadDirectory] is a function that returns the directory
+  /// to save downloaded files. This allows the main app to control
+  /// where downloads are stored.
+  OpdsCatalogProvider(
+    this._client, {
+    OpdsCacheInterface? cache,
+    Future<Directory> Function(String catalogId)? downloadDirectory,
+  }) : _cache = cache,
+       _getDownloadDir = downloadDirectory;
 
-  final OpdsClientService _clientService;
-  final OpdsCacheService _cacheService;
+  final OpdsClient _client;
+  final OpdsCacheInterface? _cache;
+  final Future<Directory> Function(String catalogId)? _getDownloadDir;
 
   @override
   String get id => 'opds';
@@ -43,7 +59,7 @@ class OpdsCatalogProvider implements CatalogProvider {
   @override
   Future<ValidationResult> validate(CatalogInfo catalog) async {
     try {
-      final feed = await _clientService.validateCatalog(catalog.url);
+      final feed = await _client.validateCatalog(catalog.url);
       return ValidationResult.success(
         serverName: feed.title,
         properties: {
@@ -76,23 +92,29 @@ class OpdsCatalogProvider implements CatalogProvider {
   }) async {
     final url = path ?? catalog.url;
 
-    // Use cache service with network-first strategy
-    final cachedResult = await _cacheService.fetchFeed(
-      catalogId: catalog.id,
-      url: url,
-      strategy: FetchStrategy.networkFirst,
-    );
+    // Use cache service with network-first strategy if available
+    if (_cache != null) {
+      final cachedResult = await _cache.fetchFeed(
+        catalogId: catalog.id,
+        url: url,
+        strategy: FetchStrategy.networkFirst,
+      );
 
-    return cachedResult.feed.toBrowseResult().copyWith(
-      properties: {
-        ...cachedResult.feed.toBrowseResult().properties,
-        'isFromCache': cachedResult.isFromCache,
-        if (cachedResult.cachedAt != null)
-          'cachedAt': cachedResult.cachedAt!.toIso8601String(),
-        if (cachedResult.expiresAt != null)
-          'expiresAt': cachedResult.expiresAt!.toIso8601String(),
-      },
-    );
+      return cachedResult.feed.toBrowseResult().copyWith(
+        properties: {
+          ...cachedResult.feed.toBrowseResult().properties,
+          'isFromCache': cachedResult.isFromCache,
+          if (cachedResult.cachedAt != null)
+            'cachedAt': cachedResult.cachedAt!.toIso8601String(),
+          if (cachedResult.expiresAt != null)
+            'expiresAt': cachedResult.expiresAt!.toIso8601String(),
+        },
+      );
+    }
+
+    // Direct fetch without caching
+    final feed = await _client.fetchFeed(url);
+    return feed.toBrowseResult();
   }
 
   @override
@@ -102,13 +124,13 @@ class OpdsCatalogProvider implements CatalogProvider {
     int? page,
   }) async {
     // First get the root feed to find the search link
-    final rootFeed = await _clientService.fetchFeed(catalog.url);
+    final rootFeed = await _client.fetchFeed(catalog.url);
 
     if (!rootFeed.hasSearch) {
       throw UnsupportedError('This OPDS catalog does not support search');
     }
 
-    final searchResult = await _clientService.search(rootFeed, query);
+    final searchResult = await _client.search(rootFeed, query);
     return searchResult.toBrowseResult();
   }
 
@@ -132,9 +154,18 @@ class OpdsCatalogProvider implements CatalogProvider {
       currency: file.properties['currency'] as String?,
     );
 
-    await _clientService.downloadBook(
+    // Determine download directory
+    Directory downloadDir;
+    if (_getDownloadDir != null) {
+      downloadDir = await _getDownloadDir(catalog.id);
+    } else {
+      // Default to a temp directory
+      downloadDir = Directory.systemTemp;
+    }
+
+    await _client.downloadBook(
       link,
-      catalog.id,
+      downloadDir,
       onProgress: onProgress != null
           ? (progress) {
               // Convert from 0.0-1.0 double to received/total int format

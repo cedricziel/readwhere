@@ -1,30 +1,28 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:readwhere/data/services/kavita_api_service.dart';
 import 'package:readwhere/data/services/opds_cache_service.dart';
-import 'package:readwhere/data/services/opds_client_service.dart';
-import 'package:readwhere/domain/entities/opds_feed.dart';
-import 'package:readwhere/plugins/kavita/kavita_catalog_provider.dart';
+import 'package:readwhere_kavita/readwhere_kavita.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
-@GenerateMocks([KavitaApiService, OpdsClientService, OpdsCacheService])
+@GenerateMocks([KavitaApiClient, OpdsClient, OpdsCacheService])
 import 'kavita_catalog_provider_test.mocks.dart';
 
 void main() {
   late KavitaCatalogProvider provider;
-  late MockKavitaApiService mockKavitaService;
-  late MockOpdsClientService mockOpdsService;
+  late MockKavitaApiClient mockKavitaClient;
+  late MockOpdsClient mockOpdsClient;
   late MockOpdsCacheService mockCacheService;
 
   setUp(() {
-    mockKavitaService = MockKavitaApiService();
-    mockOpdsService = MockOpdsClientService();
+    mockKavitaClient = MockKavitaApiClient();
+    mockOpdsClient = MockOpdsClient();
     mockCacheService = MockOpdsCacheService();
     provider = KavitaCatalogProvider(
-      mockKavitaService,
-      mockOpdsService,
-      mockCacheService,
+      mockKavitaClient,
+      mockOpdsClient,
+      cache: mockCacheService,
     );
   });
 
@@ -115,10 +113,10 @@ void main() {
         );
 
         when(
-          mockKavitaService.authenticate(any, any),
+          mockKavitaClient.authenticate(any, any),
         ).thenAnswer((_) async => serverInfo);
         when(
-          mockOpdsService.validateCatalog(any),
+          mockOpdsClient.validateCatalog(any),
         ).thenAnswer((_) async => mockFeed);
 
         final catalog = _TestCatalogInfo(
@@ -136,7 +134,7 @@ void main() {
 
       test('returns failure when Kavita auth fails', () async {
         when(
-          mockKavitaService.authenticate(any, any),
+          mockKavitaClient.authenticate(any, any),
         ).thenThrow(KavitaApiException('Invalid API key', statusCode: 401));
 
         final catalog = _TestCatalogInfo(

@@ -1,22 +1,18 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 import '../../data/database/database_helper.dart';
-import '../../plugins/kavita/kavita_account_provider.dart';
-import '../../plugins/kavita/kavita_catalog_provider.dart';
-import '../../plugins/opds/opds_account_provider.dart';
-import '../../plugins/opds/opds_catalog_provider.dart';
 import '../../data/repositories/book_repository_impl.dart';
 import '../../data/repositories/bookmark_repository_impl.dart';
 import '../../data/repositories/catalog_repository_impl.dart';
 import '../../data/repositories/opds_cache_repository_impl.dart';
 import '../../data/repositories/reading_progress_repository_impl.dart';
 import '../../data/services/book_import_service.dart';
-import '../../data/services/kavita_api_service.dart';
 import '../../data/services/opds_cache_service.dart';
-import '../../data/services/opds_client_service.dart';
 import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
@@ -77,12 +73,10 @@ Future<void> setupServiceLocator() async {
   // Services
   sl.registerLazySingleton<BookImportService>(() => BookImportService());
 
-  sl.registerLazySingleton<OpdsClientService>(
-    () => OpdsClientService(http.Client()),
-  );
+  sl.registerLazySingleton<OpdsClient>(() => OpdsClient(http.Client()));
 
-  sl.registerLazySingleton<KavitaApiService>(
-    () => KavitaApiService(http.Client()),
+  sl.registerLazySingleton<KavitaApiClient>(
+    () => KavitaApiClient(http.Client()),
   );
 
   sl.registerLazySingleton<OpdsCacheService>(
@@ -112,19 +106,21 @@ Future<void> setupServiceLocator() async {
     final registry = CatalogProviderRegistry();
 
     // OPDS Provider (for generic OPDS catalogs)
+    // Uses package providers with injectable cache
     registry.register(
-      OpdsCatalogProvider(sl<OpdsClientService>(), sl<OpdsCacheService>()),
+      OpdsCatalogProvider(sl<OpdsClient>(), cache: sl<OpdsCacheService>()),
       accountProvider: OpdsAccountProvider(),
     );
 
     // Kavita Provider (OPDS + Kavita API for progress sync)
+    // Uses package providers with injectable cache
     registry.register(
       KavitaCatalogProvider(
-        sl<KavitaApiService>(),
-        sl<OpdsClientService>(),
-        sl<OpdsCacheService>(),
+        sl<KavitaApiClient>(),
+        sl<OpdsClient>(),
+        cache: sl<OpdsCacheService>(),
       ),
-      accountProvider: KavitaAccountProvider(sl<KavitaApiService>()),
+      accountProvider: KavitaAccountProvider(sl<KavitaApiClient>()),
     );
 
     // Nextcloud Provider (WebDAV file access)
@@ -150,9 +146,9 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<CatalogsProvider>(
     () => CatalogsProvider(
       catalogRepository: sl(),
-      opdsClientService: sl(),
+      opdsClient: sl(),
       cacheService: sl(),
-      kavitaApiService: sl(),
+      kavitaApiClient: sl(),
       importService: sl(),
       bookRepository: sl(),
       nextcloudProvider: sl(),

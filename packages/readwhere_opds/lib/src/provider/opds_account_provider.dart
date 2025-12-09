@@ -19,7 +19,7 @@ class OpdsAccountProvider implements AccountProvider {
     // OPDS authentication is typically handled at the HTTP level.
     // For basic auth, the credentials are passed with each request.
     // We don't do a separate authentication step here.
-    return _OpdsAccountInfo(
+    return OpdsAccountInfo(
       catalogId: '',
       serverUrl: serverUrl,
       authType: credentials.type,
@@ -64,8 +64,9 @@ class OpdsAccountProvider implements AccountProvider {
 }
 
 /// Simple AccountInfo implementation for OPDS.
-class _OpdsAccountInfo implements AccountInfo {
-  const _OpdsAccountInfo({
+class OpdsAccountInfo implements AccountInfo {
+  /// Creates OPDS account info
+  const OpdsAccountInfo({
     required this.catalogId,
     required this.serverUrl,
     required this.authType,
@@ -75,11 +76,13 @@ class _OpdsAccountInfo implements AccountInfo {
   @override
   final String catalogId;
 
+  /// The OPDS server URL
   final String serverUrl;
 
   @override
   final AuthType authType;
 
+  /// The authentication credentials (if any)
   final AuthCredentials? credentials;
 
   @override

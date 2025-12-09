@@ -1,7 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-import '../../core/constants/app_constants.dart';
-
 /// OPDS link relation types
 class OpdsLinkRel {
   static const String self = 'self';
@@ -45,6 +43,17 @@ class OpdsMimeType {
 
   OpdsMimeType._();
 }
+
+/// Default supported book formats for OPDS
+const List<String> defaultSupportedFormats = [
+  'epub',
+  'pdf',
+  'mobi',
+  'azw',
+  'azw3',
+  'cbr',
+  'cbz',
+];
 
 /// Represents an OPDS link element
 class OpdsLink extends Equatable {
@@ -181,11 +190,17 @@ class OpdsLink extends Equatable {
     return null;
   }
 
-  /// Whether this link's format is supported by the app
-  bool get isSupportedFormat {
+  /// Whether this link's format is supported by the app.
+  ///
+  /// Uses [defaultSupportedFormats] by default. Use [isSupportedFormatWith]
+  /// to check against a custom list of supported formats.
+  bool get isSupportedFormat => isSupportedFormatWith(defaultSupportedFormats);
+
+  /// Whether this link's format is in the given list of supported formats.
+  bool isSupportedFormatWith(List<String> supportedFormats) {
     final ext = fileExtension;
     if (ext == null) return false;
-    return AppConstants.supportedBookFormats.contains(ext);
+    return supportedFormats.contains(ext);
   }
 
   OpdsLink copyWith({

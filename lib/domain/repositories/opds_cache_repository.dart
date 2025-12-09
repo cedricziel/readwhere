@@ -1,5 +1,4 @@
-import '../../data/models/opds/cached_opds_feed_model.dart';
-import '../entities/opds_feed.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
 
 /// Statistics about cached data
 class CacheStats {

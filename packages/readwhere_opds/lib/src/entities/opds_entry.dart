@@ -96,9 +96,23 @@ class OpdsEntry extends Equatable {
     return acquisitionLinks.where((l) => l.isSupportedFormat).toList();
   }
 
+  /// Get acquisition links for formats supported by the given list
+  List<OpdsLink> supportedAcquisitionLinksWith(List<String> supportedFormats) {
+    return acquisitionLinks
+        .where((l) => l.isSupportedFormatWith(supportedFormats))
+        .toList();
+  }
+
   /// Whether this entry has at least one supported format
   bool get hasSupportedFormat {
     return acquisitionLinks.any((l) => l.isSupportedFormat);
+  }
+
+  /// Whether this entry has at least one format in the given list
+  bool hasSupportedFormatWith(List<String> supportedFormats) {
+    return acquisitionLinks.any(
+      (l) => l.isSupportedFormatWith(supportedFormats),
+    );
   }
 
   /// Whether this entry only has unsupported formats (no supported options)

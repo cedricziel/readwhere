@@ -1,8 +1,8 @@
 import 'package:xml/xml.dart';
 
-import '../../../domain/entities/opds_entry.dart';
-import '../../../domain/entities/opds_feed.dart';
-import '../../../domain/entities/opds_link.dart';
+import '../entities/opds_entry.dart';
+import '../entities/opds_feed.dart';
+import '../entities/opds_link.dart';
 import 'opds_entry_model.dart';
 import 'opds_link_model.dart';
 
