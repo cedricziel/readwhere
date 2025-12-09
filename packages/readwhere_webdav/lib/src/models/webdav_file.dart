@@ -1,16 +1,17 @@
 import 'package:equatable/equatable.dart';
 
-/// Represents a file or directory on a Nextcloud server
+/// Represents a file or directory on a WebDAV server
 ///
-/// Used for WebDAV directory listings and file operations.
-class NextcloudFile extends Equatable {
-  /// Full path on the Nextcloud server (relative to WebDAV root)
+/// This is a generic representation that works with any WebDAV server.
+/// Server-specific extensions can be added via subclassing.
+class WebDavFile extends Equatable {
+  /// Full path on the WebDAV server (relative to the WebDAV root)
   final String path;
 
   /// Display name of the file/directory
   final String name;
 
-  /// Whether this is a directory
+  /// Whether this is a directory (collection in WebDAV terms)
   final bool isDirectory;
 
   /// File size in bytes (null for directories)
@@ -19,13 +20,13 @@ class NextcloudFile extends Equatable {
   /// Last modification timestamp
   final DateTime? lastModified;
 
-  /// MIME type (null for directories)
+  /// MIME type / content type (null for directories)
   final String? mimeType;
 
-  /// ETag for change detection
+  /// ETag for change detection and caching
   final String? etag;
 
-  const NextcloudFile({
+  const WebDavFile({
     required this.path,
     required this.name,
     required this.isDirectory,
@@ -34,23 +35,6 @@ class NextcloudFile extends Equatable {
     this.mimeType,
     this.etag,
   });
-
-  /// Whether this file is an EPUB ebook
-  bool get isEpub =>
-      mimeType == 'application/epub+zip' ||
-      name.toLowerCase().endsWith('.epub');
-
-  /// Whether this file is a PDF document
-  bool get isPdf =>
-      mimeType == 'application/pdf' || name.toLowerCase().endsWith('.pdf');
-
-  /// Whether this file is a CBZ/CBR comic archive
-  bool get isComic =>
-      name.toLowerCase().endsWith('.cbz') ||
-      name.toLowerCase().endsWith('.cbr');
-
-  /// Whether this is a supported book format
-  bool get isSupportedBook => isEpub || isPdf || isComic;
 
   /// Get the file extension (lowercase, without dot)
   String? get extension {
@@ -67,7 +51,7 @@ class NextcloudFile extends Equatable {
   }
 
   /// Create a copy with updated fields
-  NextcloudFile copyWith({
+  WebDavFile copyWith({
     String? path,
     String? name,
     bool? isDirectory,
@@ -76,7 +60,7 @@ class NextcloudFile extends Equatable {
     String? mimeType,
     String? etag,
   }) {
-    return NextcloudFile(
+    return WebDavFile(
       path: path ?? this.path,
       name: name ?? this.name,
       isDirectory: isDirectory ?? this.isDirectory,
@@ -89,17 +73,17 @@ class NextcloudFile extends Equatable {
 
   @override
   List<Object?> get props => [
-    path,
-    name,
-    isDirectory,
-    size,
-    lastModified,
-    mimeType,
-    etag,
-  ];
+        path,
+        name,
+        isDirectory,
+        size,
+        lastModified,
+        mimeType,
+        etag,
+      ];
 
   @override
   String toString() {
-    return 'NextcloudFile(path: $path, name: $name, isDirectory: $isDirectory)';
+    return 'WebDavFile(path: $path, name: $name, isDirectory: $isDirectory)';
   }
 }

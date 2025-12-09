@@ -1,18 +1,50 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../domain/entities/nextcloud_file.dart';
+import '../webdav/nextcloud_file.dart';
 
 /// List tile for displaying a Nextcloud file or directory
+///
+/// This is a reusable widget that can be used to display files
+/// in a list with appropriate icons and metadata.
 class NextcloudFileTile extends StatelessWidget {
+  /// The file to display
   final NextcloudFile file;
+
+  /// Called when the tile is tapped
   final VoidCallback onTap;
+
+  /// Download progress (0.0 to 1.0) if the file is being downloaded
   final double? downloadProgress;
+
+  /// Icon for EPUB files (defaults to menu_book)
+  final IconData epubIcon;
+
+  /// Color for EPUB files (defaults to orange)
+  final Color? epubColor;
+
+  /// Icon for PDF files (defaults to picture_as_pdf)
+  final IconData pdfIcon;
+
+  /// Color for PDF files (defaults to red)
+  final Color? pdfColor;
+
+  /// Icon for comic files (defaults to collections_bookmark)
+  final IconData comicIcon;
+
+  /// Color for comic files (defaults to purple)
+  final Color? comicColor;
 
   const NextcloudFileTile({
     super.key,
     required this.file,
     required this.onTap,
     this.downloadProgress,
+    this.epubIcon = Icons.menu_book,
+    this.epubColor,
+    this.pdfIcon = Icons.picture_as_pdf,
+    this.pdfColor,
+    this.comicIcon = Icons.collections_bookmark,
+    this.comicColor,
   });
 
   @override
@@ -38,14 +70,14 @@ class NextcloudFileTile extends StatelessWidget {
     Color color;
 
     if (file.isEpub) {
-      icon = Icons.menu_book;
-      color = Colors.orange;
+      icon = epubIcon;
+      color = epubColor ?? Colors.orange;
     } else if (file.isPdf) {
-      icon = Icons.picture_as_pdf;
-      color = Colors.red;
+      icon = pdfIcon;
+      color = pdfColor ?? Colors.red;
     } else if (file.isComic) {
-      icon = Icons.collections_bookmark;
-      color = Colors.purple;
+      icon = comicIcon;
+      color = comicColor ?? Colors.purple;
     } else {
       icon = Icons.insert_drive_file;
       color = theme.colorScheme.outline;
@@ -62,11 +94,11 @@ class NextcloudFileTile extends StatelessWidget {
     final parts = <String>[];
 
     if (file.size != null) {
-      parts.add(_formatFileSize(file.size!));
+      parts.add(formatFileSize(file.size!));
     }
 
     if (file.lastModified != null) {
-      parts.add(_formatDate(file.lastModified!));
+      parts.add(formatDate(file.lastModified!));
     }
 
     if (parts.isEmpty) return null;
@@ -112,13 +144,15 @@ class NextcloudFileTile extends StatelessWidget {
     return null;
   }
 
-  String _formatFileSize(int bytes) {
+  /// Format file size for display
+  static String formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
-  String _formatDate(DateTime date) {
+  /// Format date for display
+  static String formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
 

@@ -10,6 +10,9 @@ workspace:
   - packages/readwhere_epub
   - packages/readwhere_cbz
   - packages/readwhere_cbr
+  - packages/readwhere_rar
+  - packages/readwhere_webdav
+  - packages/readwhere_nextcloud
 
 dependencies:
   flutter:
@@ -30,7 +33,7 @@ dependencies:
   # Database & Storage
   sqflite: ^2.4.2
   path_provider: ^2.1.5
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.5.4
 
   # EPUB Support
   readwhere_epub:
@@ -47,6 +50,14 @@ dependencies:
   # CBR Support
   readwhere_cbr:
     path: packages/readwhere_cbr
+
+  # WebDAV Support
+  readwhere_webdav:
+    path: packages/readwhere_webdav
+
+  # Nextcloud Integration
+  readwhere_nextcloud:
+    path: packages/readwhere_nextcloud
 
   # Networking
   http: ^1.6.0

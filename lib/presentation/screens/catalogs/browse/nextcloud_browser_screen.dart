@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 
 import '../../../../core/di/service_locator.dart';
-import '../../../../domain/entities/nextcloud_file.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../providers/library_provider.dart';
-import 'widgets/nextcloud_file_tile.dart';
 
 /// Screen for browsing Nextcloud files via WebDAV
 class NextcloudBrowserScreen extends StatefulWidget {

@@ -1,20 +1,17 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../data/models/opds/cached_opds_feed_model.dart';
 import '../../data/services/book_import_service.dart';
 import '../../data/services/kavita_api_service.dart';
-import '../../data/services/nextcloud_api_service.dart';
-import '../../data/services/nextcloud_webdav_service.dart';
 import '../../data/services/opds_cache_service.dart';
 import '../../data/services/opds_client_service.dart';
-import '../../data/services/secure_storage_service.dart';
 import '../../domain/entities/book.dart';
 import '../../domain/entities/catalog.dart';
-import '../../domain/entities/nextcloud_file.dart';
 import '../../domain/entities/opds_entry.dart';
 import '../../domain/entities/opds_feed.dart';
 import '../../domain/entities/opds_link.dart';
@@ -36,10 +33,9 @@ class CatalogsProvider extends ChangeNotifier {
   final BookImportService _importService;
   final BookRepository _bookRepository;
 
-  // Nextcloud services (optional for backward compatibility)
-  final NextcloudApiService? _nextcloudApiService;
-  final NextcloudWebDavService? _webDavService;
-  final SecureStorageService? _secureStorage;
+  // Nextcloud integration (from readwhere_nextcloud package)
+  final NextcloudProvider? _nextcloudProvider;
+  final CredentialStorage? _credentialStorage;
 
   CatalogsProvider({
     required CatalogRepository catalogRepository,
@@ -48,18 +44,16 @@ class CatalogsProvider extends ChangeNotifier {
     required KavitaApiService kavitaApiService,
     required BookImportService importService,
     required BookRepository bookRepository,
-    NextcloudApiService? nextcloudApiService,
-    NextcloudWebDavService? webDavService,
-    SecureStorageService? secureStorage,
+    NextcloudProvider? nextcloudProvider,
+    CredentialStorage? credentialStorage,
   }) : _catalogRepository = catalogRepository,
        _opdsClientService = opdsClientService,
        _cacheService = cacheService,
        _kavitaApiService = kavitaApiService,
        _importService = importService,
        _bookRepository = bookRepository,
-       _nextcloudApiService = nextcloudApiService,
-       _webDavService = webDavService,
-       _secureStorage = secureStorage;
+       _nextcloudProvider = nextcloudProvider,
+       _credentialStorage = credentialStorage;
 
   // State
   List<Catalog> _catalogs = [];
@@ -80,12 +74,8 @@ class CatalogsProvider extends ChangeNotifier {
   DateTime? _cachedAt;
   DateTime? _cacheExpiresAt;
 
-  // Nextcloud state
-  LoginFlowInit? _pendingOAuthFlow;
-  bool _isPollingOAuth = false;
-  String _currentNextcloudPath = '/';
-  List<NextcloudFile> _nextcloudFiles = [];
-  final List<String> _nextcloudPathStack = [];
+  // Nextcloud state - delegates to NextcloudProvider from package
+  // Local state kept for backward compatibility with existing UI
 
   // Getters
   List<Catalog> get catalogs => List.unmodifiable(_catalogs);
@@ -116,12 +106,13 @@ class CatalogsProvider extends ChangeNotifier {
     return '${age.inDays}d ago';
   }
 
-  // Nextcloud getters
-  String? get oAuthLoginUrl => _pendingOAuthFlow?.loginUrl;
-  bool get isPollingOAuth => _isPollingOAuth;
-  String get currentNextcloudPath => _currentNextcloudPath;
-  List<NextcloudFile> get nextcloudFiles => List.unmodifiable(_nextcloudFiles);
-  bool get canNavigateNextcloudBack => _nextcloudPathStack.isNotEmpty;
+  // Nextcloud getters - delegate to NextcloudProvider
+  String? get oAuthLoginUrl => _nextcloudProvider?.pendingOAuthFlow?.loginUrl;
+  bool get isPollingOAuth => _nextcloudProvider?.isPollingOAuth ?? false;
+  String get currentNextcloudPath => _nextcloudProvider?.currentPath ?? '/';
+  List<NextcloudFile> get nextcloudFiles => _nextcloudProvider?.files ?? [];
+  bool get canNavigateNextcloudBack =>
+      (_nextcloudProvider?.breadcrumbs.length ?? 0) > 1;
 
   /// Whether we can navigate back in the feed stack
   bool get canNavigateBack => _navigationStack.isNotEmpty;
@@ -688,7 +679,7 @@ class CatalogsProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // NEXTCLOUD METHODS
+  // NEXTCLOUD METHODS - Delegate to NextcloudProvider/NextcloudClient
   // ============================================================
 
   /// Validate Nextcloud server credentials
@@ -697,10 +688,10 @@ class CatalogsProvider extends ChangeNotifier {
     String username,
     String appPassword,
   ) async {
-    if (_nextcloudApiService == null) {
+    if (_nextcloudProvider == null) {
       throw Exception('Nextcloud service not available');
     }
-    return await _nextcloudApiService.validateAppPassword(
+    return await _nextcloudProvider.validateCredentials(
       serverUrl,
       username,
       appPassword,
@@ -709,30 +700,24 @@ class CatalogsProvider extends ChangeNotifier {
 
   /// Start Nextcloud OAuth2 Login Flow v2
   Future<void> startNextcloudOAuth(String serverUrl) async {
-    if (_nextcloudApiService == null) {
+    if (_nextcloudProvider == null) {
       throw Exception('Nextcloud service not available');
     }
 
-    _pendingOAuthFlow = await _nextcloudApiService.initiateOAuthFlow(serverUrl);
-    _isPollingOAuth = true;
+    await _nextcloudProvider.startOAuthFlow(serverUrl);
     notifyListeners();
   }
 
   /// Poll for OAuth flow completion
   /// Returns LoginFlowResult when complete, null if still pending
   Future<LoginFlowResult?> pollNextcloudOAuth() async {
-    if (_nextcloudApiService == null || _pendingOAuthFlow == null) {
+    if (_nextcloudProvider == null) {
       return null;
     }
 
-    final result = await _nextcloudApiService.pollOAuthFlow(
-      _pendingOAuthFlow!.pollEndpoint,
-      _pendingOAuthFlow!.pollToken,
-    );
+    final result = await _nextcloudProvider.pollOAuthFlow();
 
     if (result != null) {
-      _pendingOAuthFlow = null;
-      _isPollingOAuth = false;
       notifyListeners();
     }
 
@@ -741,8 +726,7 @@ class CatalogsProvider extends ChangeNotifier {
 
   /// Cancel OAuth flow
   void cancelNextcloudOAuth() {
-    _pendingOAuthFlow = null;
-    _isPollingOAuth = false;
+    _nextcloudProvider?.cancelOAuthFlow();
     notifyListeners();
   }
 
@@ -760,9 +744,9 @@ class CatalogsProvider extends ChangeNotifier {
       'addNextcloudCatalog called: name=$name, url=$url, username=$username',
     );
 
-    if (_secureStorage == null) {
-      debugPrint('addNextcloudCatalog: Secure storage is null!');
-      throw Exception('Secure storage not available');
+    if (_credentialStorage == null) {
+      debugPrint('addNextcloudCatalog: Credential storage is null!');
+      throw Exception('Credential storage not available');
     }
 
     try {
@@ -770,7 +754,7 @@ class CatalogsProvider extends ChangeNotifier {
       debugPrint('addNextcloudCatalog: Generated ID: $id');
 
       // Store password securely
-      await _secureStorage.saveAppPassword(id, appPassword);
+      await _credentialStorage.saveAppPassword(id, appPassword);
       debugPrint('addNextcloudCatalog: Saved app password');
 
       final catalog = Catalog(
@@ -808,21 +792,22 @@ class CatalogsProvider extends ChangeNotifier {
 
   /// Open Nextcloud browser for a catalog
   Future<void> openNextcloudBrowser(Catalog catalog) async {
-    if (_webDavService == null) {
-      throw Exception('WebDAV service not available');
+    if (_nextcloudProvider == null) {
+      throw Exception('Nextcloud service not available');
     }
 
     _selectedCatalog = catalog;
-    _currentNextcloudPath = catalog.effectiveBooksFolder;
-    _nextcloudPathStack.clear();
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _nextcloudFiles = await _webDavService.listDirectory(
-        catalog,
-        _currentNextcloudPath,
+      await _nextcloudProvider.openBrowser(
+        catalogId: catalog.id,
+        serverUrl: catalog.url,
+        userId: catalog.userId ?? catalog.username ?? '',
+        username: catalog.username,
+        booksFolder: catalog.effectiveBooksFolder,
       );
     } catch (e) {
       _error = 'Failed to open Nextcloud: $e';
@@ -834,25 +819,16 @@ class CatalogsProvider extends ChangeNotifier {
 
   /// Navigate to a path in Nextcloud browser
   Future<void> navigateNextcloudTo(String path) async {
-    if (_selectedCatalog == null || _webDavService == null) return;
+    if (_selectedCatalog == null || _nextcloudProvider == null) return;
 
-    _nextcloudPathStack.add(_currentNextcloudPath);
-    _currentNextcloudPath = path;
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _nextcloudFiles = await _webDavService.listDirectory(
-        _selectedCatalog!,
-        path,
-      );
+      await _nextcloudProvider.navigateTo(path);
     } catch (e) {
       _error = 'Failed to navigate: $e';
-      // Revert navigation on error
-      if (_nextcloudPathStack.isNotEmpty) {
-        _currentNextcloudPath = _nextcloudPathStack.removeLast();
-      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -860,49 +836,33 @@ class CatalogsProvider extends ChangeNotifier {
   }
 
   /// Navigate back in Nextcloud browser
-  void navigateNextcloudBack() {
-    if (_nextcloudPathStack.isEmpty) return;
-
-    _currentNextcloudPath = _nextcloudPathStack.removeLast();
-    _error = null;
-
-    // Reload the directory
-    if (_selectedCatalog != null && _webDavService != null) {
-      _isLoading = true;
-      notifyListeners();
-
-      _webDavService
-          .listDirectory(_selectedCatalog!, _currentNextcloudPath)
-          .then(
-            (files) {
-              _nextcloudFiles = files;
-              _isLoading = false;
-              notifyListeners();
-            },
-            onError: (e) {
-              _error = 'Failed to navigate back: $e';
-              _isLoading = false;
-              notifyListeners();
-            },
-          );
-    } else {
-      notifyListeners();
-    }
-  }
-
-  /// Refresh current Nextcloud directory
-  Future<void> refreshNextcloudDirectory() async {
-    if (_selectedCatalog == null || _webDavService == null) return;
+  Future<void> navigateNextcloudBack() async {
+    if (_nextcloudProvider == null) return;
 
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _nextcloudFiles = await _webDavService.listDirectory(
-        _selectedCatalog!,
-        _currentNextcloudPath,
-      );
+      await _nextcloudProvider.navigateBack();
+    } catch (e) {
+      _error = 'Failed to navigate back: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Refresh current Nextcloud directory
+  Future<void> refreshNextcloudDirectory() async {
+    if (_nextcloudProvider == null) return;
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _nextcloudProvider.refresh();
     } catch (e) {
       _error = 'Failed to refresh: $e';
     } finally {
@@ -914,20 +874,17 @@ class CatalogsProvider extends ChangeNotifier {
   /// Close Nextcloud browser
   void closeNextcloudBrowser() {
     _selectedCatalog = null;
-    _currentNextcloudPath = '/';
-    _nextcloudFiles = [];
-    _nextcloudPathStack.clear();
+    _nextcloudProvider?.closeBrowser();
     _error = null;
     notifyListeners();
   }
 
   /// Download and import a book from Nextcloud
   Future<Book?> downloadNextcloudBook(NextcloudFile file) async {
-    if (_selectedCatalog == null || _webDavService == null) {
+    if (_selectedCatalog == null || _nextcloudProvider == null) {
       return null;
     }
 
-    final catalog = _selectedCatalog!;
     final entryId = 'nextcloud:${file.path}';
 
     try {
@@ -938,18 +895,15 @@ class CatalogsProvider extends ChangeNotifier {
       _downloadProgress[entryId] = 0.0;
       notifyListeners();
 
-      // Download file
-      await _webDavService.downloadFile(
-        catalog,
-        file.path,
+      // Download file using NextcloudProvider
+      final downloadedFile = await _nextcloudProvider.downloadFile(
+        file,
         tempPath,
-        onProgress: (received, total) {
-          if (total > 0) {
-            _downloadProgress[entryId] = received / total;
-            notifyListeners();
-          }
-        },
       );
+
+      if (downloadedFile == null) {
+        throw Exception('Download failed');
+      }
 
       _downloadProgress[entryId] = 1.0;
       notifyListeners();
@@ -976,15 +930,13 @@ class CatalogsProvider extends ChangeNotifier {
   }
 
   /// Get Nextcloud breadcrumbs for current path
-  List<String> get nextcloudBreadcrumbs {
-    final parts = _currentNextcloudPath.split('/').where((p) => p.isNotEmpty);
-    return ['/', ...parts];
-  }
+  List<String> get nextcloudBreadcrumbs =>
+      _nextcloudProvider?.breadcrumbs ?? ['/'];
 
   /// Delete a Nextcloud catalog and its credentials
   Future<void> removeNextcloudCatalog(Catalog catalog) async {
-    if (_secureStorage != null) {
-      await _secureStorage.deleteCredentials(catalog.id);
+    if (_credentialStorage != null) {
+      await _credentialStorage.deleteCredentials(catalog.id);
     }
     await removeCatalog(catalog.id);
   }

@@ -1,83 +1,36 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
-import '../../core/constants/app_constants.dart';
-
-/// Exception thrown when Nextcloud API calls fail
-class NextcloudApiException implements Exception {
-  final String message;
-  final int? statusCode;
-  final String? response;
-
-  NextcloudApiException(this.message, {this.statusCode, this.response});
-
-  @override
-  String toString() => 'NextcloudApiException: $message (status: $statusCode)';
-}
-
-/// Server information returned after successful authentication
-class NextcloudServerInfo {
-  final String serverName;
-  final String version;
-  final String userId;
-  final String displayName;
-  final String? email;
-
-  NextcloudServerInfo({
-    required this.serverName,
-    required this.version,
-    required this.userId,
-    required this.displayName,
-    this.email,
-  });
-}
-
-/// Login Flow v2 initialization response
-class LoginFlowInit {
-  /// URL to open in browser for user authentication
-  final String loginUrl;
-
-  /// Endpoint to poll for authentication completion
-  final String pollEndpoint;
-
-  /// Token to use when polling
-  final String pollToken;
-
-  LoginFlowInit({
-    required this.loginUrl,
-    required this.pollEndpoint,
-    required this.pollToken,
-  });
-}
-
-/// Login Flow v2 result (returned after successful authentication)
-class LoginFlowResult {
-  final String server;
-  final String loginName;
-  final String appPassword;
-
-  LoginFlowResult({
-    required this.server,
-    required this.loginName,
-    required this.appPassword,
-  });
-}
+import '../exceptions/nextcloud_exception.dart';
+import 'models/server_info.dart';
+import '../auth/models/login_flow_init.dart';
+import '../auth/models/login_flow_result.dart';
 
 /// Service for Nextcloud authentication and OCS API calls
-class NextcloudApiService {
+///
+/// Provides methods for:
+/// - Validating app passwords
+/// - Initiating OAuth2 Login Flow v2
+/// - Polling for OAuth completion
+/// - Checking if a URL is a valid Nextcloud server
+class OcsApiService {
   final http.Client _client;
 
   /// User-Agent header for all requests
-  static const String _userAgent = AppConstants.nextcloudUserAgent;
+  final String userAgent;
 
-  NextcloudApiService(this._client);
+  OcsApiService(
+    this._client, {
+    this.userAgent = 'ReadWhere/1.0.0 Nextcloud',
+  });
 
   /// Common headers for OCS API requests
   Map<String, String> _ocsHeaders(String auth) => {
         'Authorization': 'Basic $auth',
         'OCS-APIRequest': 'true',
         'Accept': 'application/json',
-        'User-Agent': _userAgent,
+        'User-Agent': userAgent,
       };
 
   /// Validate app password authentication and return server info
@@ -88,7 +41,7 @@ class NextcloudApiService {
     String username,
     String appPassword,
   ) async {
-    final baseUrl = _normalizeUrl(serverUrl);
+    final baseUrl = normalizeUrl(serverUrl);
     final auth = base64Encode(utf8.encode('$username:$appPassword'));
 
     try {
@@ -99,7 +52,7 @@ class NextcloudApiService {
       );
 
       if (userResponse.statusCode != 200) {
-        throw NextcloudApiException(
+        throw NextcloudException(
           'Authentication failed',
           statusCode: userResponse.statusCode,
           response: userResponse.body,
@@ -110,7 +63,7 @@ class NextcloudApiService {
       final ocsData = userData['ocs']?['data'];
 
       if (ocsData == null) {
-        throw NextcloudApiException('Invalid response from server');
+        throw NextcloudException('Invalid response from server');
       }
 
       // Get server capabilities for version info
@@ -129,9 +82,8 @@ class NextcloudApiService {
         if (versionInfo != null) {
           version = versionInfo['string'] as String? ?? 'Unknown';
         }
-        serverName =
-            capData['ocs']?['data']?['capabilities']?['theming']?['name']
-                as String? ??
+        serverName = capData['ocs']?['data']?['capabilities']?['theming']
+                ?['name'] as String? ??
             'Nextcloud';
       }
 
@@ -139,16 +91,16 @@ class NextcloudApiService {
         serverName: serverName,
         version: version,
         userId: ocsData['id'] as String? ?? username,
-        displayName:
-            ocsData['displayname'] as String? ??
+        displayName: ocsData['displayname'] as String? ??
             ocsData['id'] as String? ??
             username,
         email: ocsData['email'] as String?,
       );
     } on http.ClientException catch (e) {
-      throw NextcloudApiException('Network error: ${e.message}');
+      throw NextcloudException('Network error: ${e.message}', cause: e);
     } on FormatException catch (e) {
-      throw NextcloudApiException('Invalid server response: ${e.message}');
+      throw NextcloudException('Invalid server response: ${e.message}',
+          cause: e);
     }
   }
 
@@ -157,19 +109,19 @@ class NextcloudApiService {
   /// Returns URLs and token for the browser-based login flow.
   /// See: https://docs.nextcloud.com/server/latest/developer_manual/client_apis/LoginFlow/
   Future<LoginFlowInit> initiateOAuthFlow(String serverUrl) async {
-    final baseUrl = _normalizeUrl(serverUrl);
+    final baseUrl = normalizeUrl(serverUrl);
 
     try {
       final response = await _client.post(
         Uri.parse('$baseUrl/index.php/login/v2'),
         headers: {
           'Accept': 'application/json',
-          'User-Agent': _userAgent,
+          'User-Agent': userAgent,
         },
       );
 
       if (response.statusCode != 200) {
-        throw NextcloudApiException(
+        throw NextcloudException(
           'Failed to initiate login flow',
           statusCode: response.statusCode,
           response: response.body,
@@ -184,9 +136,10 @@ class NextcloudApiService {
         pollToken: data['poll']['token'] as String,
       );
     } on http.ClientException catch (e) {
-      throw NextcloudApiException('Network error: ${e.message}');
+      throw NextcloudException('Network error: ${e.message}', cause: e);
     } on FormatException catch (e) {
-      throw NextcloudApiException('Invalid server response: ${e.message}');
+      throw NextcloudException('Invalid server response: ${e.message}',
+          cause: e);
     }
   }
 
@@ -204,7 +157,7 @@ class NextcloudApiService {
         Uri.parse(pollEndpoint),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': _userAgent,
+          'User-Agent': userAgent,
         },
         body: 'token=$pollToken',
       );
@@ -215,7 +168,7 @@ class NextcloudApiService {
       }
 
       if (response.statusCode != 200) {
-        throw NextcloudApiException(
+        throw NextcloudException(
           'Login flow failed or timed out',
           statusCode: response.statusCode,
           response: response.body,
@@ -230,15 +183,16 @@ class NextcloudApiService {
         appPassword: data['appPassword'] as String,
       );
     } on http.ClientException catch (e) {
-      throw NextcloudApiException('Network error: ${e.message}');
+      throw NextcloudException('Network error: ${e.message}', cause: e);
     } on FormatException catch (e) {
-      throw NextcloudApiException('Invalid server response: ${e.message}');
+      throw NextcloudException('Invalid server response: ${e.message}',
+          cause: e);
     }
   }
 
   /// Test if a URL is a valid Nextcloud server
   Future<bool> isNextcloudServer(String serverUrl) async {
-    final baseUrl = _normalizeUrl(serverUrl);
+    final baseUrl = normalizeUrl(serverUrl);
 
     try {
       final response = await _client.get(
@@ -256,7 +210,7 @@ class NextcloudApiService {
   }
 
   /// Normalize server URL (remove trailing slash, ensure https)
-  String _normalizeUrl(String url) {
+  static String normalizeUrl(String url) {
     var normalized = url.trim();
 
     // Remove trailing slash

@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 
 import '../../data/database/database_helper.dart';
 import '../../data/repositories/book_repository_impl.dart';
@@ -9,11 +10,8 @@ import '../../data/repositories/opds_cache_repository_impl.dart';
 import '../../data/repositories/reading_progress_repository_impl.dart';
 import '../../data/services/book_import_service.dart';
 import '../../data/services/kavita_api_service.dart';
-import '../../data/services/nextcloud_api_service.dart';
-import '../../data/services/nextcloud_webdav_service.dart';
 import '../../data/services/opds_cache_service.dart';
 import '../../data/services/opds_client_service.dart';
-import '../../data/services/secure_storage_service.dart';
 import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
@@ -86,15 +84,18 @@ Future<void> setupServiceLocator() async {
     () => OpdsCacheService(opdsClient: sl(), cacheRepository: sl()),
   );
 
-  // Nextcloud services
-  sl.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
+  // Nextcloud services (from readwhere_nextcloud package)
+  sl.registerLazySingleton<CredentialStorage>(() => SecureCredentialStorage());
 
-  sl.registerLazySingleton<NextcloudApiService>(
-    () => NextcloudApiService(http.Client()),
+  sl.registerLazySingleton<NextcloudClient>(
+    () => NextcloudClient.create(
+      httpClient: http.Client(),
+      credentialStorage: sl<CredentialStorage>(),
+    ),
   );
 
-  sl.registerLazySingleton<NextcloudWebDavService>(
-    () => NextcloudWebDavService(sl()),
+  sl.registerLazySingleton<NextcloudProvider>(
+    () => NextcloudProvider(sl<NextcloudClient>()),
   );
 
   // Providers
@@ -116,9 +117,8 @@ Future<void> setupServiceLocator() async {
       kavitaApiService: sl(),
       importService: sl(),
       bookRepository: sl(),
-      nextcloudApiService: sl(),
-      webDavService: sl(),
-      secureStorage: sl(),
+      nextcloudProvider: sl(),
+      credentialStorage: sl(),
     ),
   );
 

@@ -1,0 +1,42 @@
+name: readwhere_nextcloud
+description: Complete Nextcloud integration for Flutter - auth, WebDAV, and UI.
+version: 0.1.0
+publish_to: none
+repository: https://github.com/cedricziel/readwhere
+
+environment:
+  sdk: ^3.5.0
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Internal dependency
+  readwhere_webdav:
+    path: ../readwhere_webdav
+
+  # Networking
+  http: ^1.6.0
+  dio: ^5.9.0
+
+  # Secure storage
+  flutter_secure_storage: ^9.2.4
+
+  # URL handling
+  url_launcher: ^6.3.2
+
+  # State management
+  provider: ^6.1.5+1
+
+  # Utilities
+  equatable: ^2.0.7
+  collection: ^1.19.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.6.1
+  build_runner: ^2.10.4
+  coverage: ^1.7.0
