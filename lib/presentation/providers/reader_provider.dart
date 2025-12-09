@@ -371,6 +371,86 @@ class ReaderProvider extends ChangeNotifier {
     }
   }
 
+  /// Navigate to a chapter by its href (file path within the EPUB)
+  ///
+  /// Finds the chapter that matches the given href and navigates to it.
+  /// This is used for handling internal EPUB links between chapters.
+  ///
+  /// [href] The href to navigate to (e.g., 'chapter1.xhtml' or 'text/chapter1.xhtml#section1')
+  /// Returns true if navigation was successful, false otherwise
+  Future<bool> navigateToHref(String href) async {
+    if (_currentBook == null) {
+      return false;
+    }
+
+    // Strip any anchor from the href (e.g., 'chapter.xhtml#section1' -> 'chapter.xhtml')
+    final hrefWithoutAnchor = href.contains('#') ? href.split('#').first : href;
+
+    // Get the filename from the href (handle both 'file.xhtml' and 'path/to/file.xhtml')
+    final filename = hrefWithoutAnchor.split('/').last;
+
+    // Try to find matching chapter in table of contents
+    int? matchingIndex;
+
+    // First, try exact match on href
+    for (var i = 0; i < _tableOfContents.length; i++) {
+      final tocHref = _tableOfContents[i].href;
+      if (tocHref == href || tocHref == hrefWithoutAnchor) {
+        matchingIndex = i;
+        break;
+      }
+    }
+
+    // If no exact match, try matching by filename
+    if (matchingIndex == null) {
+      for (var i = 0; i < _tableOfContents.length; i++) {
+        final tocFilename = _tableOfContents[i].href.split('/').last;
+        // Also strip any anchor from TOC href
+        final tocFilenameClean = tocFilename.contains('#')
+            ? tocFilename.split('#').first
+            : tocFilename;
+        if (tocFilenameClean == filename) {
+          matchingIndex = i;
+          break;
+        }
+      }
+    }
+
+    // If still no match, try to find by checking if the href ends with the filename
+    if (matchingIndex == null) {
+      for (var i = 0; i < _tableOfContents.length; i++) {
+        if (_tableOfContents[i].href.endsWith(filename) ||
+            _tableOfContents[i].href.endsWith(hrefWithoutAnchor)) {
+          matchingIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (matchingIndex != null) {
+      await goToChapter(matchingIndex);
+      return true;
+    }
+
+    // If we have a reader controller, it might have more chapters than TOC entries
+    // Try to navigate using the controller directly if available
+    if (_readerController != null) {
+      final totalChapters = _readerController!.totalChapters;
+      for (var i = 0; i < totalChapters; i++) {
+        // The controller might expose chapter hrefs - check if current chapter matches
+        // For now, we'll try matching based on index if TOC is smaller than actual chapters
+        if (i < _tableOfContents.length) continue; // Already checked these
+
+        // Try to navigate and see if it works
+        await goToChapter(i);
+        return true;
+      }
+    }
+
+    debugPrint('Could not find chapter for href: $href');
+    return false;
+  }
+
   /// Save the current reading progress
   ///
   /// Persists the progress to the database.

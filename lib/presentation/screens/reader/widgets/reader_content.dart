@@ -198,14 +198,29 @@ class ReaderContentWidget extends StatelessWidget {
               'td': Style(padding: HtmlPaddings.all(8)),
             },
             onLinkTap: (url, attributes, element) {
-              // Handle internal links (chapter navigation)
-              if (url != null && url.startsWith('#')) {
+              if (url == null) return;
+
+              // Handle anchor links within current chapter
+              if (url.startsWith('#')) {
                 // TODO: Implement anchor navigation within chapter
                 debugPrint('Navigate to anchor: $url');
-              } else if (url != null) {
-                // TODO: Handle external links (open in browser or handle custom schemes)
-                debugPrint('External link: $url');
+                return;
               }
+
+              // Check if it's an external link (http/https/mailto/tel)
+              if (url.startsWith('http://') ||
+                  url.startsWith('https://') ||
+                  url.startsWith('mailto:') ||
+                  url.startsWith('tel:')) {
+                // TODO: Open external link in browser
+                debugPrint('External link: $url');
+                return;
+              }
+
+              // Treat as internal EPUB link (chapter navigation)
+              // Links like 'chapter.xhtml', 'text/chapter.xhtml', 'chapter.xhtml#section'
+              debugPrint('Internal link: $url');
+              readerProvider.navigateToHref(url);
             },
             // Handle images from EPUB resources
             extensions: [

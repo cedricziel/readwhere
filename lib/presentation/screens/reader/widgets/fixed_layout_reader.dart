@@ -295,6 +295,7 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
                             readingTheme,
                             viewportWidth,
                             viewportHeight,
+                            readerProvider,
                           ),
                         ),
                       ),
@@ -589,6 +590,7 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
     ReadingThemeData readingTheme,
     int viewportWidth,
     int viewportHeight,
+    ReaderProvider readerProvider,
   ) {
     return Html(
       data: htmlContent,
@@ -614,11 +616,29 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
         'img': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
       },
       onLinkTap: (url, attributes, element) {
-        if (url != null && url.startsWith('#')) {
+        if (url == null) return;
+
+        // Handle anchor links within current chapter
+        if (url.startsWith('#')) {
+          // TODO: Implement anchor navigation within chapter
           debugPrint('Navigate to anchor: $url');
-        } else if (url != null) {
-          debugPrint('External link: $url');
+          return;
         }
+
+        // Check if it's an external link (http/https/mailto/tel)
+        if (url.startsWith('http://') ||
+            url.startsWith('https://') ||
+            url.startsWith('mailto:') ||
+            url.startsWith('tel:')) {
+          // TODO: Open external link in browser
+          debugPrint('External link: $url');
+          return;
+        }
+
+        // Treat as internal EPUB link (chapter navigation)
+        // Links like 'chapter.xhtml', 'text/chapter.xhtml', 'chapter.xhtml#section'
+        debugPrint('Internal link: $url');
+        readerProvider.navigateToHref(url);
       },
     );
   }
