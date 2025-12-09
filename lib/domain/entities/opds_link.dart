@@ -110,9 +110,22 @@ class OpdsLink extends Equatable {
   /// Whether this link points to a PDF file
   bool get isPdf => type == OpdsMimeType.pdf;
 
-  /// Get the file extension based on MIME type
+  /// Get the file extension based on MIME type or URL
   String? get fileExtension {
-    switch (type) {
+    // First try MIME type
+    final mimeExt = _extensionFromMimeType(type);
+    if (mimeExt != null) return mimeExt;
+
+    // Fallback: try to extract from URL
+    return _extensionFromUrl(href);
+  }
+
+  /// Extract extension from MIME type
+  static String? _extensionFromMimeType(String mimeType) {
+    final normalizedType = mimeType.toLowerCase().trim();
+
+    // Exact matches
+    switch (normalizedType) {
       case OpdsMimeType.epub:
         return 'epub';
       case OpdsMimeType.pdf:
@@ -123,9 +136,49 @@ class OpdsLink extends Equatable {
         return 'cbz';
       case OpdsMimeType.cbr:
         return 'cbr';
-      default:
-        return null;
     }
+
+    // Handle variations (x-cbr, x-cbz, etc.)
+    if (normalizedType.contains('cbz') ||
+        normalizedType.contains('comicbook+zip')) {
+      return 'cbz';
+    }
+    if (normalizedType.contains('cbr') ||
+        normalizedType.contains('comicbook-rar') ||
+        normalizedType.contains('x-rar')) {
+      return 'cbr';
+    }
+    if (normalizedType.contains('epub')) {
+      return 'epub';
+    }
+    if (normalizedType.contains('pdf')) {
+      return 'pdf';
+    }
+    if (normalizedType.contains('mobi') ||
+        normalizedType.contains('mobipocket')) {
+      return 'mobi';
+    }
+
+    return null;
+  }
+
+  /// Extract extension from URL path
+  static String? _extensionFromUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      final path = uri.path.toLowerCase();
+
+      // Common book extensions
+      const extensions = ['epub', 'pdf', 'mobi', 'azw', 'azw3', 'cbr', 'cbz'];
+      for (final ext in extensions) {
+        if (path.endsWith('.$ext')) {
+          return ext;
+        }
+      }
+    } catch (_) {
+      // Invalid URL, ignore
+    }
+    return null;
   }
 
   /// Whether this link's format is supported by the app
