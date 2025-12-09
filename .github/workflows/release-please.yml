@@ -119,3 +119,44 @@ jobs:
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: readwhere-windows-x64.zip
+
+  build-macos:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS
+        run: flutter build macos --release
+
+      - name: Create macOS DMG
+        run: |
+          # Create a temporary directory for DMG contents
+          mkdir -p dmg_contents
+          cp -R "build/macos/Build/Products/Release/ReadWhere.app" dmg_contents/
+
+          # Create a symlink to Applications folder
+          ln -s /Applications dmg_contents/Applications
+
+          # Create DMG
+          hdiutil create -volname "ReadWhere" -srcfolder dmg_contents -ov -format UDZO readwhere-macos.dmg
+
+      - name: Upload macOS build to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: readwhere-macos.dmg
+          body: |
+            ## macOS Note
+            The macOS build is unsigned. On first launch, right-click the app and select "Open", then click "Open" in the dialog to bypass Gatekeeper.
