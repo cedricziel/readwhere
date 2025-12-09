@@ -70,9 +70,10 @@ class AppRoutes {
   /// Generates the article path with the given feed and item IDs.
   ///
   /// [feedId] is the unique identifier of the feed (catalog).
-  /// [itemId] is the unique identifier of the feed item.
+  /// [itemId] is the unique identifier of the feed item (URL-encoded because
+  /// RSS item IDs are often URLs containing slashes and special characters).
   static String articlePath(String feedId, String itemId) {
-    return '/feeds/$feedId/article/$itemId';
+    return '/feeds/$feedId/article/${Uri.encodeComponent(itemId)}';
   }
 
   // Navigation helper methods

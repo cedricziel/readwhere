@@ -209,17 +209,20 @@ GoRouter createAppRouter() {
         path: AppRoutes.article,
         builder: (context, state) {
           final feedId = state.pathParameters['feedId'];
-          final itemId = state.pathParameters['itemId'];
+          final rawItemId = state.pathParameters['itemId'];
           if (feedId == null ||
               feedId.isEmpty ||
-              itemId == null ||
-              itemId.isEmpty) {
+              rawItemId == null ||
+              rawItemId.isEmpty) {
             // Redirect to feeds if parameters missing
             WidgetsBinding.instance.addPostFrameCallback((_) {
               context.go(AppRoutes.feeds);
             });
             return const SizedBox.shrink();
           }
+
+          // Decode the itemId (RSS item IDs are often URLs that were encoded)
+          final itemId = Uri.decodeComponent(rawItemId);
 
           return ArticleScreen(feedId: feedId, itemId: itemId);
         },
