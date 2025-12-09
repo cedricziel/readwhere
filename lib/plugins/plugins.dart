@@ -19,6 +19,7 @@
 /// ```
 library;
 
+export 'cbz/cbz.dart';
 export 'epub/epub.dart';
 export 'plugin_registry.dart';
 export 'reader_content.dart';

@@ -6,6 +6,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../domain/entities/opds_entry.dart';
 import '../../../../domain/entities/opds_link.dart';
 import '../../../providers/catalogs_provider.dart';
+import '../../../providers/library_provider.dart';
 import '../../../router/routes.dart';
 import '../../../widgets/common/cache_status_indicator.dart';
 import 'widgets/feed_breadcrumbs.dart';
@@ -87,6 +88,11 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
   ) async {
     final book = await provider.downloadAndImportBook(entry);
     if (book != null && mounted) {
+      // Refresh the library so the book can be found
+      final libraryProvider = sl<LibraryProvider>();
+      await libraryProvider.loadBooks();
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Downloaded "${book.title}"'),

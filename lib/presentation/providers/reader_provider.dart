@@ -11,6 +11,7 @@ import '../../domain/repositories/bookmark_repository.dart';
 import '../../plugins/plugin_registry.dart';
 import '../../plugins/epub/readwhere_epub_controller.dart';
 import '../../plugins/cbr/cbr_reader_controller.dart';
+import '../../plugins/cbz/cbz_reader_controller.dart';
 import '../../plugins/reader_controller.dart';
 import 'catalogs_provider.dart';
 
@@ -225,6 +226,11 @@ class ReaderProvider extends ChangeNotifier {
         _currentChapterHtml = cbrController.getPageContent(chapterIndex);
         _currentChapterCss = '';
         _currentChapterImages = cbrController.getPageImages(chapterIndex);
+      } else if (_readerController is CbzReaderController) {
+        final cbzController = _readerController as CbzReaderController;
+        _currentChapterHtml = cbzController.getPageContent(chapterIndex);
+        _currentChapterCss = '';
+        _currentChapterImages = cbzController.getPageImages(chapterIndex);
       } else {
         _currentChapterHtml = '<p>Unsupported reader controller type</p>';
         _currentChapterCss = '';

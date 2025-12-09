@@ -7,6 +7,7 @@ import 'package:readwhere_epub/readwhere_epub.dart' as epub;
 
 import '../../domain/entities/book.dart';
 import '../../domain/entities/import_result.dart';
+import '../../plugins/plugin_registry.dart';
 
 /// Service for importing books into the library
 ///
@@ -291,19 +292,14 @@ class BookImportService {
   /// Re-extract cover image for an existing book
   ///
   /// Attempts to extract and save the cover from the book file.
-  /// Uses the main EPUB parser first, falls back to direct archive extraction.
+  /// Uses the plugin system to find the appropriate handler for the format.
   /// Returns the new cover path if successful, null otherwise.
   ///
   /// [book] The book to extract cover for
   Future<String?> extractCover(Book book) async {
     debugPrint('extractCover - Attempting to extract cover for: ${book.title}');
     debugPrint('extractCover - Book file path: ${book.filePath}');
-
-    // Only support EPUB for now
-    if (book.format.toLowerCase() != 'epub') {
-      debugPrint('extractCover - Unsupported format: ${book.format}');
-      return null;
-    }
+    debugPrint('extractCover - Book format: ${book.format}');
 
     final file = File(book.filePath);
     if (!await file.exists()) {
@@ -313,17 +309,40 @@ class BookImportService {
 
     Uint8List? coverImage;
 
-    // Parse EPUB and extract cover using readwhere_epub
-    try {
-      debugPrint('extractCover - Parsing EPUB...');
-      final reader = await epub.EpubReader.open(book.filePath);
-      final cover = reader.getCoverImage();
-      coverImage = cover?.bytes;
-      if (coverImage != null && coverImage.isNotEmpty) {
-        debugPrint('extractCover - Found cover (${coverImage.length} bytes)');
+    // Try to find a plugin that can handle this file
+    final pluginRegistry = PluginRegistry();
+    final plugin = await pluginRegistry.getPluginForFile(book.filePath);
+
+    if (plugin != null) {
+      // Use plugin's extractCover method
+      debugPrint('extractCover - Using plugin: ${plugin.name}');
+      try {
+        coverImage = await plugin.extractCover(book.filePath);
+        if (coverImage != null && coverImage.isNotEmpty) {
+          debugPrint('extractCover - Found cover (${coverImage.length} bytes)');
+        }
+      } catch (e) {
+        debugPrint('extractCover - Plugin extraction failed: $e');
       }
-    } catch (e) {
-      debugPrint('extractCover - EPUB parsing failed: $e');
+    } else {
+      // Fallback to EPUB-specific extraction for backwards compatibility
+      if (book.format.toLowerCase() == 'epub') {
+        try {
+          debugPrint('extractCover - Fallback: Parsing EPUB...');
+          final reader = await epub.EpubReader.open(book.filePath);
+          final cover = reader.getCoverImage();
+          coverImage = cover?.bytes;
+          if (coverImage != null && coverImage.isNotEmpty) {
+            debugPrint(
+              'extractCover - Found cover (${coverImage.length} bytes)',
+            );
+          }
+        } catch (e) {
+          debugPrint('extractCover - EPUB parsing failed: $e');
+        }
+      } else {
+        debugPrint('extractCover - No plugin found for format: ${book.format}');
+      }
     }
 
     // Save the cover if we found one
@@ -333,7 +352,7 @@ class BookImportService {
       return coverPath;
     }
 
-    debugPrint('extractCover - No cover image found in EPUB');
+    debugPrint('extractCover - No cover image found');
     return null;
   }
 }
