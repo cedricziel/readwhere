@@ -13,9 +13,11 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Internal dependency
+  # Internal dependencies
   readwhere_webdav:
     path: ../readwhere_webdav
+  readwhere_plugin:
+    path: ../readwhere_plugin
 
   # Networking
   http: ^1.6.0

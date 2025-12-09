@@ -60,6 +60,10 @@ dependencies:
   readwhere_nextcloud:
     path: packages/readwhere_nextcloud
 
+  # Plugin System
+  readwhere_plugin:
+    path: packages/readwhere_plugin
+
   # Networking
   http: ^1.6.0
   dio: ^5.9.0

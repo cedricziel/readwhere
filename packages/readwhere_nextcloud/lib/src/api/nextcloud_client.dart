@@ -22,7 +22,7 @@ class NextcloudClient {
   final NextcloudWebDav webdav;
 
   /// Credential storage
-  final CredentialStorage storage;
+  final NextcloudCredentialStorage storage;
 
   NextcloudClient({
     required this.api,
@@ -33,7 +33,7 @@ class NextcloudClient {
   /// Create a NextcloudClient with default services
   factory NextcloudClient.create({
     http.Client? httpClient,
-    required CredentialStorage credentialStorage,
+    required NextcloudCredentialStorage credentialStorage,
     String userAgent = 'ReadWhere/1.0.0 Nextcloud',
   }) {
     final client = httpClient ?? http.Client();

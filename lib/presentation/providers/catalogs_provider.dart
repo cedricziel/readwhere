@@ -35,7 +35,7 @@ class CatalogsProvider extends ChangeNotifier {
 
   // Nextcloud integration (from readwhere_nextcloud package)
   final NextcloudProvider? _nextcloudProvider;
-  final CredentialStorage? _credentialStorage;
+  final NextcloudCredentialStorage? _credentialStorage;
 
   CatalogsProvider({
     required CatalogRepository catalogRepository,
@@ -45,7 +45,7 @@ class CatalogsProvider extends ChangeNotifier {
     required BookImportService importService,
     required BookRepository bookRepository,
     NextcloudProvider? nextcloudProvider,
-    CredentialStorage? credentialStorage,
+    NextcloudCredentialStorage? credentialStorage,
   }) : _catalogRepository = catalogRepository,
        _opdsClientService = opdsClientService,
        _cacheService = cacheService,

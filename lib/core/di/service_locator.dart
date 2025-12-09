@@ -1,8 +1,13 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 import '../../data/database/database_helper.dart';
+import '../../plugins/kavita/kavita_account_provider.dart';
+import '../../plugins/kavita/kavita_catalog_provider.dart';
+import '../../plugins/opds/opds_account_provider.dart';
+import '../../plugins/opds/opds_catalog_provider.dart';
 import '../../data/repositories/book_repository_impl.dart';
 import '../../data/repositories/bookmark_repository_impl.dart';
 import '../../data/repositories/catalog_repository_impl.dart';
@@ -85,18 +90,51 @@ Future<void> setupServiceLocator() async {
   );
 
   // Nextcloud services (from readwhere_nextcloud package)
-  sl.registerLazySingleton<CredentialStorage>(() => SecureCredentialStorage());
+  sl.registerLazySingleton<NextcloudCredentialStorage>(
+    () => SecureCredentialStorage(),
+  );
+
+  sl.registerLazySingleton<OcsApiService>(() => OcsApiService(http.Client()));
 
   sl.registerLazySingleton<NextcloudClient>(
     () => NextcloudClient.create(
       httpClient: http.Client(),
-      credentialStorage: sl<CredentialStorage>(),
+      credentialStorage: sl<NextcloudCredentialStorage>(),
     ),
   );
 
   sl.registerLazySingleton<NextcloudProvider>(
     () => NextcloudProvider(sl<NextcloudClient>()),
   );
+
+  // Catalog Provider Registry (plugin system)
+  sl.registerLazySingleton<CatalogProviderRegistry>(() {
+    final registry = CatalogProviderRegistry();
+
+    // OPDS Provider (for generic OPDS catalogs)
+    registry.register(
+      OpdsCatalogProvider(sl<OpdsClientService>(), sl<OpdsCacheService>()),
+      accountProvider: OpdsAccountProvider(),
+    );
+
+    // Kavita Provider (OPDS + Kavita API for progress sync)
+    registry.register(
+      KavitaCatalogProvider(
+        sl<KavitaApiService>(),
+        sl<OpdsClientService>(),
+        sl<OpdsCacheService>(),
+      ),
+      accountProvider: KavitaAccountProvider(sl<KavitaApiService>()),
+    );
+
+    // Nextcloud Provider (WebDAV file access)
+    registry.register(
+      NextcloudCatalogProvider(sl<NextcloudClient>()),
+      accountProvider: NextcloudAccountProvider(sl<OcsApiService>()),
+    );
+
+    return registry;
+  });
 
   // Providers
   sl.registerLazySingleton<ThemeProvider>(() => ThemeProvider());

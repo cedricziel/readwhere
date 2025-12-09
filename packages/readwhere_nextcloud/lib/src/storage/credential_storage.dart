@@ -2,7 +2,10 @@
 ///
 /// Implement this interface to provide custom credential storage.
 /// The package provides a default implementation using flutter_secure_storage.
-abstract class CredentialStorage {
+///
+/// This is a Nextcloud-specific interface. For the generic plugin interface,
+/// see `CredentialStorage` from `readwhere_plugin`.
+abstract class NextcloudCredentialStorage {
   /// Save an app password for a catalog
   Future<void> saveAppPassword(String catalogId, String appPassword);
 
@@ -29,3 +32,9 @@ abstract class CredentialStorage {
   /// Delete all stored credentials
   Future<void> deleteAll();
 }
+
+/// Deprecated: Use [NextcloudCredentialStorage] instead.
+///
+/// This typedef exists for backward compatibility.
+@Deprecated('Use NextcloudCredentialStorage instead')
+typedef CredentialStorage = NextcloudCredentialStorage;

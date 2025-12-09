@@ -10,7 +10,7 @@ import 'nextcloud_file.dart';
 /// Wraps the generic [WebDavClient] with Nextcloud-specific URL building
 /// and authentication handling.
 class NextcloudWebDav {
-  final CredentialStorage _storage;
+  final NextcloudCredentialStorage _storage;
 
   /// User-Agent for WebDAV requests
   final String userAgent;
