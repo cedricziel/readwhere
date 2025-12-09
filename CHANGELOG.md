@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.0](https://github.com/cedricziel/readwhere/compare/v0.0.2...v0.1.0) (2025-12-09)
+
+
+### Features
+
+* **feeds:** complete RSS feed reader with article scraping and tests ([5e3d764](https://github.com/cedricziel/readwhere/commit/5e3d764f75492d49228cb252dc344caeb91074da))
+* **feeds:** implement FeedsScreen for RSS feed management ([82d3c41](https://github.com/cedricziel/readwhere/commit/82d3c4159b95e2c3e1ef16f5ca9a31174017c698))
+* **feeds:** implement full RSS feed reader with article viewing ([74725c0](https://github.com/cedricziel/readwhere/commit/74725c0a2dead6f3a441df2d8f4c652dfd124c20))
+* **plugin:** add unified plugin architecture (Checkpoint 1) ([a9f55c6](https://github.com/cedricziel/readwhere/commit/a9f55c602055cd18ea8ef5aeac0b36fd1d92e54b))
+* **plugin:** add unified plugin validation to CatalogsProvider ([655ea95](https://github.com/cedricziel/readwhere/commit/655ea95c3f575c6fd205f6a1c6619a835ba1bc77))
+* **plugin:** add UnifiedCatalogBrowsingProvider for catalog browsing ([45146e7](https://github.com/cedricziel/readwhere/commit/45146e7c5bb2eba94a88998b91910bbc8665b34a))
+* **plugin:** implement PluginStorageImpl and migrate EPUB plugin (Checkpoint 2) ([e1f541b](https://github.com/cedricziel/readwhere/commit/e1f541b6e2dd79b7b94b771174ca4d8ba26c8ba8))
+* **plugin:** migrate catalog plugins to unified architecture (Checkpoint 3b) ([284f0a4](https://github.com/cedricziel/readwhere/commit/284f0a40b7f2f2f42e81e923f872ca98e773efd6))
+* **plugin:** migrate CBZ and CBR plugins to unified architecture (Checkpoint 3a) ([65e6843](https://github.com/cedricziel/readwhere/commit/65e684379f5ffd31ee67018ed72dcc759353c17e))
+* **plugin:** register unified catalog plugins in service locator ([1e5cdec](https://github.com/cedricziel/readwhere/commit/1e5cdec1c3726bf06cd1292b89fed18d074ea79e))
+* **rss:** add RSS/Atom feed and OPML support packages ([a94641f](https://github.com/cedricziel/readwhere/commit/a94641f78f6a54cbec07b1b99cfa0536a0940516))
+
+
+### Bug Fixes
+
+* **feeds:** fix RSS type parsing and add UI tests ([a0dbf3d](https://github.com/cedricziel/readwhere/commit/a0dbf3d372d358a5756cea9df818b39949b2ef5d))
+* **feeds:** URL-encode article itemId to handle RSS items with URL-based IDs ([81e0c6d](https://github.com/cedricziel/readwhere/commit/81e0c6da45615b606fd2e10b8227fd50d89f0d54))
+
 ## 0.0.2 (2025-12-09)
 
 
