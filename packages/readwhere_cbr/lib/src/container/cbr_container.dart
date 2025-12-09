@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:path/path.dart' as p;
 import 'package:readwhere_cbz/readwhere_cbz.dart' show naturalSort;
+import 'package:unrar_file/unrar_file.dart';
 
 import '../errors/cbr_exception.dart';
 
@@ -64,24 +66,56 @@ class CbrContainer {
 
   /// Platform-aware RAR extraction.
   ///
-  /// Uses command-line `unrar` on desktop platforms (macOS, Linux, Windows)
-  /// since the unrar_file package only supports mobile platforms.
+  /// Strategy:
+  /// 1. Try command-line `unrar` first (works on all platforms if installed)
+  /// 2. If not available, try the unrar_file plugin (Android/iOS only)
+  /// 3. Provide helpful error messages for each platform
   static Future<void> _extractRar(
     String filePath,
     String destPath, {
     String? password,
   }) async {
-    if (_isDesktopPlatform()) {
-      await _extractWithCommandLine(filePath, destPath, password: password);
-    } else {
-      await _extractWithPlugin(filePath, destPath, password: password);
+    // First, try command-line unrar (available on all platforms if installed)
+    final unrarPath = await _findUnrar();
+    if (unrarPath != null) {
+      await _extractWithCommandLine(
+        filePath,
+        destPath,
+        unrarPath: unrarPath,
+        password: password,
+      );
+      return;
     }
+
+    // Command-line not available, try plugin on mobile platforms
+    if (!_isDesktopPlatform()) {
+      try {
+        await _extractWithPlugin(filePath, destPath, password: password);
+        return;
+      } on MissingPluginException {
+        // Plugin not available on this platform, fall through to error
+      }
+    }
+
+    // No extraction method available
+    throw CbrExtractionException(
+      'No RAR extraction method available.\n'
+      '${_isDesktopPlatform() ? _desktopInstallInstructions : _mobileInstallInstructions}',
+    );
   }
+
+  static const _desktopInstallInstructions = '''
+Please install unrar:
+  macOS: brew install --cask rar
+         (If blocked by Gatekeeper, run: xattr -d com.apple.quarantine /opt/homebrew/bin/unrar)
+  Linux: sudo apt install unrar
+  Windows: Download from https://www.rarlab.com/rar_add.htm''';
+
+  static const _mobileInstallInstructions =
+      'CBR support requires the unrar_file plugin which is not available on this platform.';
 
   /// Check if running on a desktop platform.
   static bool _isDesktopPlatform() {
-    // dart:io's Platform is not available on web, but this code path
-    // won't be reached on web anyway since File operations fail there.
     return Platform.isMacOS || Platform.isLinux || Platform.isWindows;
   }
 
@@ -89,19 +123,9 @@ class CbrContainer {
   static Future<void> _extractWithCommandLine(
     String filePath,
     String destPath, {
+    required String unrarPath,
     String? password,
   }) async {
-    // Try to find unrar executable
-    final unrarPath = await _findUnrar();
-    if (unrarPath == null) {
-      throw CbrExtractionException(
-        'unrar command not found. Please install unrar:\n'
-        '  macOS: brew install unrar\n'
-        '  Ubuntu: sudo apt install unrar\n'
-        '  Windows: Download from https://www.rarlab.com/rar_add.htm',
-      );
-    }
-
     final args = <String>[
       'x', // Extract with full paths
       '-o+', // Overwrite existing files
@@ -134,53 +158,58 @@ class CbrContainer {
 
   /// Find the unrar executable on the system.
   static Future<String?> _findUnrar() async {
-    // Common unrar locations
-    final candidates = <String>[
-      'unrar', // In PATH
+    // Check absolute paths first (more reliable than PATH lookup)
+    final absolutePaths = <String>[
+      '/opt/homebrew/bin/unrar', // Homebrew on Apple Silicon Mac
       '/usr/local/bin/unrar', // Homebrew on Intel Mac
-      '/opt/homebrew/bin/unrar', // Homebrew on Apple Silicon
-      '/usr/bin/unrar', // Linux
+      '/usr/bin/unrar', // Linux system install
       r'C:\Program Files\WinRAR\UnRAR.exe', // Windows WinRAR
       r'C:\Program Files (x86)\WinRAR\UnRAR.exe', // Windows WinRAR x86
     ];
 
-    for (final candidate in candidates) {
-      try {
-        final result = await Process.run(
-          candidate,
-          ['--version'],
-          runInShell: Platform.isWindows,
-        );
-        if (result.exitCode == 0 || result.exitCode == 7) {
-          // unrar returns 7 for --version
-          return candidate;
-        }
-      } catch (_) {
-        // Try next candidate
+    for (final path in absolutePaths) {
+      final file = File(path);
+      if (await file.exists()) {
+        return path;
       }
+    }
+
+    // Try PATH lookup as fallback (using 'which' on Unix, 'where' on Windows)
+    try {
+      if (Platform.isWindows) {
+        final result = await Process.run('where', ['unrar']);
+        if (result.exitCode == 0) {
+          final path = result.stdout.toString().trim().split('\n').first;
+          if (path.isNotEmpty) return path;
+        }
+      } else {
+        final result = await Process.run('which', ['unrar']);
+        if (result.exitCode == 0) {
+          final path = result.stdout.toString().trim();
+          if (path.isNotEmpty) return path;
+        }
+      }
+    } catch (_) {
+      // which/where not available
     }
 
     return null;
   }
 
-  /// Extract using the unrar_file plugin (mobile only).
+  /// Extract using the unrar_file plugin (Android/iOS only).
+  ///
+  /// Throws [MissingPluginException] if the plugin is not available.
   static Future<void> _extractWithPlugin(
     String filePath,
     String destPath, {
     String? password,
   }) async {
-    // Dynamic import to avoid issues on desktop
-    try {
-      // Use dynamic invocation to call the plugin
-      // This avoids compile-time issues on unsupported platforms
-      final unrarFile = _UnrarFileWrapper();
-      await unrarFile.extractRar(filePath, destPath, password: password ?? '');
-    } catch (e) {
-      throw CbrExtractionException(
-        'unrar_file plugin extraction failed: $e',
-        cause: e,
-      );
-    }
+    // Call the plugin directly - will throw MissingPluginException on desktop
+    await UnrarFile.extract_rar(
+      filePath,
+      destPath,
+      password: password ?? '',
+    );
   }
 
   /// Opens a CBR file from a [File] object.
@@ -356,36 +385,4 @@ class CbrContainer {
 
   /// The temp directory path (for debugging).
   String get tempPath => _tempDir.path;
-}
-
-/// Wrapper for unrar_file plugin to avoid compile-time issues on desktop.
-///
-/// This class is only instantiated on mobile platforms where unrar_file is available.
-class _UnrarFileWrapper {
-  Future<void> extractRar(
-    String filePath,
-    String destPath, {
-    required String password,
-  }) async {
-    // Dynamic import to avoid compile issues on desktop
-    // The actual implementation uses the unrar_file package
-    // which is only available on Android/iOS
-    try {
-      // Import dynamically to avoid errors on unsupported platforms
-      // ignore: depend_on_referenced_packages
-      final unrarFile = await _loadUnrarFile();
-      await unrarFile.extractRar(filePath, destPath, password: password);
-    } catch (e) {
-      throw Exception('unrar_file plugin not available: $e');
-    }
-  }
-
-  Future<dynamic> _loadUnrarFile() async {
-    // This would require conditional imports which Dart doesn't fully support
-    // For now, throw on desktop platforms (which should never reach here)
-    throw UnsupportedError(
-      'unrar_file is only supported on Android and iOS. '
-      'On desktop platforms, install the unrar command-line tool.',
-    );
-  }
 }
