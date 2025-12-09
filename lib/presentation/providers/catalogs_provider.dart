@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'package:readwhere_rss/readwhere_rss.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../data/adapters/catalog_info_adapter.dart';
 import '../../domain/entities/catalog.dart';
 import '../../domain/repositories/catalog_repository.dart';
 
@@ -26,6 +28,7 @@ class CatalogsProvider extends ChangeNotifier {
   final RssClient _rssClient;
   final NextcloudProvider? _nextcloudProvider;
   final NextcloudCredentialStorage? _credentialStorage;
+  final UnifiedPluginRegistry? _pluginRegistry;
 
   CatalogsProvider({
     required CatalogRepository catalogRepository,
@@ -34,12 +37,14 @@ class CatalogsProvider extends ChangeNotifier {
     required RssClient rssClient,
     NextcloudProvider? nextcloudProvider,
     NextcloudCredentialStorage? credentialStorage,
+    UnifiedPluginRegistry? pluginRegistry,
   }) : _catalogRepository = catalogRepository,
        _opdsClient = opdsClient,
        _kavitaApiClient = kavitaApiClient,
        _rssClient = rssClient,
        _nextcloudProvider = nextcloudProvider,
-       _credentialStorage = credentialStorage;
+       _credentialStorage = credentialStorage,
+       _pluginRegistry = pluginRegistry;
 
   // State
   List<Catalog> _catalogs = [];
@@ -381,6 +386,110 @@ class CatalogsProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // ===== Unified Plugin Validation =====
+
+  /// Validate a catalog using the unified plugin system.
+  ///
+  /// This method finds the appropriate plugin for the catalog type
+  /// and uses it to validate the catalog. Returns a [ValidationResult]
+  /// indicating success or failure.
+  ///
+  /// Falls back to legacy validation methods if the plugin registry
+  /// is not available or no plugin can handle the catalog.
+  Future<ValidationResult> validateCatalogUnified(Catalog catalog) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Try unified plugin system first
+      if (_pluginRegistry != null) {
+        final catalogInfo = catalog.toCatalogInfo();
+        final plugin = _pluginRegistry.forCatalog<CatalogBrowsingCapability>(
+          catalogInfo,
+        );
+
+        if (plugin != null) {
+          final result = await plugin.validate(catalogInfo);
+          if (!result.isValid) {
+            _error = result.error;
+          }
+          return result;
+        }
+      }
+
+      // Fall back to legacy validation based on type
+      switch (catalog.type) {
+        case CatalogType.opds:
+          final feed = await _opdsClient.validateCatalog(catalog.url);
+          return ValidationResult.success(
+            serverName: feed.title,
+            properties: {'feedId': feed.id, 'feedKind': feed.kind.name},
+          );
+
+        case CatalogType.kavita:
+          if (catalog.apiKey == null) {
+            return ValidationResult.failure(
+              error: 'API key is required for Kavita servers',
+              errorCode: 'missing_api_key',
+            );
+          }
+          final serverInfo = await _kavitaApiClient.authenticate(
+            catalog.url,
+            catalog.apiKey!,
+          );
+          return ValidationResult.success(
+            serverName: serverInfo.serverName,
+            properties: {'version': serverInfo.version},
+          );
+
+        case CatalogType.rss:
+          final feed = await _rssClient.fetchFeed(catalog.url);
+          return ValidationResult.success(
+            serverName: feed.title,
+            properties: {'itemCount': feed.items.length},
+          );
+
+        case CatalogType.nextcloud:
+          if (_nextcloudProvider == null || catalog.username == null) {
+            return ValidationResult.failure(
+              error: 'Nextcloud service or credentials not available',
+              errorCode: 'missing_credentials',
+            );
+          }
+          // Nextcloud validation requires app password from secure storage
+          return ValidationResult.failure(
+            error: 'Use validateNextcloud() for Nextcloud catalogs',
+            errorCode: 'use_legacy_method',
+          );
+      }
+    } catch (e) {
+      _error = 'Validation failed: $e';
+      return ValidationResult.failure(
+        error: e.toString(),
+        errorCode: 'validation_failed',
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Get the plugin that can handle a catalog type.
+  ///
+  /// Returns null if no plugin can handle the catalog or if the
+  /// plugin registry is not available.
+  CatalogBrowsingCapability? getPluginForCatalog(Catalog catalog) {
+    if (_pluginRegistry == null) return null;
+    final catalogInfo = catalog.toCatalogInfo();
+    return _pluginRegistry.forCatalog<CatalogBrowsingCapability>(catalogInfo);
+  }
+
+  /// Check if a plugin is available for the catalog type.
+  bool hasPluginForCatalog(Catalog catalog) {
+    return getPluginForCatalog(catalog) != null;
   }
 
   // ===== Nextcloud OAuth =====

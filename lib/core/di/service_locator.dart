@@ -297,6 +297,7 @@ Future<void> setupServiceLocator() async {
       rssClient: sl(),
       nextcloudProvider: sl(),
       credentialStorage: sl(),
+      pluginRegistry: sl(),
     ),
   );
 
