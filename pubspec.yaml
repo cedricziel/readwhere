@@ -24,6 +24,8 @@ workspace:
   - packages/readwhere_rss
   - packages/readwhere_opml
   - packages/readwhere_rss_plugin
+  - packages/readwhere_opds_plugin
+  - packages/readwhere_kavita_plugin
 
 dependencies:
   flutter:
@@ -103,6 +105,14 @@ dependencies:
     path: packages/readwhere_opml
   readwhere_rss_plugin:
     path: packages/readwhere_rss_plugin
+
+  # OPDS Plugin
+  readwhere_opds_plugin:
+    path: packages/readwhere_opds_plugin
+
+  # Kavita Plugin
+  readwhere_kavita_plugin:
+    path: packages/readwhere_kavita_plugin
 
   # Networking
   http: ^1.6.0

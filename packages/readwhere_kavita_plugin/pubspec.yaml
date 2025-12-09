@@ -1,5 +1,5 @@
-name: readwhere_rss_plugin
-description: RSS and OPML integration plugin for ReadWhere
+name: readwhere_kavita_plugin
+description: Kavita server plugin for ReadWhere using unified plugin architecture
 version: 0.1.0
 publish_to: none
 resolution: workspace
@@ -8,14 +8,13 @@ environment:
   sdk: ^3.8.0
 
 dependencies:
-  readwhere_rss:
-    path: ../readwhere_rss
-  readwhere_opml:
-    path: ../readwhere_opml
+  readwhere_kavita:
+    path: ../readwhere_kavita
+  readwhere_opds:
+    path: ../readwhere_opds
   readwhere_plugin:
     path: ../readwhere_plugin
   http: ^1.2.0
-  equatable: ^2.0.5
   logging: ^1.2.0
 
 dev_dependencies:
