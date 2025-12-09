@@ -40,6 +40,10 @@ dependencies:
   archive: ^4.0.7
   xml: ^6.6.1
 
+  # CBR Support
+  readwhere_cbr:
+    path: packages/readwhere_cbr
+
   # Networking
   http: ^1.6.0
   dio: ^5.9.0
