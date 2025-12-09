@@ -9,6 +9,7 @@ import 'package:readwhere/data/services/opds_cache_service.dart';
 import 'package:readwhere/presentation/providers/library_provider.dart';
 import 'package:readwhere/presentation/providers/settings_provider.dart';
 import 'package:readwhere/presentation/providers/catalogs_provider.dart';
+import 'package:readwhere/presentation/providers/update_provider.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
@@ -36,5 +37,6 @@ import 'package:sqflite/sqflite.dart';
   LibraryProvider,
   SettingsProvider,
   CatalogsProvider,
+  UpdateProvider,
 ])
 void main() {}
