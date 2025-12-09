@@ -5,6 +5,10 @@ import 'package:flutter/foundation.dart';
 /// This provides a common interface that all catalog-type specific providers
 /// (OPDS, Kavita, Nextcloud, etc.) implement for UI consumption.
 ///
+/// **Note**: For new catalog implementations, consider using
+/// [UnifiedCatalogBrowsingProvider] which wraps [CatalogBrowsingCapability]
+/// plugins and provides automatic plugin discovery.
+///
 /// Extends [ChangeNotifier] for Flutter state management integration.
 abstract class BrowsingProvider extends ChangeNotifier {
   /// Whether an operation is in progress

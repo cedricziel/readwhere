@@ -2,17 +2,15 @@
 ///
 /// This package provides:
 /// - Unified RssPlugin with CatalogBrowsingCapability
-/// - CatalogProvider implementation for RSS/Atom feeds (legacy)
 /// - OPML import/export services
 /// - Adapters for converting RSS entities to catalog entries
 library;
 
-// ===== New Unified Plugin System =====
+// ===== Unified Plugin System =====
 export 'src/rss_plugin.dart';
 
-// ===== Legacy Provider (maintained for backward compatibility) =====
+// Providers
 export 'src/provider/rss_account_provider.dart';
-export 'src/provider/rss_catalog_provider.dart';
 
 // Adapters
 export 'src/adapters/rss_catalog_adapters.dart';

@@ -4,7 +4,7 @@
 /// including:
 /// - REST API client for authentication and progress sync
 /// - OPDS-based catalog browsing and downloading
-/// - Account and catalog provider implementations
+/// - Account provider implementation
 library;
 
 // API Client
@@ -17,5 +17,4 @@ export 'src/models/kavita_progress.dart';
 
 // Providers
 export 'src/provider/kavita_account_provider.dart';
-export 'src/provider/kavita_catalog_provider.dart';
 export 'src/provider/kavita_provider.dart';

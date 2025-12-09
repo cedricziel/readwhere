@@ -242,43 +242,6 @@ Future<void> setupServiceLocator() async {
     ),
   );
 
-  // Catalog Provider Registry (plugin system)
-  sl.registerLazySingleton<CatalogProviderRegistry>(() {
-    final registry = CatalogProviderRegistry();
-
-    // OPDS Provider (for generic OPDS catalogs)
-    // Uses package providers with injectable cache
-    registry.register(
-      OpdsCatalogProvider(sl<OpdsClient>(), cache: sl<OpdsCacheService>()),
-      accountProvider: OpdsAccountProvider(),
-    );
-
-    // Kavita Provider (OPDS + Kavita API for progress sync)
-    // Uses package providers with injectable cache
-    registry.register(
-      KavitaCatalogProvider(
-        sl<KavitaApiClient>(),
-        sl<OpdsClient>(),
-        cache: sl<OpdsCacheService>(),
-      ),
-      accountProvider: KavitaAccountProvider(sl<KavitaApiClient>()),
-    );
-
-    // Nextcloud Provider (WebDAV file access)
-    registry.register(
-      NextcloudCatalogProvider(sl<NextcloudClient>()),
-      accountProvider: NextcloudAccountProvider(sl<OcsApiService>()),
-    );
-
-    // RSS Provider (RSS/Atom feeds)
-    registry.register(
-      RssCatalogProvider(sl<RssClient>()),
-      accountProvider: RssAccountProvider(),
-    );
-
-    return registry;
-  });
-
   // Providers
   sl.registerLazySingleton<ThemeProvider>(() => ThemeProvider());
 

@@ -42,16 +42,13 @@
 /// );
 /// ```
 ///
-/// ## Legacy Interfaces (Deprecated)
+/// ## Legacy Interfaces
 ///
-/// The following interfaces are maintained for backward compatibility
-/// but will be removed in a future version:
+/// Some legacy interfaces are maintained for backward compatibility:
 ///
-/// - [CatalogProvider] - Use [CatalogCapability] mixin instead
 /// - [AccountProvider] - Use [AccountCapability] mixin instead
 /// - [ReaderPlugin] - Use [ReaderCapability] mixin instead
 /// - [PluginRegistry] - Use [UnifiedPluginRegistry] instead
-/// - [CatalogProviderRegistry] - Use [UnifiedPluginRegistry] instead
 ///
 /// ## Data Types
 ///
@@ -87,8 +84,6 @@ export 'src/storage/plugin_storage.dart';
 // Catalog (Legacy)
 export 'src/catalog/browsing_provider.dart';
 export 'src/catalog/catalog_capability.dart'; // Legacy CatalogCapability enum
-export 'src/catalog/catalog_provider.dart';
-export 'src/catalog/catalog_provider_registry.dart';
 
 // Account (Legacy)
 export 'src/account/account_provider.dart';

@@ -3,7 +3,7 @@
 /// This package provides OPDS 1.x and 2.0 catalog support including:
 /// - Feed parsing from XML
 /// - HTTP client for fetching feeds
-/// - CatalogProvider and AccountProvider implementations
+/// - AccountProvider implementation
 /// - Injectable cache interface
 library;
 
@@ -22,7 +22,6 @@ export 'src/client/opds_client.dart';
 export 'src/client/opds_exception.dart';
 
 // Providers
-export 'src/provider/opds_catalog_provider.dart';
 export 'src/provider/opds_account_provider.dart';
 export 'src/provider/opds_provider.dart';
 

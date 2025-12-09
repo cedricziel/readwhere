@@ -1,0 +1,415 @@
+import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
+
+import '../../../../domain/entities/catalog.dart';
+import '../../../providers/unified_catalog_browsing_provider.dart';
+
+/// Unified browse screen for all catalog types.
+///
+/// This screen uses [UnifiedCatalogBrowsingProvider] to provide a consistent
+/// browsing experience across OPDS, Kavita, RSS, and other catalog types.
+///
+/// The screen automatically handles:
+/// - Loading and error states
+/// - Navigation stack with back button
+/// - Search (if supported by the catalog)
+/// - Download progress
+/// - Pagination
+class UnifiedBrowseScreen extends StatefulWidget {
+  const UnifiedBrowseScreen({super.key, required this.catalog});
+
+  /// The catalog to browse.
+  final Catalog catalog;
+
+  @override
+  State<UnifiedBrowseScreen> createState() => _UnifiedBrowseScreenState();
+}
+
+class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
+  late final UnifiedCatalogBrowsingProvider _provider;
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _provider = GetIt.I<UnifiedCatalogBrowsingProvider>();
+    _provider.addListener(_onProviderChanged);
+    _scrollController.addListener(_onScroll);
+
+    // Open the catalog
+    _provider.openCatalog(widget.catalog);
+  }
+
+  @override
+  void dispose() {
+    _provider.removeListener(_onProviderChanged);
+    _provider.closeBrowser();
+    _searchController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onProviderChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _onScroll() {
+    // Load more when near the bottom
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_provider.isLoading && _provider.hasNextPage) {
+        _provider.loadNextPage();
+      }
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    await _provider.refresh();
+  }
+
+  void _onSearch(String query) {
+    if (query.isEmpty) {
+      _provider.clearSearch();
+    } else {
+      _provider.search(query);
+    }
+  }
+
+  void _onEntryTap(CatalogEntry entry) {
+    if (entry.type == CatalogEntryType.book) {
+      _showDownloadOptions(entry);
+    } else {
+      // Navigate to the entry (collection/navigation)
+      _provider.navigateToEntry(entry);
+    }
+  }
+
+  void _showDownloadOptions(CatalogEntry entry) {
+    if (entry.files.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No downloadable files available')),
+      );
+      return;
+    }
+
+    if (entry.files.length == 1) {
+      // Download directly
+      _downloadFile(entry, entry.files.first);
+      return;
+    }
+
+    // Show format selection
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => _DownloadOptionsSheet(
+        entry: entry,
+        onDownload: (file) {
+          Navigator.pop(context);
+          _downloadFile(entry, file);
+        },
+      ),
+    );
+  }
+
+  Future<void> _downloadFile(CatalogEntry entry, CatalogFile file) async {
+    final bookId = await _provider.downloadAndImportEntry(entry, file);
+    if (mounted) {
+      if (bookId != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Downloaded: ${entry.title}')));
+      } else if (_provider.error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_provider.error!)));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(appBar: _buildAppBar(), body: _buildBody());
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    final canGoBack = _provider.canNavigateBack;
+    final isSearching = _provider.isSearching;
+
+    return AppBar(
+      leading: canGoBack
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () async {
+                final navigated = await _provider.navigateBack();
+                if (!navigated && mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+            )
+          : null,
+      title: isSearching
+          ? TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                border: InputBorder.none,
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    _searchController.clear();
+                    _provider.clearSearch();
+                  },
+                ),
+              ),
+              onSubmitted: _onSearch,
+            )
+          : Text(_provider.currentResult?.title ?? widget.catalog.name),
+      actions: [
+        if (_provider.hasSearch && !isSearching)
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              setState(() {
+                _searchController.clear();
+              });
+              _onSearch(''); // Trigger search mode
+            },
+          ),
+        if (_provider.isFromCache)
+          Tooltip(
+            message: 'Cached ${_provider.cacheAgeText}',
+            child: const Icon(Icons.offline_bolt, size: 20),
+          ),
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: _provider.isLoading ? null : _onRefresh,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody() {
+    if (_provider.isLoading && _provider.entries.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_provider.error != null && _provider.entries.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              _provider.error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _onRefresh, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+
+    if (_provider.entries.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.folder_open, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              _provider.isSearching
+                  ? 'No results found'
+                  : 'This catalog is empty',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      child: ListView.builder(
+        controller: _scrollController,
+        itemCount: _provider.entries.length + (_provider.isLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= _provider.entries.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final entry = _provider.entries[index];
+          return _CatalogEntryTile(
+            entry: entry,
+            downloadProgress: _provider.getDownloadProgress(entry.id),
+            isDownloaded: _provider.isDownloaded(entry.id),
+            onTap: () => _onEntryTap(entry),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Tile widget for displaying a catalog entry.
+class _CatalogEntryTile extends StatelessWidget {
+  const _CatalogEntryTile({
+    required this.entry,
+    required this.onTap,
+    this.downloadProgress,
+    this.isDownloaded = false,
+  });
+
+  final CatalogEntry entry;
+  final VoidCallback onTap;
+  final double? downloadProgress;
+  final bool isDownloaded;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDownloading = downloadProgress != null;
+
+    return ListTile(
+      leading: _buildLeading(),
+      title: Text(entry.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: entry.subtitle != null
+          ? Text(entry.subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis)
+          : null,
+      trailing: _buildTrailing(isDownloading),
+      onTap: isDownloading ? null : onTap,
+    );
+  }
+
+  Widget _buildLeading() {
+    if (entry.thumbnailUrl != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: Image.network(
+          entry.thumbnailUrl!,
+          width: 48,
+          height: 64,
+          fit: BoxFit.cover,
+          errorBuilder: (_, error, stackTrace) => _buildDefaultIcon(),
+        ),
+      );
+    }
+    return _buildDefaultIcon();
+  }
+
+  Widget _buildDefaultIcon() {
+    IconData icon;
+    switch (entry.type) {
+      case CatalogEntryType.book:
+        icon = Icons.book;
+      case CatalogEntryType.collection:
+        icon = Icons.folder;
+      case CatalogEntryType.navigation:
+        icon = Icons.chevron_right;
+    }
+    return Container(
+      width: 48,
+      height: 64,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(icon, color: Colors.grey[600]),
+    );
+  }
+
+  Widget? _buildTrailing(bool isDownloading) {
+    if (isDownloading) {
+      return SizedBox(
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(
+          value: downloadProgress,
+          strokeWidth: 2,
+        ),
+      );
+    }
+
+    if (isDownloaded) {
+      return const Icon(Icons.check_circle, color: Colors.green);
+    }
+
+    if (entry.type == CatalogEntryType.book && entry.files.isNotEmpty) {
+      return const Icon(Icons.download);
+    }
+
+    if (entry.type != CatalogEntryType.book) {
+      return const Icon(Icons.chevron_right);
+    }
+
+    return null;
+  }
+}
+
+/// Bottom sheet for selecting download format.
+class _DownloadOptionsSheet extends StatelessWidget {
+  const _DownloadOptionsSheet({required this.entry, required this.onDownload});
+
+  final CatalogEntry entry;
+  final void Function(CatalogFile) onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Choose format',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          const Divider(height: 1),
+          ...entry.files.map(
+            (file) => ListTile(
+              leading: Icon(_getFormatIcon(file)),
+              title: Text(file.title ?? _getFormatName(file)),
+              subtitle: file.size != null
+                  ? Text(_formatSize(file.size!))
+                  : null,
+              onTap: () => onDownload(file),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  IconData _getFormatIcon(CatalogFile file) {
+    if (file.isEpub) return Icons.book;
+    if (file.isPdf) return Icons.picture_as_pdf;
+    if (file.isComic) return Icons.photo_library;
+    return Icons.insert_drive_file;
+  }
+
+  String _getFormatName(CatalogFile file) {
+    final ext = file.extension?.toUpperCase();
+    if (ext != null) return ext;
+    if (file.isEpub) return 'EPUB';
+    if (file.isPdf) return 'PDF';
+    if (file.isComic) return 'Comic';
+    return file.mimeType;
+  }
+
+  String _formatSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+}

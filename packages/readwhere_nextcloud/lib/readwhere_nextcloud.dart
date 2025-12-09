@@ -17,14 +17,12 @@ export 'package:readwhere_plugin/readwhere_plugin.dart'
         CatalogFile,
         CatalogInfo,
         CatalogLink,
-        CatalogProvider,
         CredentialStorage,
         CredentialType,
         DefaultCatalogEntry,
         OAuth2Credentials,
         OAuthFlowInit,
         OAuthFlowResult,
-        ProgressCallback,
         ValidationResult;
 
 // Client
@@ -57,7 +55,6 @@ export 'src/provider/nextcloud_provider.dart';
 
 // Plugin Providers
 export 'src/provider/nextcloud_account_provider.dart';
-export 'src/provider/nextcloud_catalog_provider.dart';
 
 // Exceptions
 export 'src/exceptions/nextcloud_exception.dart';
