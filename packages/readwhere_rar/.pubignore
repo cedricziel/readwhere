@@ -1,0 +1,5 @@
+# Test fixtures - exclude from package distribution
+test/fixtures/
+
+# Development files
+bin/

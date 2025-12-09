@@ -1,0 +1,18 @@
+name: readwhere_rar
+description: A pure Dart library for reading RAR 4.x archives (STORE method only).
+version: 0.1.0
+repository: https://github.com/cedricziel/readwhere
+
+environment:
+  sdk: ^3.5.0
+
+resolution: workspace
+
+dependencies:
+  equatable: ^2.0.7
+  collection: ^1.19.1
+  path: ^1.9.1
+
+dev_dependencies:
+  test: ^1.25.0
+  coverage: ^1.7.0
