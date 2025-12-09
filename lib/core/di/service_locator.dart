@@ -1,6 +1,8 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
+import 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
 import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
@@ -104,16 +106,22 @@ Future<void> setupServiceLocator() async {
     final storageFactory = sl<PluginStorageFactory>();
     final contextFactory = sl<PluginContextFactory>();
 
-    // Register EPUB plugin
+    // Register all reader plugins
     await registry.register(
       ReadwhereEpubPlugin(),
       storageFactory: storageFactory,
       contextFactory: contextFactory,
     );
-
-    // Additional plugins will be registered here as they're migrated
-    // await registry.register(CbzPlugin(), ...);
-    // await registry.register(CbrPlugin(), ...);
+    await registry.register(
+      CbzReaderPlugin(),
+      storageFactory: storageFactory,
+      contextFactory: contextFactory,
+    );
+    await registry.register(
+      CbrReaderPlugin(),
+      storageFactory: storageFactory,
+      contextFactory: contextFactory,
+    );
 
     return registry;
   });

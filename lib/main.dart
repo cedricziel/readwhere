@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
-import 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
-import 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
-import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'app.dart';
 import 'core/di/service_locator.dart';
 import 'core/utils/logger.dart';
@@ -30,14 +27,9 @@ Future<void> main() async {
   AppLogger.initialize(level: Level.INFO);
 
   // Initialize dependency injection and wait for setup to complete
+  // All reader plugins (EPUB, CBZ, CBR) are now registered via
+  // UnifiedPluginRegistry in service_locator.dart
   await setupServiceLocator();
-
-  // Register reader plugins with legacy PluginRegistry
-  // Note: EPUB plugin is now registered via UnifiedPluginRegistry in service_locator
-  // CBZ and CBR plugins will be migrated in a future checkpoint
-  final pluginRegistry = PluginRegistry();
-  pluginRegistry.register(CbzReaderPlugin());
-  pluginRegistry.register(CbrReaderPlugin());
 
   // Initialize providers from service locator
   final themeProvider = sl<ThemeProvider>();

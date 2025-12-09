@@ -12,8 +12,11 @@ import 'cbz_reader_controller.dart';
 ///
 /// This plugin provides support for CBZ (Comic Book ZIP) files,
 /// which are ZIP archives containing sequential comic/manga images.
-class CbzReaderPlugin implements ReaderPlugin {
-  static final _logger = Logger('CbzReaderPlugin');
+///
+/// Implements the unified plugin architecture with [PluginBase] and
+/// [ReaderCapability] mixin.
+class CbzReaderPlugin extends PluginBase with ReaderCapability {
+  late Logger _log;
 
   @override
   String get id => 'com.readwhere.cbz';
@@ -25,6 +28,9 @@ class CbzReaderPlugin implements ReaderPlugin {
   String get description => 'Supports CBZ (Comic Book ZIP) format comics';
 
   @override
+  String get version => '1.0.0';
+
+  @override
   List<String> get supportedExtensions => ['cbz'];
 
   @override
@@ -34,7 +40,21 @@ class CbzReaderPlugin implements ReaderPlugin {
   ];
 
   @override
-  Future<bool> canHandle(String filePath) async {
+  List<String> get capabilityNames => ['ReaderCapability'];
+
+  @override
+  Future<void> initialize(PluginContext context) async {
+    _log = context.logger;
+    _log.info('CBZ plugin initialized');
+  }
+
+  @override
+  Future<void> dispose() async {
+    _log.info('CBZ plugin disposed');
+  }
+
+  @override
+  Future<bool> canHandleFile(String filePath) async {
     try {
       // Check file extension
       final extension = path.extension(filePath).toLowerCase();
@@ -64,7 +84,7 @@ class CbzReaderPlugin implements ReaderPlugin {
 
       return false;
     } catch (e) {
-      _logger.fine('Cannot handle file $filePath: $e');
+      _log.fine('Cannot handle file $filePath: $e');
       return false;
     }
   }
@@ -73,7 +93,7 @@ class CbzReaderPlugin implements ReaderPlugin {
   Future<BookMetadata> parseMetadata(String filePath) async {
     cbz.CbzReader? reader;
     try {
-      _logger.info('Parsing metadata from: $filePath');
+      _log.info('Parsing metadata from: $filePath');
 
       reader = await cbz.CbzReader.open(filePath);
       final book = reader.book;
@@ -86,7 +106,7 @@ class CbzReaderPlugin implements ReaderPlugin {
         );
         coverImage ??= reader.getCoverBytes();
       } catch (e) {
-        _logger.warning('Failed to extract cover: $e');
+        _log.warning('Failed to extract cover: $e');
       }
 
       // Build table of contents from pages
@@ -108,10 +128,10 @@ class CbzReaderPlugin implements ReaderPlugin {
         isFixedLayout: true, // Comics are always fixed layout
       );
 
-      _logger.info('Parsed metadata: ${bookMetadata.title}');
+      _log.info('Parsed metadata: ${bookMetadata.title}');
       return bookMetadata;
     } catch (e, stackTrace) {
-      _logger.severe('Error parsing metadata from $filePath', e, stackTrace);
+      _log.severe('Error parsing metadata from $filePath', e, stackTrace);
       rethrow;
     } finally {
       reader?.dispose();
@@ -122,7 +142,7 @@ class CbzReaderPlugin implements ReaderPlugin {
   Future<Uint8List?> extractCover(String filePath) async {
     cbz.CbzReader? reader;
     try {
-      _logger.info('Extracting cover from: $filePath');
+      _log.info('Extracting cover from: $filePath');
 
       reader = await cbz.CbzReader.open(filePath);
 
@@ -132,7 +152,7 @@ class CbzReaderPlugin implements ReaderPlugin {
 
       return cover;
     } catch (e, stackTrace) {
-      _logger.severe('Error extracting cover from $filePath', e, stackTrace);
+      _log.severe('Error extracting cover from $filePath', e, stackTrace);
       return null;
     } finally {
       reader?.dispose();
@@ -142,14 +162,14 @@ class CbzReaderPlugin implements ReaderPlugin {
   @override
   Future<ReaderController> openBook(String filePath) async {
     try {
-      _logger.info('Opening book: $filePath');
+      _log.info('Opening book: $filePath');
 
       final controller = await CbzReaderController.create(filePath);
 
-      _logger.info('Book opened successfully');
+      _log.info('Book opened successfully');
       return controller;
     } catch (e, stackTrace) {
-      _logger.severe('Error opening book $filePath', e, stackTrace);
+      _log.severe('Error opening book $filePath', e, stackTrace);
       rethrow;
     }
   }

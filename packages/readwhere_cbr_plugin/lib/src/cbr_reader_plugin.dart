@@ -12,8 +12,11 @@ import 'cbr_reader_controller.dart';
 ///
 /// This plugin provides support for CBR (Comic Book RAR) files,
 /// reusing metadata parsing from the CBZ package.
-class CbrReaderPlugin implements ReaderPlugin {
-  static final _logger = Logger('CbrReaderPlugin');
+///
+/// Implements the unified plugin architecture with [PluginBase] and
+/// [ReaderCapability] mixin.
+class CbrReaderPlugin extends PluginBase with ReaderCapability {
+  late Logger _log;
 
   @override
   String get id => 'com.readwhere.cbr';
@@ -25,6 +28,10 @@ class CbrReaderPlugin implements ReaderPlugin {
   String get description => 'Supports CBR (Comic Book RAR) format comics';
 
   @override
+  String get version => '1.0.0';
+
+  // Note: CBR plugin also accepts .cbz because some servers mislabel RAR files
+  @override
   List<String> get supportedExtensions => ['cbr', 'cbz'];
 
   @override
@@ -34,7 +41,21 @@ class CbrReaderPlugin implements ReaderPlugin {
   ];
 
   @override
-  Future<bool> canHandle(String filePath) async {
+  List<String> get capabilityNames => ['ReaderCapability'];
+
+  @override
+  Future<void> initialize(PluginContext context) async {
+    _log = context.logger;
+    _log.info('CBR plugin initialized');
+  }
+
+  @override
+  Future<void> dispose() async {
+    _log.info('CBR plugin disposed');
+  }
+
+  @override
+  Future<bool> canHandleFile(String filePath) async {
     try {
       // Check file extension - accept both .cbr and .cbz
       // (some servers mislabel RAR files with .cbz extension)
@@ -65,7 +86,7 @@ class CbrReaderPlugin implements ReaderPlugin {
 
       return false;
     } catch (e) {
-      _logger.fine('Cannot handle file $filePath: $e');
+      _log.fine('Cannot handle file $filePath: $e');
       return false;
     }
   }
@@ -74,7 +95,7 @@ class CbrReaderPlugin implements ReaderPlugin {
   Future<BookMetadata> parseMetadata(String filePath) async {
     cbr.CbrReader? reader;
     try {
-      _logger.info('Parsing metadata from: $filePath');
+      _log.info('Parsing metadata from: $filePath');
 
       reader = await cbr.CbrReader.open(filePath);
       final book = reader.book;
@@ -87,7 +108,7 @@ class CbrReaderPlugin implements ReaderPlugin {
         );
         coverImage ??= reader.getCoverBytes();
       } catch (e) {
-        _logger.warning('Failed to extract cover: $e');
+        _log.warning('Failed to extract cover: $e');
       }
 
       // Build table of contents from pages
@@ -109,10 +130,10 @@ class CbrReaderPlugin implements ReaderPlugin {
         isFixedLayout: true, // Comics are always fixed layout
       );
 
-      _logger.info('Parsed metadata: ${bookMetadata.title}');
+      _log.info('Parsed metadata: ${bookMetadata.title}');
       return bookMetadata;
     } catch (e, stackTrace) {
-      _logger.severe('Error parsing metadata from $filePath', e, stackTrace);
+      _log.severe('Error parsing metadata from $filePath', e, stackTrace);
       rethrow;
     } finally {
       await reader?.dispose();
@@ -123,25 +144,21 @@ class CbrReaderPlugin implements ReaderPlugin {
   Future<Uint8List?> extractCover(String filePath) async {
     cbr.CbrReader? reader;
     try {
-      _logger.info('Extracting cover from: $filePath');
+      _log.info('Extracting cover from: $filePath');
 
       reader = await cbr.CbrReader.open(filePath);
-      _logger.info('CBR reader opened, ${reader.pageCount} pages found');
+      _log.info('CBR reader opened, ${reader.pageCount} pages found');
 
       // Try thumbnail first, fall back to full cover
       var cover = reader.getCoverThumbnail(options: cbr.ThumbnailOptions.cover);
-      _logger.info('Cover thumbnail result: ${cover?.length ?? 0} bytes');
+      _log.info('Cover thumbnail result: ${cover?.length ?? 0} bytes');
 
       cover ??= reader.getCoverBytes();
-      _logger.info('Cover bytes result: ${cover?.length ?? 0} bytes');
+      _log.info('Cover bytes result: ${cover?.length ?? 0} bytes');
 
       return cover;
     } catch (e, stackTrace) {
-      _logger.severe(
-        'Error extracting cover from $filePath: $e',
-        e,
-        stackTrace,
-      );
+      _log.severe('Error extracting cover from $filePath: $e', e, stackTrace);
       return null;
     } finally {
       await reader?.dispose();
@@ -151,14 +168,14 @@ class CbrReaderPlugin implements ReaderPlugin {
   @override
   Future<ReaderController> openBook(String filePath) async {
     try {
-      _logger.info('Opening book: $filePath');
+      _log.info('Opening book: $filePath');
 
       final controller = await CbrReaderController.create(filePath);
 
-      _logger.info('Book opened successfully');
+      _log.info('Book opened successfully');
       return controller;
     } catch (e, stackTrace) {
-      _logger.severe('Error opening book $filePath', e, stackTrace);
+      _log.severe('Error opening book $filePath', e, stackTrace);
       rethrow;
     }
   }

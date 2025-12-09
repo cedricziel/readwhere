@@ -10,6 +10,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  flutter:
+    sdk: flutter
   readwhere_plugin:
     path: ../readwhere_plugin
   readwhere_cbz:
@@ -21,6 +23,7 @@ dependencies:
   image: ^4.5.3
 
 dev_dependencies:
-  test: ^1.25.0
+  flutter_test:
+    sdk: flutter
   mockito: ^5.6.1
   build_runner: ^2.10.4
