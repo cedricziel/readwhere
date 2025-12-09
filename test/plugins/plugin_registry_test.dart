@@ -1,10 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:readwhere/domain/entities/book_metadata.dart';
-import 'package:readwhere/plugins/plugin_registry.dart';
-import 'package:readwhere/plugins/reader_controller.dart';
-import 'package:readwhere/plugins/reader_plugin.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 /// Mock implementation of ReaderPlugin for testing
 class MockReaderPlugin implements ReaderPlugin {

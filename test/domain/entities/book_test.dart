@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:readwhere/domain/entities/book.dart';
-import 'package:readwhere/domain/entities/book_metadata.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 void main() {
   group('Book', () {

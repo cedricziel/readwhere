@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../domain/entities/toc_entry.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 import '../../../providers/reader_provider.dart';
 
 /// Bottom sheet displaying the table of contents

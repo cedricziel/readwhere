@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../domain/entities/book_metadata.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 /// A badge widget that indicates a book's encryption/DRM status.
 ///

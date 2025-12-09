@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:readwhere/plugins/search_result.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 void main() {
   group('SearchResult', () {

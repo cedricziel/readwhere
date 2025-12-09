@@ -19,10 +19,20 @@
 /// ```
 library;
 
+// Re-export plugin interfaces from package
+export 'package:readwhere_plugin/readwhere_plugin.dart'
+    show
+        PluginRegistry,
+        ReaderContent,
+        ReaderController,
+        ReaderPlugin,
+        SearchResult,
+        ReadingLocation,
+        BookMetadata,
+        TocEntry,
+        EpubEncryptionType;
+
+// Export plugin implementations
+export 'cbr/cbr.dart';
 export 'cbz/cbz.dart';
 export 'epub/epub.dart';
-export 'plugin_registry.dart';
-export 'reader_content.dart';
-export 'reader_controller.dart';
-export 'reader_plugin.dart';
-export 'search_result.dart';

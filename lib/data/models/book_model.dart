@@ -1,5 +1,5 @@
 import '../../domain/entities/book.dart';
-import '../../domain/entities/book_metadata.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 import '../database/tables/books_table.dart';
 
 /// Data model for Book entity with database serialization support

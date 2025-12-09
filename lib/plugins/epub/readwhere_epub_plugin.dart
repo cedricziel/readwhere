@@ -5,10 +5,7 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:readwhere_epub/readwhere_epub.dart' as epub;
 
-import '../../domain/entities/book_metadata.dart';
-import '../../domain/entities/toc_entry.dart';
-import '../reader_controller.dart';
-import '../reader_plugin.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'readwhere_epub_controller.dart';
 
 /// EPUB plugin using the readwhere_epub library.

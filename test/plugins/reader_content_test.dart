@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:readwhere/plugins/reader_content.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 void main() {
   group('ReaderContent', () {

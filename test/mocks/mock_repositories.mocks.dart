@@ -3,27 +3,22 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i9;
-import 'dart:typed_data' as _i17;
+import 'dart:async' as _i8;
+import 'dart:typed_data' as _i15;
 
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i14;
-import 'package:readwhere/data/database/database_helper.dart' as _i13;
-import 'package:readwhere/data/services/book_import_service.dart' as _i15;
+import 'package:mockito/src/dummies.dart' as _i13;
+import 'package:readwhere/data/database/database_helper.dart' as _i12;
+import 'package:readwhere/data/services/book_import_service.dart' as _i14;
 import 'package:readwhere/domain/entities/book.dart' as _i2;
-import 'package:readwhere/domain/entities/book_metadata.dart' as _i7;
 import 'package:readwhere/domain/entities/bookmark.dart' as _i3;
 import 'package:readwhere/domain/entities/import_result.dart' as _i6;
 import 'package:readwhere/domain/entities/reading_progress.dart' as _i4;
-import 'package:readwhere/domain/entities/toc_entry.dart' as _i18;
-import 'package:readwhere/domain/repositories/book_repository.dart' as _i10;
-import 'package:readwhere/domain/repositories/bookmark_repository.dart' as _i11;
+import 'package:readwhere/domain/repositories/book_repository.dart' as _i9;
+import 'package:readwhere/domain/repositories/bookmark_repository.dart' as _i10;
 import 'package:readwhere/domain/repositories/reading_progress_repository.dart'
-    as _i12;
-import 'package:readwhere/plugins/reader_content.dart' as _i19;
-import 'package:readwhere/plugins/reader_controller.dart' as _i8;
-import 'package:readwhere/plugins/reader_plugin.dart' as _i16;
-import 'package:readwhere/plugins/search_result.dart' as _i20;
+    as _i11;
+import 'package:readwhere_plugin/readwhere_plugin.dart' as _i7;
 import 'package:sqflite/sqflite.dart' as _i5;
 
 // ignore_for_file: type=lint
@@ -73,12 +68,12 @@ class _FakeBookMetadata_5 extends _i1.SmartFake implements _i7.BookMetadata {
 }
 
 class _FakeReaderController_6 extends _i1.SmartFake
-    implements _i8.ReaderController {
+    implements _i7.ReaderController {
   _FakeReaderController_6(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeFuture_7<T1> extends _i1.SmartFake implements _i9.Future<T1> {
+class _FakeFuture_7<T1> extends _i1.SmartFake implements _i8.Future<T1> {
   _FakeFuture_7(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
@@ -96,332 +91,332 @@ class _FakeBatch_9 extends _i1.SmartFake implements _i5.Batch {
 /// A class which mocks [BookRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockBookRepository extends _i1.Mock implements _i10.BookRepository {
+class MockBookRepository extends _i1.Mock implements _i9.BookRepository {
   MockBookRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i9.Future<List<_i2.Book>> getAll() =>
+  _i8.Future<List<_i2.Book>> getAll() =>
       (super.noSuchMethod(
             Invocation.method(#getAll, []),
-            returnValue: _i9.Future<List<_i2.Book>>.value(<_i2.Book>[]),
+            returnValue: _i8.Future<List<_i2.Book>>.value(<_i2.Book>[]),
           )
-          as _i9.Future<List<_i2.Book>>);
+          as _i8.Future<List<_i2.Book>>);
 
   @override
-  _i9.Future<_i2.Book?> getById(String? id) =>
+  _i8.Future<_i2.Book?> getById(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#getById, [id]),
-            returnValue: _i9.Future<_i2.Book?>.value(),
+            returnValue: _i8.Future<_i2.Book?>.value(),
           )
-          as _i9.Future<_i2.Book?>);
+          as _i8.Future<_i2.Book?>);
 
   @override
-  _i9.Future<_i2.Book> insert(_i2.Book? book) =>
+  _i8.Future<_i2.Book> insert(_i2.Book? book) =>
       (super.noSuchMethod(
             Invocation.method(#insert, [book]),
-            returnValue: _i9.Future<_i2.Book>.value(
+            returnValue: _i8.Future<_i2.Book>.value(
               _FakeBook_0(this, Invocation.method(#insert, [book])),
             ),
           )
-          as _i9.Future<_i2.Book>);
+          as _i8.Future<_i2.Book>);
 
   @override
-  _i9.Future<_i2.Book> update(_i2.Book? book) =>
+  _i8.Future<_i2.Book> update(_i2.Book? book) =>
       (super.noSuchMethod(
             Invocation.method(#update, [book]),
-            returnValue: _i9.Future<_i2.Book>.value(
+            returnValue: _i8.Future<_i2.Book>.value(
               _FakeBook_0(this, Invocation.method(#update, [book])),
             ),
           )
-          as _i9.Future<_i2.Book>);
+          as _i8.Future<_i2.Book>);
 
   @override
-  _i9.Future<bool> delete(String? id) =>
+  _i8.Future<bool> delete(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#delete, [id]),
-            returnValue: _i9.Future<bool>.value(false),
+            returnValue: _i8.Future<bool>.value(false),
           )
-          as _i9.Future<bool>);
+          as _i8.Future<bool>);
 
   @override
-  _i9.Future<List<_i2.Book>> getRecent({int? limit = 10}) =>
+  _i8.Future<List<_i2.Book>> getRecent({int? limit = 10}) =>
       (super.noSuchMethod(
             Invocation.method(#getRecent, [], {#limit: limit}),
-            returnValue: _i9.Future<List<_i2.Book>>.value(<_i2.Book>[]),
+            returnValue: _i8.Future<List<_i2.Book>>.value(<_i2.Book>[]),
           )
-          as _i9.Future<List<_i2.Book>>);
+          as _i8.Future<List<_i2.Book>>);
 
   @override
-  _i9.Future<List<_i2.Book>> getFavorites() =>
+  _i8.Future<List<_i2.Book>> getFavorites() =>
       (super.noSuchMethod(
             Invocation.method(#getFavorites, []),
-            returnValue: _i9.Future<List<_i2.Book>>.value(<_i2.Book>[]),
+            returnValue: _i8.Future<List<_i2.Book>>.value(<_i2.Book>[]),
           )
-          as _i9.Future<List<_i2.Book>>);
+          as _i8.Future<List<_i2.Book>>);
 
   @override
-  _i9.Future<List<_i2.Book>> search(String? query) =>
+  _i8.Future<List<_i2.Book>> search(String? query) =>
       (super.noSuchMethod(
             Invocation.method(#search, [query]),
-            returnValue: _i9.Future<List<_i2.Book>>.value(<_i2.Book>[]),
+            returnValue: _i8.Future<List<_i2.Book>>.value(<_i2.Book>[]),
           )
-          as _i9.Future<List<_i2.Book>>);
+          as _i8.Future<List<_i2.Book>>);
 
   @override
-  _i9.Future<void> updateLastOpened(String? id) =>
+  _i8.Future<void> updateLastOpened(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#updateLastOpened, [id]),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<_i2.Book> toggleFavorite(String? id) =>
+  _i8.Future<_i2.Book> toggleFavorite(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#toggleFavorite, [id]),
-            returnValue: _i9.Future<_i2.Book>.value(
+            returnValue: _i8.Future<_i2.Book>.value(
               _FakeBook_0(this, Invocation.method(#toggleFavorite, [id])),
             ),
           )
-          as _i9.Future<_i2.Book>);
+          as _i8.Future<_i2.Book>);
 }
 
 /// A class which mocks [BookmarkRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockBookmarkRepository extends _i1.Mock
-    implements _i11.BookmarkRepository {
+    implements _i10.BookmarkRepository {
   MockBookmarkRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i9.Future<List<_i3.Bookmark>> getBookmarksForBook(String? bookId) =>
+  _i8.Future<List<_i3.Bookmark>> getBookmarksForBook(String? bookId) =>
       (super.noSuchMethod(
             Invocation.method(#getBookmarksForBook, [bookId]),
-            returnValue: _i9.Future<List<_i3.Bookmark>>.value(<_i3.Bookmark>[]),
+            returnValue: _i8.Future<List<_i3.Bookmark>>.value(<_i3.Bookmark>[]),
           )
-          as _i9.Future<List<_i3.Bookmark>>);
+          as _i8.Future<List<_i3.Bookmark>>);
 
   @override
-  _i9.Future<_i3.Bookmark> addBookmark(_i3.Bookmark? bookmark) =>
+  _i8.Future<_i3.Bookmark> addBookmark(_i3.Bookmark? bookmark) =>
       (super.noSuchMethod(
             Invocation.method(#addBookmark, [bookmark]),
-            returnValue: _i9.Future<_i3.Bookmark>.value(
+            returnValue: _i8.Future<_i3.Bookmark>.value(
               _FakeBookmark_1(
                 this,
                 Invocation.method(#addBookmark, [bookmark]),
               ),
             ),
           )
-          as _i9.Future<_i3.Bookmark>);
+          as _i8.Future<_i3.Bookmark>);
 
   @override
-  _i9.Future<bool> deleteBookmark(String? id) =>
+  _i8.Future<bool> deleteBookmark(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#deleteBookmark, [id]),
-            returnValue: _i9.Future<bool>.value(false),
+            returnValue: _i8.Future<bool>.value(false),
           )
-          as _i9.Future<bool>);
+          as _i8.Future<bool>);
 
   @override
-  _i9.Future<_i3.Bookmark> updateBookmark(_i3.Bookmark? bookmark) =>
+  _i8.Future<_i3.Bookmark> updateBookmark(_i3.Bookmark? bookmark) =>
       (super.noSuchMethod(
             Invocation.method(#updateBookmark, [bookmark]),
-            returnValue: _i9.Future<_i3.Bookmark>.value(
+            returnValue: _i8.Future<_i3.Bookmark>.value(
               _FakeBookmark_1(
                 this,
                 Invocation.method(#updateBookmark, [bookmark]),
               ),
             ),
           )
-          as _i9.Future<_i3.Bookmark>);
+          as _i8.Future<_i3.Bookmark>);
 }
 
 /// A class which mocks [ReadingProgressRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockReadingProgressRepository extends _i1.Mock
-    implements _i12.ReadingProgressRepository {
+    implements _i11.ReadingProgressRepository {
   MockReadingProgressRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i9.Future<_i4.ReadingProgress?> getProgressForBook(String? bookId) =>
+  _i8.Future<_i4.ReadingProgress?> getProgressForBook(String? bookId) =>
       (super.noSuchMethod(
             Invocation.method(#getProgressForBook, [bookId]),
-            returnValue: _i9.Future<_i4.ReadingProgress?>.value(),
+            returnValue: _i8.Future<_i4.ReadingProgress?>.value(),
           )
-          as _i9.Future<_i4.ReadingProgress?>);
+          as _i8.Future<_i4.ReadingProgress?>);
 
   @override
-  _i9.Future<_i4.ReadingProgress> saveProgress(_i4.ReadingProgress? progress) =>
+  _i8.Future<_i4.ReadingProgress> saveProgress(_i4.ReadingProgress? progress) =>
       (super.noSuchMethod(
             Invocation.method(#saveProgress, [progress]),
-            returnValue: _i9.Future<_i4.ReadingProgress>.value(
+            returnValue: _i8.Future<_i4.ReadingProgress>.value(
               _FakeReadingProgress_2(
                 this,
                 Invocation.method(#saveProgress, [progress]),
               ),
             ),
           )
-          as _i9.Future<_i4.ReadingProgress>);
+          as _i8.Future<_i4.ReadingProgress>);
 
   @override
-  _i9.Future<bool> deleteProgressForBook(String? bookId) =>
+  _i8.Future<bool> deleteProgressForBook(String? bookId) =>
       (super.noSuchMethod(
             Invocation.method(#deleteProgressForBook, [bookId]),
-            returnValue: _i9.Future<bool>.value(false),
+            returnValue: _i8.Future<bool>.value(false),
           )
-          as _i9.Future<bool>);
+          as _i8.Future<bool>);
 }
 
 /// A class which mocks [DatabaseHelper].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockDatabaseHelper extends _i1.Mock implements _i13.DatabaseHelper {
+class MockDatabaseHelper extends _i1.Mock implements _i12.DatabaseHelper {
   MockDatabaseHelper() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i9.Future<_i5.Database> get database =>
+  _i8.Future<_i5.Database> get database =>
       (super.noSuchMethod(
             Invocation.getter(#database),
-            returnValue: _i9.Future<_i5.Database>.value(
+            returnValue: _i8.Future<_i5.Database>.value(
               _FakeDatabase_3(this, Invocation.getter(#database)),
             ),
           )
-          as _i9.Future<_i5.Database>);
+          as _i8.Future<_i5.Database>);
 
   @override
-  _i9.Future<void> close() =>
+  _i8.Future<void> close() =>
       (super.noSuchMethod(
             Invocation.method(#close, []),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<void> deleteDatabase() =>
+  _i8.Future<void> deleteDatabase() =>
       (super.noSuchMethod(
             Invocation.method(#deleteDatabase, []),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<List<Map<String, dynamic>>> rawQuery(
+  _i8.Future<List<Map<String, dynamic>>> rawQuery(
     String? sql, [
     List<dynamic>? arguments,
   ]) =>
       (super.noSuchMethod(
             Invocation.method(#rawQuery, [sql, arguments]),
-            returnValue: _i9.Future<List<Map<String, dynamic>>>.value(
+            returnValue: _i8.Future<List<Map<String, dynamic>>>.value(
               <Map<String, dynamic>>[],
             ),
           )
-          as _i9.Future<List<Map<String, dynamic>>>);
+          as _i8.Future<List<Map<String, dynamic>>>);
 
   @override
-  _i9.Future<int> rawExecute(String? sql, [List<dynamic>? arguments]) =>
+  _i8.Future<int> rawExecute(String? sql, [List<dynamic>? arguments]) =>
       (super.noSuchMethod(
             Invocation.method(#rawExecute, [sql, arguments]),
-            returnValue: _i9.Future<int>.value(0),
+            returnValue: _i8.Future<int>.value(0),
           )
-          as _i9.Future<int>);
+          as _i8.Future<int>);
 
   @override
-  _i9.Future<String> getDatabasePath() =>
+  _i8.Future<String> getDatabasePath() =>
       (super.noSuchMethod(
             Invocation.method(#getDatabasePath, []),
-            returnValue: _i9.Future<String>.value(
-              _i14.dummyValue<String>(
+            returnValue: _i8.Future<String>.value(
+              _i13.dummyValue<String>(
                 this,
                 Invocation.method(#getDatabasePath, []),
               ),
             ),
           )
-          as _i9.Future<String>);
+          as _i8.Future<String>);
 
   @override
-  _i9.Future<bool> exists() =>
+  _i8.Future<bool> exists() =>
       (super.noSuchMethod(
             Invocation.method(#exists, []),
-            returnValue: _i9.Future<bool>.value(false),
+            returnValue: _i8.Future<bool>.value(false),
           )
-          as _i9.Future<bool>);
+          as _i8.Future<bool>);
 }
 
 /// A class which mocks [BookImportService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockBookImportService extends _i1.Mock implements _i15.BookImportService {
+class MockBookImportService extends _i1.Mock implements _i14.BookImportService {
   MockBookImportService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i9.Future<_i6.ImportResult> importEpubWithValidation(String? filePath) =>
+  _i8.Future<_i6.ImportResult> importEpubWithValidation(String? filePath) =>
       (super.noSuchMethod(
             Invocation.method(#importEpubWithValidation, [filePath]),
-            returnValue: _i9.Future<_i6.ImportResult>.value(
+            returnValue: _i8.Future<_i6.ImportResult>.value(
               _FakeImportResult_4(
                 this,
                 Invocation.method(#importEpubWithValidation, [filePath]),
               ),
             ),
           )
-          as _i9.Future<_i6.ImportResult>);
+          as _i8.Future<_i6.ImportResult>);
 
   @override
-  _i9.Future<_i2.Book> importEpub(String? filePath) =>
+  _i8.Future<_i2.Book> importEpub(String? filePath) =>
       (super.noSuchMethod(
             Invocation.method(#importEpub, [filePath]),
-            returnValue: _i9.Future<_i2.Book>.value(
+            returnValue: _i8.Future<_i2.Book>.value(
               _FakeBook_0(this, Invocation.method(#importEpub, [filePath])),
             ),
           )
-          as _i9.Future<_i2.Book>);
+          as _i8.Future<_i2.Book>);
 
   @override
-  _i9.Future<_i2.Book> importBook(String? filePath) =>
+  _i8.Future<_i2.Book> importBook(String? filePath) =>
       (super.noSuchMethod(
             Invocation.method(#importBook, [filePath]),
-            returnValue: _i9.Future<_i2.Book>.value(
+            returnValue: _i8.Future<_i2.Book>.value(
               _FakeBook_0(this, Invocation.method(#importBook, [filePath])),
             ),
           )
-          as _i9.Future<_i2.Book>);
+          as _i8.Future<_i2.Book>);
 
   @override
-  _i9.Future<void> deleteCover(String? coverPath) =>
+  _i8.Future<void> deleteCover(String? coverPath) =>
       (super.noSuchMethod(
             Invocation.method(#deleteCover, [coverPath]),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<String?> extractCover(_i2.Book? book) =>
+  _i8.Future<String?> extractCover(_i2.Book? book) =>
       (super.noSuchMethod(
             Invocation.method(#extractCover, [book]),
-            returnValue: _i9.Future<String?>.value(),
+            returnValue: _i8.Future<String?>.value(),
           )
-          as _i9.Future<String?>);
+          as _i8.Future<String?>);
 }
 
 /// A class which mocks [ReaderPlugin].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockReaderPlugin extends _i1.Mock implements _i16.ReaderPlugin {
+class MockReaderPlugin extends _i1.Mock implements _i7.ReaderPlugin {
   MockReaderPlugin() {
     _i1.throwOnMissingStub(this);
   }
@@ -430,7 +425,7 @@ class MockReaderPlugin extends _i1.Mock implements _i16.ReaderPlugin {
   String get id =>
       (super.noSuchMethod(
             Invocation.getter(#id),
-            returnValue: _i14.dummyValue<String>(this, Invocation.getter(#id)),
+            returnValue: _i13.dummyValue<String>(this, Invocation.getter(#id)),
           )
           as String);
 
@@ -438,7 +433,7 @@ class MockReaderPlugin extends _i1.Mock implements _i16.ReaderPlugin {
   String get name =>
       (super.noSuchMethod(
             Invocation.getter(#name),
-            returnValue: _i14.dummyValue<String>(
+            returnValue: _i13.dummyValue<String>(
               this,
               Invocation.getter(#name),
             ),
@@ -449,7 +444,7 @@ class MockReaderPlugin extends _i1.Mock implements _i16.ReaderPlugin {
   String get description =>
       (super.noSuchMethod(
             Invocation.getter(#description),
-            returnValue: _i14.dummyValue<String>(
+            returnValue: _i13.dummyValue<String>(
               this,
               Invocation.getter(#description),
             ),
@@ -473,52 +468,52 @@ class MockReaderPlugin extends _i1.Mock implements _i16.ReaderPlugin {
           as List<String>);
 
   @override
-  _i9.Future<bool> canHandle(String? filePath) =>
+  _i8.Future<bool> canHandle(String? filePath) =>
       (super.noSuchMethod(
             Invocation.method(#canHandle, [filePath]),
-            returnValue: _i9.Future<bool>.value(false),
+            returnValue: _i8.Future<bool>.value(false),
           )
-          as _i9.Future<bool>);
+          as _i8.Future<bool>);
 
   @override
-  _i9.Future<_i7.BookMetadata> parseMetadata(String? filePath) =>
+  _i8.Future<_i7.BookMetadata> parseMetadata(String? filePath) =>
       (super.noSuchMethod(
             Invocation.method(#parseMetadata, [filePath]),
-            returnValue: _i9.Future<_i7.BookMetadata>.value(
+            returnValue: _i8.Future<_i7.BookMetadata>.value(
               _FakeBookMetadata_5(
                 this,
                 Invocation.method(#parseMetadata, [filePath]),
               ),
             ),
           )
-          as _i9.Future<_i7.BookMetadata>);
+          as _i8.Future<_i7.BookMetadata>);
 
   @override
-  _i9.Future<_i8.ReaderController> openBook(String? filePath) =>
+  _i8.Future<_i7.ReaderController> openBook(String? filePath) =>
       (super.noSuchMethod(
             Invocation.method(#openBook, [filePath]),
-            returnValue: _i9.Future<_i8.ReaderController>.value(
+            returnValue: _i8.Future<_i7.ReaderController>.value(
               _FakeReaderController_6(
                 this,
                 Invocation.method(#openBook, [filePath]),
               ),
             ),
           )
-          as _i9.Future<_i8.ReaderController>);
+          as _i8.Future<_i7.ReaderController>);
 
   @override
-  _i9.Future<_i17.Uint8List?> extractCover(String? filePath) =>
+  _i8.Future<_i15.Uint8List?> extractCover(String? filePath) =>
       (super.noSuchMethod(
             Invocation.method(#extractCover, [filePath]),
-            returnValue: _i9.Future<_i17.Uint8List?>.value(),
+            returnValue: _i8.Future<_i15.Uint8List?>.value(),
           )
-          as _i9.Future<_i17.Uint8List?>);
+          as _i8.Future<_i15.Uint8List?>);
 }
 
 /// A class which mocks [ReaderController].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockReaderController extends _i1.Mock implements _i8.ReaderController {
+class MockReaderController extends _i1.Mock implements _i7.ReaderController {
   MockReaderController() {
     _i1.throwOnMissingStub(this);
   }
@@ -527,7 +522,7 @@ class MockReaderController extends _i1.Mock implements _i8.ReaderController {
   String get bookId =>
       (super.noSuchMethod(
             Invocation.getter(#bookId),
-            returnValue: _i14.dummyValue<String>(
+            returnValue: _i13.dummyValue<String>(
               this,
               Invocation.getter(#bookId),
             ),
@@ -535,12 +530,12 @@ class MockReaderController extends _i1.Mock implements _i8.ReaderController {
           as String);
 
   @override
-  List<_i18.TocEntry> get tableOfContents =>
+  List<_i7.TocEntry> get tableOfContents =>
       (super.noSuchMethod(
             Invocation.getter(#tableOfContents),
-            returnValue: <_i18.TocEntry>[],
+            returnValue: <_i7.TocEntry>[],
           )
-          as List<_i18.TocEntry>);
+          as List<_i7.TocEntry>);
 
   @override
   int get totalChapters =>
@@ -561,12 +556,12 @@ class MockReaderController extends _i1.Mock implements _i8.ReaderController {
           as double);
 
   @override
-  _i9.Stream<_i19.ReaderContent> get contentStream =>
+  _i8.Stream<_i7.ReaderContent> get contentStream =>
       (super.noSuchMethod(
             Invocation.getter(#contentStream),
-            returnValue: _i9.Stream<_i19.ReaderContent>.empty(),
+            returnValue: _i8.Stream<_i7.ReaderContent>.empty(),
           )
-          as _i9.Stream<_i19.ReaderContent>);
+          as _i8.Stream<_i7.ReaderContent>);
 
   @override
   bool get isFixedLayout =>
@@ -574,59 +569,59 @@ class MockReaderController extends _i1.Mock implements _i8.ReaderController {
           as bool);
 
   @override
-  _i9.Future<void> goToChapter(int? index) =>
+  _i8.Future<void> goToChapter(int? index) =>
       (super.noSuchMethod(
             Invocation.method(#goToChapter, [index]),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<void> goToLocation(String? cfi) =>
+  _i8.Future<void> goToLocation(String? cfi) =>
       (super.noSuchMethod(
             Invocation.method(#goToLocation, [cfi]),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<void> nextChapter() =>
+  _i8.Future<void> nextChapter() =>
       (super.noSuchMethod(
             Invocation.method(#nextChapter, []),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<void> previousChapter() =>
+  _i8.Future<void> previousChapter() =>
       (super.noSuchMethod(
             Invocation.method(#previousChapter, []),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<List<_i20.SearchResult>> search(String? query) =>
+  _i8.Future<List<_i7.SearchResult>> search(String? query) =>
       (super.noSuchMethod(
             Invocation.method(#search, [query]),
-            returnValue: _i9.Future<List<_i20.SearchResult>>.value(
-              <_i20.SearchResult>[],
+            returnValue: _i8.Future<List<_i7.SearchResult>>.value(
+              <_i7.SearchResult>[],
             ),
           )
-          as _i9.Future<List<_i20.SearchResult>>);
+          as _i8.Future<List<_i7.SearchResult>>);
 
   @override
-  _i9.Future<void> dispose() =>
+  _i8.Future<void> dispose() =>
       (super.noSuchMethod(
             Invocation.method(#dispose, []),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 }
 
 /// A class which mocks [Database].
@@ -641,7 +636,7 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
   String get path =>
       (super.noSuchMethod(
             Invocation.getter(#path),
-            returnValue: _i14.dummyValue<String>(
+            returnValue: _i13.dummyValue<String>(
               this,
               Invocation.getter(#path),
             ),
@@ -662,24 +657,24 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
           as _i5.Database);
 
   @override
-  _i9.Future<void> close() =>
+  _i8.Future<void> close() =>
       (super.noSuchMethod(
             Invocation.method(#close, []),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<T> transaction<T>(
-    _i9.Future<T> Function(_i5.Transaction)? action, {
+  _i8.Future<T> transaction<T>(
+    _i8.Future<T> Function(_i5.Transaction)? action, {
     bool? exclusive,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#transaction, [action], {#exclusive: exclusive}),
             returnValue:
-                _i14.ifNotNull(
-                  _i14.dummyValueOrNull<T>(
+                _i13.ifNotNull(
+                  _i13.dummyValueOrNull<T>(
                     this,
                     Invocation.method(
                       #transaction,
@@ -687,7 +682,7 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
                       {#exclusive: exclusive},
                     ),
                   ),
-                  (T v) => _i9.Future<T>.value(v),
+                  (T v) => _i8.Future<T>.value(v),
                 ) ??
                 _FakeFuture_7<T>(
                   this,
@@ -698,50 +693,50 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
                   ),
                 ),
           )
-          as _i9.Future<T>);
+          as _i8.Future<T>);
 
   @override
-  _i9.Future<T> readTransaction<T>(
-    _i9.Future<T> Function(_i5.Transaction)? action,
+  _i8.Future<T> readTransaction<T>(
+    _i8.Future<T> Function(_i5.Transaction)? action,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#readTransaction, [action]),
             returnValue:
-                _i14.ifNotNull(
-                  _i14.dummyValueOrNull<T>(
+                _i13.ifNotNull(
+                  _i13.dummyValueOrNull<T>(
                     this,
                     Invocation.method(#readTransaction, [action]),
                   ),
-                  (T v) => _i9.Future<T>.value(v),
+                  (T v) => _i8.Future<T>.value(v),
                 ) ??
                 _FakeFuture_7<T>(
                   this,
                   Invocation.method(#readTransaction, [action]),
                 ),
           )
-          as _i9.Future<T>);
+          as _i8.Future<T>);
 
   @override
-  _i9.Future<T> devInvokeMethod<T>(String? method, [Object? arguments]) =>
+  _i8.Future<T> devInvokeMethod<T>(String? method, [Object? arguments]) =>
       (super.noSuchMethod(
             Invocation.method(#devInvokeMethod, [method, arguments]),
             returnValue:
-                _i14.ifNotNull(
-                  _i14.dummyValueOrNull<T>(
+                _i13.ifNotNull(
+                  _i13.dummyValueOrNull<T>(
                     this,
                     Invocation.method(#devInvokeMethod, [method, arguments]),
                   ),
-                  (T v) => _i9.Future<T>.value(v),
+                  (T v) => _i8.Future<T>.value(v),
                 ) ??
                 _FakeFuture_7<T>(
                   this,
                   Invocation.method(#devInvokeMethod, [method, arguments]),
                 ),
           )
-          as _i9.Future<T>);
+          as _i8.Future<T>);
 
   @override
-  _i9.Future<T> devInvokeSqlMethod<T>(
+  _i8.Future<T> devInvokeSqlMethod<T>(
     String? method,
     String? sql, [
     List<Object?>? arguments,
@@ -749,8 +744,8 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
       (super.noSuchMethod(
             Invocation.method(#devInvokeSqlMethod, [method, sql, arguments]),
             returnValue:
-                _i14.ifNotNull(
-                  _i14.dummyValueOrNull<T>(
+                _i13.ifNotNull(
+                  _i13.dummyValueOrNull<T>(
                     this,
                     Invocation.method(#devInvokeSqlMethod, [
                       method,
@@ -758,7 +753,7 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
                       arguments,
                     ]),
                   ),
-                  (T v) => _i9.Future<T>.value(v),
+                  (T v) => _i8.Future<T>.value(v),
                 ) ??
                 _FakeFuture_7<T>(
                   this,
@@ -769,27 +764,27 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
                   ]),
                 ),
           )
-          as _i9.Future<T>);
+          as _i8.Future<T>);
 
   @override
-  _i9.Future<void> execute(String? sql, [List<Object?>? arguments]) =>
+  _i8.Future<void> execute(String? sql, [List<Object?>? arguments]) =>
       (super.noSuchMethod(
             Invocation.method(#execute, [sql, arguments]),
-            returnValue: _i9.Future<void>.value(),
-            returnValueForMissingStub: _i9.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i9.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i9.Future<int> rawInsert(String? sql, [List<Object?>? arguments]) =>
+  _i8.Future<int> rawInsert(String? sql, [List<Object?>? arguments]) =>
       (super.noSuchMethod(
             Invocation.method(#rawInsert, [sql, arguments]),
-            returnValue: _i9.Future<int>.value(0),
+            returnValue: _i8.Future<int>.value(0),
           )
-          as _i9.Future<int>);
+          as _i8.Future<int>);
 
   @override
-  _i9.Future<int> insert(
+  _i8.Future<int> insert(
     String? table,
     Map<String, Object?>? values, {
     String? nullColumnHack,
@@ -804,12 +799,12 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
                 #conflictAlgorithm: conflictAlgorithm,
               },
             ),
-            returnValue: _i9.Future<int>.value(0),
+            returnValue: _i8.Future<int>.value(0),
           )
-          as _i9.Future<int>);
+          as _i8.Future<int>);
 
   @override
-  _i9.Future<List<Map<String, Object?>>> query(
+  _i8.Future<List<Map<String, Object?>>> query(
     String? table, {
     bool? distinct,
     List<String>? columns,
@@ -837,27 +832,27 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
                 #offset: offset,
               },
             ),
-            returnValue: _i9.Future<List<Map<String, Object?>>>.value(
+            returnValue: _i8.Future<List<Map<String, Object?>>>.value(
               <Map<String, Object?>>[],
             ),
           )
-          as _i9.Future<List<Map<String, Object?>>>);
+          as _i8.Future<List<Map<String, Object?>>>);
 
   @override
-  _i9.Future<List<Map<String, Object?>>> rawQuery(
+  _i8.Future<List<Map<String, Object?>>> rawQuery(
     String? sql, [
     List<Object?>? arguments,
   ]) =>
       (super.noSuchMethod(
             Invocation.method(#rawQuery, [sql, arguments]),
-            returnValue: _i9.Future<List<Map<String, Object?>>>.value(
+            returnValue: _i8.Future<List<Map<String, Object?>>>.value(
               <Map<String, Object?>>[],
             ),
           )
-          as _i9.Future<List<Map<String, Object?>>>);
+          as _i8.Future<List<Map<String, Object?>>>);
 
   @override
-  _i9.Future<_i5.QueryCursor> rawQueryCursor(
+  _i8.Future<_i5.QueryCursor> rawQueryCursor(
     String? sql,
     List<Object?>? arguments, {
     int? bufferSize,
@@ -868,7 +863,7 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
               [sql, arguments],
               {#bufferSize: bufferSize},
             ),
-            returnValue: _i9.Future<_i5.QueryCursor>.value(
+            returnValue: _i8.Future<_i5.QueryCursor>.value(
               _FakeQueryCursor_8(
                 this,
                 Invocation.method(
@@ -879,10 +874,10 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
               ),
             ),
           )
-          as _i9.Future<_i5.QueryCursor>);
+          as _i8.Future<_i5.QueryCursor>);
 
   @override
-  _i9.Future<_i5.QueryCursor> queryCursor(
+  _i8.Future<_i5.QueryCursor> queryCursor(
     String? table, {
     bool? distinct,
     List<String>? columns,
@@ -912,7 +907,7 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
                 #bufferSize: bufferSize,
               },
             ),
-            returnValue: _i9.Future<_i5.QueryCursor>.value(
+            returnValue: _i8.Future<_i5.QueryCursor>.value(
               _FakeQueryCursor_8(
                 this,
                 Invocation.method(
@@ -934,18 +929,18 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
               ),
             ),
           )
-          as _i9.Future<_i5.QueryCursor>);
+          as _i8.Future<_i5.QueryCursor>);
 
   @override
-  _i9.Future<int> rawUpdate(String? sql, [List<Object?>? arguments]) =>
+  _i8.Future<int> rawUpdate(String? sql, [List<Object?>? arguments]) =>
       (super.noSuchMethod(
             Invocation.method(#rawUpdate, [sql, arguments]),
-            returnValue: _i9.Future<int>.value(0),
+            returnValue: _i8.Future<int>.value(0),
           )
-          as _i9.Future<int>);
+          as _i8.Future<int>);
 
   @override
-  _i9.Future<int> update(
+  _i8.Future<int> update(
     String? table,
     Map<String, Object?>? values, {
     String? where,
@@ -962,20 +957,20 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
                 #conflictAlgorithm: conflictAlgorithm,
               },
             ),
-            returnValue: _i9.Future<int>.value(0),
+            returnValue: _i8.Future<int>.value(0),
           )
-          as _i9.Future<int>);
+          as _i8.Future<int>);
 
   @override
-  _i9.Future<int> rawDelete(String? sql, [List<Object?>? arguments]) =>
+  _i8.Future<int> rawDelete(String? sql, [List<Object?>? arguments]) =>
       (super.noSuchMethod(
             Invocation.method(#rawDelete, [sql, arguments]),
-            returnValue: _i9.Future<int>.value(0),
+            returnValue: _i8.Future<int>.value(0),
           )
-          as _i9.Future<int>);
+          as _i8.Future<int>);
 
   @override
-  _i9.Future<int> delete(
+  _i8.Future<int> delete(
     String? table, {
     String? where,
     List<Object?>? whereArgs,
@@ -986,9 +981,9 @@ class MockDatabase extends _i1.Mock implements _i5.Database {
               [table],
               {#where: where, #whereArgs: whereArgs},
             ),
-            returnValue: _i9.Future<int>.value(0),
+            returnValue: _i8.Future<int>.value(0),
           )
-          as _i9.Future<int>);
+          as _i8.Future<int>);
 
   @override
   _i5.Batch batch() =>

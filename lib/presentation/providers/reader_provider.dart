@@ -1,18 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/book.dart';
-import '../../domain/entities/book_metadata.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 import '../../domain/entities/reading_progress.dart';
 import '../../domain/entities/bookmark.dart';
 import '../../domain/entities/reading_settings.dart';
-import '../../domain/entities/toc_entry.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
-import '../../plugins/plugin_registry.dart';
 import '../../plugins/epub/readwhere_epub_controller.dart';
 import '../../plugins/cbr/cbr_reader_controller.dart';
 import '../../plugins/cbz/cbz_reader_controller.dart';
-import '../../plugins/reader_controller.dart';
 import 'catalogs_provider.dart';
 
 /// Provider for managing reader state and reading operations

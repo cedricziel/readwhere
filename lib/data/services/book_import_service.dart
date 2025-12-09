@@ -7,7 +7,7 @@ import 'package:readwhere_epub/readwhere_epub.dart' as epub;
 
 import '../../domain/entities/book.dart';
 import '../../domain/entities/import_result.dart';
-import '../../plugins/plugin_registry.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 /// Service for importing books into the library
 ///

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'app.dart';
 import 'core/di/service_locator.dart';
 import 'core/utils/logger.dart';
-import 'plugins/plugin_registry.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'plugins/cbr/cbr_reader_plugin.dart';
 import 'plugins/cbz/cbz_reader_plugin.dart';
 import 'plugins/epub/readwhere_epub_plugin.dart';

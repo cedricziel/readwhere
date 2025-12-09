@@ -7,10 +7,7 @@ import 'package:logging/logging.dart';
 import 'package:readwhere_cbr/readwhere_cbr.dart' as cbr;
 import 'package:readwhere_panel_detection/readwhere_panel_detection.dart';
 
-import '../../domain/entities/toc_entry.dart';
-import '../reader_content.dart';
-import '../reader_controller.dart';
-import '../search_result.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 /// Reader controller for CBR comic books.
 ///

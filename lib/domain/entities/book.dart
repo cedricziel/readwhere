@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
-
-import 'book_metadata.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 /// Represents a book in the library
 class Book extends Equatable {

@@ -4,10 +4,7 @@ import 'dart:typed_data';
 import 'package:logging/logging.dart';
 import 'package:readwhere_epub/readwhere_epub.dart' as epub;
 
-import '../../domain/entities/toc_entry.dart';
-import '../reader_content.dart';
-import '../reader_controller.dart';
-import '../search_result.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 /// Reader controller using the readwhere_epub library.
 ///

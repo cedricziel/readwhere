@@ -7,7 +7,7 @@
 
 import 'package:logging/logging.dart';
 
-import '../plugin_registry.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'readwhere_epub_plugin.dart';
 
 /// Initialize the EPUB plugin with the registry
