@@ -34,13 +34,18 @@ class RarFileEntry extends Equatable {
   /// CRC32 checksum of the unpacked file.
   int get crc32 => block.fileCrc;
 
-  /// Whether this file can be extracted (STORE method, not encrypted, not directory).
-  bool get canExtract =>
-      block.isStored && !block.isEncrypted && !block.isDirectory;
+  /// Whether this file can be extracted (not encrypted, not directory, not split).
+  ///
+  /// Both STORE and compressed files can be extracted - compressed files
+  /// will be decompressed using the Rar29 algorithm.
+  bool get canExtract => !block.isEncrypted && !block.isDirectory && !isSplit;
 
-  /// Whether this file uses unsupported compression.
-  bool get hasUnsupportedCompression =>
-      block.isCompressed && !block.isDirectory;
+  /// Whether this file needs decompression.
+  bool get needsDecompression => block.isCompressed && !block.isDirectory;
+
+  /// Whether this file uses unsupported compression (PPM mode).
+  /// Currently all standard RAR compression methods are supported.
+  bool get hasUnsupportedCompression => false;
 
   /// Whether this file's data is encrypted.
   bool get isEncrypted => block.isEncrypted;

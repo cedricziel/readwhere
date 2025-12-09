@@ -99,12 +99,12 @@ void main() {
         expect(entry.canExtract, isTrue);
       });
 
-      test('returns false for compressed files', () {
+      test('returns true for compressed files (decompression supported)', () {
         final block = createFileBlock(
           compressionMethod: RarCompressionMethod.normal,
         );
         final entry = RarFileEntry(block);
-        expect(entry.canExtract, isFalse);
+        expect(entry.canExtract, isTrue);
       });
 
       test('returns false for encrypted files', () {
@@ -135,28 +135,28 @@ void main() {
         expect(entry.hasUnsupportedCompression, isFalse);
       });
 
-      test('returns true for FASTEST', () {
+      test('returns false for FASTEST (decompression supported)', () {
         final block = createFileBlock(
           compressionMethod: RarCompressionMethod.fastest,
         );
         final entry = RarFileEntry(block);
-        expect(entry.hasUnsupportedCompression, isTrue);
+        expect(entry.hasUnsupportedCompression, isFalse);
       });
 
-      test('returns true for NORMAL', () {
+      test('returns false for NORMAL (decompression supported)', () {
         final block = createFileBlock(
           compressionMethod: RarCompressionMethod.normal,
         );
         final entry = RarFileEntry(block);
-        expect(entry.hasUnsupportedCompression, isTrue);
+        expect(entry.hasUnsupportedCompression, isFalse);
       });
 
-      test('returns true for BEST', () {
+      test('returns false for BEST (decompression supported)', () {
         final block = createFileBlock(
           compressionMethod: RarCompressionMethod.best,
         );
         final entry = RarFileEntry(block);
-        expect(entry.hasUnsupportedCompression, isTrue);
+        expect(entry.hasUnsupportedCompression, isFalse);
       });
 
       test('returns false for directories', () {

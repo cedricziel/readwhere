@@ -2,16 +2,17 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import '../constants.dart';
+import '../decompress/rar_decompressor.dart';
 import '../errors/rar_exception.dart';
 import '../utils/crc.dart';
 import 'rar_file_entry.dart';
 import 'rar_parser.dart';
 
-/// High-level RAR 4.x archive reader for STORE-compressed files only.
+/// High-level RAR 4.x archive reader with decompression support.
 ///
-/// This is a pure Dart implementation that reads RAR 4.x archives containing
-/// only uncompressed (STORE method 0x30) files. Files using compression
-/// (methods 0x31-0x35) cannot be extracted but are reported via [unsupportedFiles].
+/// This is a pure Dart implementation that reads RAR 4.x archives.
+/// Both uncompressed (STORE) and compressed files can be extracted.
+/// Compressed files are decompressed using the Rar29 algorithm.
 ///
 /// ## Example
 ///
@@ -210,9 +211,9 @@ class RarArchive {
 
   /// Reads file bytes from a file entry.
   ///
-  /// Only works for STORE (uncompressed) files.
+  /// Works for both STORE (uncompressed) and compressed files.
+  /// Compressed files are decompressed using the Rar29 algorithm.
   ///
-  /// Throws [RarUnsupportedCompressionException] if the file uses compression.
   /// Throws [RarEncryptedArchiveException] if the file is encrypted.
   /// Throws [RarCrcException] if CRC verification fails.
   Uint8List readFileBytesFromEntry(RarFileEntry entry) {
@@ -224,15 +225,13 @@ class RarArchive {
     }
 
     if (!entry.canExtract) {
-      throw RarUnsupportedCompressionException(
-        'File uses unsupported compression method '
-        '${entry.compressionMethodName}: ${entry.path}',
-        fileName: entry.path,
-        compressionMethod: entry.compressionMethod,
+      throw RarReadException(
+        'Cannot extract file: ${entry.path}',
+        filePath: entry.path,
       );
     }
 
-    // For STORE files, just read raw bytes from the data section
+    // Read compressed/raw data from archive
     final dataOffset = entry.dataOffset;
     final dataSize = entry.packedSize;
 
@@ -243,11 +242,30 @@ class RarArchive {
       );
     }
 
-    final fileBytes = Uint8List.sublistView(
+    final packedData = Uint8List.sublistView(
       _bytes,
       dataOffset,
       dataOffset + dataSize,
     );
+
+    Uint8List fileBytes;
+
+    if (entry.needsDecompression) {
+      // Decompress the data
+      try {
+        final decompressor = Rar29Decompressor(packedData, entry.size);
+        fileBytes = decompressor.decompress();
+      } catch (e) {
+        throw RarReadException(
+          'Decompression failed for ${entry.path}: $e',
+          filePath: entry.path,
+          cause: e,
+        );
+      }
+    } else {
+      // STORE - use raw bytes
+      fileBytes = packedData;
+    }
 
     // Verify CRC32
     final actualCrc = Crc32.calculate(fileBytes);

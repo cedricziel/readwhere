@@ -6,8 +6,8 @@ import 'package:test/test.dart';
 /// Integration tests using real RAR files from ssokolow/rar-test-files repository.
 ///
 /// These tests verify parsing against real archives created by the official
-/// RAR toolchain. The test files use compression (not STORE method), so
-/// extraction tests verify that compressed files are properly detected.
+/// RAR toolchain. The test files use compression (not STORE method), and
+/// we now support decompression via the Rar29 algorithm.
 void main() {
   final fixturesPath =
       '${Directory.current.path}/test/fixtures/rar-test-files-master/build';
@@ -45,16 +45,19 @@ void main() {
         expect(file.isEncrypted, isFalse);
       });
 
-      test('detects compression (not STORE)', () {
+      test('detects compression (not STORE) but supports extraction', () {
         final file = archive.files.first;
-        expect(file.hasUnsupportedCompression, isTrue);
-        expect(file.canExtract, isFalse);
+        expect(file.hasUnsupportedCompression, isFalse);
+        expect(file.canExtract, isTrue);
+        expect(file.needsDecompression, isTrue);
       });
 
-      test('allFilesExtractable is false for compressed archives', () {
-        expect(archive.allFilesExtractable, isFalse);
-        expect(archive.unsupportedFiles, hasLength(1));
-        expect(archive.extractableFiles, isEmpty);
+      test(
+          'allFilesExtractable is true for compressed archives (decompression supported)',
+          () {
+        expect(archive.allFilesExtractable, isTrue);
+        expect(archive.unsupportedFiles, isEmpty);
+        expect(archive.extractableFiles, hasLength(1));
       });
 
       test('hasFile works correctly', () {
@@ -105,10 +108,13 @@ void main() {
             equals({'testfile.jpg', 'testfile.png'}));
       });
 
-      test('all files have unsupported compression', () {
+      test('all compressed files can be extracted (decompression supported)',
+          () {
         for (final file in archive.files) {
-          expect(file.hasUnsupportedCompression, isTrue,
-              reason: '${file.path} should be compressed');
+          expect(file.hasUnsupportedCompression, isFalse,
+              reason: '${file.path} compression should be supported');
+          expect(file.canExtract, isTrue,
+              reason: '${file.path} should be extractable');
         }
       });
     });
