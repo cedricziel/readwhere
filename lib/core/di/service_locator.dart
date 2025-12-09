@@ -35,6 +35,7 @@ import '../../data/repositories/feed_item_repository_impl.dart';
 import '../../presentation/providers/audio_provider.dart';
 import '../../presentation/providers/feed_reader_provider.dart';
 import '../../presentation/providers/catalogs_provider.dart';
+import '../../presentation/providers/unified_catalog_browsing_provider.dart';
 import '../../presentation/providers/library_provider.dart';
 import '../../presentation/providers/reader_provider.dart';
 import '../../presentation/providers/settings_provider.dart';
@@ -314,6 +315,22 @@ Future<void> setupServiceLocator() async {
       feedItemRepository: sl(),
       rssClient: sl(),
       articleScraperService: sl(),
+    ),
+  );
+
+  // Unified Catalog Browsing Provider
+  sl.registerLazySingleton<UnifiedCatalogBrowsingProvider>(
+    () => UnifiedCatalogBrowsingProvider(
+      registry: sl(),
+      importBook: (filePath, {sourceCatalogId, sourceEntryId}) async {
+        final book = await sl<BookImportService>().importBook(filePath);
+        final bookWithSource = book.copyWith(
+          sourceCatalogId: sourceCatalogId,
+          sourceEntryId: sourceEntryId,
+        );
+        final savedBook = await sl<BookRepository>().insert(bookWithSource);
+        return savedBook.id;
+      },
     ),
   );
 
