@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:readwhere_panel_detection/readwhere_panel_detection.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/reading_settings.dart';
 
@@ -23,6 +24,8 @@ class SettingsProvider extends ChangeNotifier {
   static const String _syncEnabledKey = 'sync_enabled';
   static const String _hapticFeedbackKey = 'haptic_feedback';
   static const String _keepScreenAwakeKey = 'keep_screen_awake';
+  static const String _comicReadingDirectionKey = 'comic_reading_direction';
+  static const String _comicPanelModeEnabledKey = 'comic_panel_mode_enabled';
 
   SharedPreferences? _prefs;
 
@@ -33,6 +36,8 @@ class SettingsProvider extends ChangeNotifier {
   bool _syncEnabled = false;
   bool _hapticFeedback = true;
   bool _keepScreenAwake = true;
+  ReadingDirection _comicReadingDirection = ReadingDirection.leftToRight;
+  bool _comicPanelModeEnabled = false;
   bool _isInitialized = false;
 
   // Getters
@@ -54,6 +59,12 @@ class SettingsProvider extends ChangeNotifier {
 
   /// Whether screen should be kept awake during reading
   bool get keepScreenAwake => _keepScreenAwake;
+
+  /// Reading direction for comics (LTR for Western, RTL for Manga)
+  ReadingDirection get comicReadingDirection => _comicReadingDirection;
+
+  /// Whether panel mode is enabled for comics
+  bool get comicPanelModeEnabled => _comicPanelModeEnabled;
 
   /// Whether the provider has loaded settings from storage
   bool get isInitialized => _isInitialized;
@@ -276,6 +287,41 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set comic reading direction
+  ///
+  /// [direction] The reading direction (LTR for Western, RTL for Manga)
+  Future<void> setComicReadingDirection(ReadingDirection direction) async {
+    if (_comicReadingDirection == direction) return;
+
+    _comicReadingDirection = direction;
+    await _prefs?.setInt(_comicReadingDirectionKey, direction.index);
+    notifyListeners();
+  }
+
+  /// Toggle comic reading direction between LTR and RTL
+  Future<void> toggleComicReadingDirection() async {
+    final newDirection = _comicReadingDirection == ReadingDirection.leftToRight
+        ? ReadingDirection.rightToLeft
+        : ReadingDirection.leftToRight;
+    await setComicReadingDirection(newDirection);
+  }
+
+  /// Set comic panel mode enabled state
+  ///
+  /// [enabled] Whether panel-by-panel reading is enabled
+  Future<void> setComicPanelModeEnabled(bool enabled) async {
+    if (_comicPanelModeEnabled == enabled) return;
+
+    _comicPanelModeEnabled = enabled;
+    await _prefs?.setBool(_comicPanelModeEnabledKey, enabled);
+    notifyListeners();
+  }
+
+  /// Toggle comic panel mode on/off
+  Future<void> toggleComicPanelMode() async {
+    await setComicPanelModeEnabled(!_comicPanelModeEnabled);
+  }
+
   /// Reset all settings to defaults
   ///
   /// Clears all persisted settings and resets to default values.
@@ -286,6 +332,8 @@ class SettingsProvider extends ChangeNotifier {
     _syncEnabled = false;
     _hapticFeedback = true;
     _keepScreenAwake = true;
+    _comicReadingDirection = ReadingDirection.leftToRight;
+    _comicPanelModeEnabled = false;
 
     // Clear all preferences
     await Future.wait([
@@ -301,6 +349,8 @@ class SettingsProvider extends ChangeNotifier {
       _prefs?.remove(_syncEnabledKey) ?? Future.value(),
       _prefs?.remove(_hapticFeedbackKey) ?? Future.value(),
       _prefs?.remove(_keepScreenAwakeKey) ?? Future.value(),
+      _prefs?.remove(_comicReadingDirectionKey) ?? Future.value(),
+      _prefs?.remove(_comicPanelModeEnabledKey) ?? Future.value(),
     ]);
 
     notifyListeners();
@@ -356,5 +406,14 @@ class SettingsProvider extends ChangeNotifier {
     _syncEnabled = _prefs!.getBool(_syncEnabledKey) ?? false;
     _hapticFeedback = _prefs!.getBool(_hapticFeedbackKey) ?? true;
     _keepScreenAwake = _prefs!.getBool(_keepScreenAwakeKey) ?? true;
+
+    // Load comic settings
+    final readingDirectionIndex = _prefs!.getInt(_comicReadingDirectionKey);
+    if (readingDirectionIndex != null &&
+        readingDirectionIndex < ReadingDirection.values.length) {
+      _comicReadingDirection = ReadingDirection.values[readingDirectionIndex];
+    }
+    _comicPanelModeEnabled =
+        _prefs!.getBool(_comicPanelModeEnabledKey) ?? false;
   }
 }

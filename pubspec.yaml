@@ -14,6 +14,10 @@ workspace:
   - packages/readwhere_webdav
   - packages/readwhere_nextcloud
   - packages/readwhere_plugin
+  - packages/readwhere_opds
+  - packages/readwhere_kavita
+  - packages/readwhere_panel_detection
+  - packages/readwhere_sample_media
 
 dependencies:
   flutter:
@@ -44,6 +48,9 @@ dependencies:
   archive: ^4.0.7
   xml: ^6.6.1
 
+  # Image Processing (for comic panel detection)
+  image: 4.5.4
+
   # CBZ Support
   readwhere_cbz:
     path: packages/readwhere_cbz
@@ -63,6 +70,18 @@ dependencies:
   # Plugin System
   readwhere_plugin:
     path: packages/readwhere_plugin
+
+  # OPDS Support
+  readwhere_opds:
+    path: packages/readwhere_opds
+
+  # Kavita Integration
+  readwhere_kavita:
+    path: packages/readwhere_kavita
+
+  # Panel Detection for Comics
+  readwhere_panel_detection:
+    path: packages/readwhere_panel_detection
 
   # Networking
   http: ^1.6.0

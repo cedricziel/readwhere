@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:readwhere_panel_detection/readwhere_panel_detection.dart';
 
 /// Overlay controls for the reader screen
 ///
@@ -19,6 +20,21 @@ class ReaderControls extends StatelessWidget {
   final VoidCallback onPreviousChapter;
   final VoidCallback onNextChapter;
 
+  /// Whether this is comic content (CBR/CBZ) showing panel mode controls
+  final bool isComic;
+
+  /// Whether panel mode is currently enabled
+  final bool panelModeEnabled;
+
+  /// Current reading direction for comics
+  final ReadingDirection readingDirection;
+
+  /// Callback to toggle panel mode
+  final VoidCallback? onTogglePanelMode;
+
+  /// Callback to toggle reading direction
+  final VoidCallback? onToggleReadingDirection;
+
   const ReaderControls({
     super.key,
     required this.visible,
@@ -34,6 +50,11 @@ class ReaderControls extends StatelessWidget {
     required this.onProgressChanged,
     required this.onPreviousChapter,
     required this.onNextChapter,
+    this.isComic = false,
+    this.panelModeEnabled = false,
+    this.readingDirection = ReadingDirection.leftToRight,
+    this.onTogglePanelMode,
+    this.onToggleReadingDirection,
   });
 
   @override
@@ -53,6 +74,11 @@ class ReaderControls extends StatelessWidget {
             onBookmark: onBookmark,
             onSettings: onSettings,
             onAudio: onAudio,
+            isComic: isComic,
+            panelModeEnabled: panelModeEnabled,
+            readingDirection: readingDirection,
+            onTogglePanelMode: onTogglePanelMode,
+            onToggleReadingDirection: onToggleReadingDirection,
           ),
         ),
 
@@ -85,6 +111,11 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onBookmark;
   final VoidCallback onSettings;
   final VoidCallback? onAudio;
+  final bool isComic;
+  final bool panelModeEnabled;
+  final ReadingDirection readingDirection;
+  final VoidCallback? onTogglePanelMode;
+  final VoidCallback? onToggleReadingDirection;
 
   const _TopBar({
     required this.bookTitle,
@@ -92,6 +123,11 @@ class _TopBar extends StatelessWidget {
     required this.onBookmark,
     required this.onSettings,
     this.onAudio,
+    this.isComic = false,
+    this.panelModeEnabled = false,
+    this.readingDirection = ReadingDirection.leftToRight,
+    this.onTogglePanelMode,
+    this.onToggleReadingDirection,
   });
 
   @override
@@ -143,6 +179,37 @@ class _TopBar extends StatelessWidget {
                   onPressed: onAudio,
                   tooltip: 'Audio controls',
                 ),
+
+              // Comic-specific controls
+              if (isComic) ...[
+                // Panel mode toggle
+                IconButton(
+                  icon: Icon(
+                    panelModeEnabled
+                        ? Icons.grid_view_rounded
+                        : Icons.crop_square_outlined,
+                    color: panelModeEnabled ? Colors.amber : Colors.white,
+                  ),
+                  onPressed: onTogglePanelMode,
+                  tooltip: panelModeEnabled
+                      ? 'Disable panel mode'
+                      : 'Enable panel mode',
+                ),
+                // Reading direction toggle
+                IconButton(
+                  icon: Icon(
+                    readingDirection == ReadingDirection.leftToRight
+                        ? Icons.format_textdirection_l_to_r
+                        : Icons.format_textdirection_r_to_l,
+                    color: Colors.white,
+                  ),
+                  onPressed: onToggleReadingDirection,
+                  tooltip: readingDirection == ReadingDirection.leftToRight
+                      ? 'Western (LTR)'
+                      : 'Manga (RTL)',
+                ),
+              ],
+
               IconButton(
                 icon: const Icon(Icons.bookmark_border, color: Colors.white),
                 onPressed: onBookmark,

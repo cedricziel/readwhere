@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:image/image.dart' as img;
 import 'package:logging/logging.dart';
 import 'package:readwhere_cbr/readwhere_cbr.dart' as cbr;
+import 'package:readwhere_panel_detection/readwhere_panel_detection.dart';
 
 import '../../domain/entities/toc_entry.dart';
 import '../reader_content.dart';
@@ -32,6 +34,12 @@ class CbrReaderController implements ReaderController {
 
   bool _isInitialized = false;
   bool _isClosed = false;
+
+  // Panel detection state
+  final Map<int, List<Panel>> _panelCache = {};
+  int _currentPanelIndex = 0;
+  bool _panelModeEnabled = false;
+  ReadingDirection _readingDirection = ReadingDirection.leftToRight;
 
   CbrReaderController._({required cbr.CbrReader reader, required this.filePath})
     : _reader = reader;
@@ -452,6 +460,242 @@ class CbrReaderController implements ReaderController {
     }
 
     return _reader.getThumbnail(index, options: options);
+  }
+
+  // ============================================================
+  // Panel Detection and Navigation
+  // ============================================================
+
+  /// Whether panel mode is enabled.
+  bool get panelModeEnabled => _panelModeEnabled;
+
+  /// Current panel index within the current page.
+  int get currentPanelIndex => _currentPanelIndex;
+
+  /// Current reading direction for panel sorting.
+  ReadingDirection get readingDirection => _readingDirection;
+
+  /// Enable or disable panel mode.
+  void setPanelMode(bool enabled) {
+    _panelModeEnabled = enabled;
+    if (enabled) {
+      _currentPanelIndex = 0;
+    }
+    _logger.info('Panel mode ${enabled ? "enabled" : "disabled"}');
+  }
+
+  /// Set the reading direction for panel sorting.
+  void setReadingDirection(ReadingDirection direction) {
+    if (_readingDirection != direction) {
+      _readingDirection = direction;
+      // Clear cache to re-sort panels
+      _panelCache.clear();
+      _logger.info('Reading direction set to $direction');
+    }
+  }
+
+  /// Detect panels for a specific page.
+  ///
+  /// Results are cached for efficiency.
+  List<Panel> detectPanels(int pageIndex) {
+    _ensureInitialized();
+
+    if (pageIndex < 0 || pageIndex >= _reader.pageCount) {
+      return [];
+    }
+
+    // Check cache first
+    if (_panelCache.containsKey(pageIndex)) {
+      return _panelCache[pageIndex]!;
+    }
+
+    final pageBytes = _reader.getPageBytes(pageIndex);
+    if (pageBytes == null) {
+      return [];
+    }
+
+    final detector = PanelDetector(
+      options: PanelDetectionOptions(
+        readingDirection: _readingDirection,
+        minPanelAreaFraction: 0.02,
+        maxPanelAreaFraction: 0.90,
+      ),
+    );
+
+    final result = detector.detect(pageBytes);
+
+    if (result.success && result.panels.isNotEmpty) {
+      _panelCache[pageIndex] = result.panels;
+      _logger.info(
+        'Detected ${result.panels.length} panels on page $pageIndex',
+      );
+      return result.panels;
+    }
+
+    // Return empty list if detection failed or no panels found
+    _panelCache[pageIndex] = [];
+    return [];
+  }
+
+  /// Get the number of panels on a page.
+  int getPanelCount(int pageIndex) {
+    final panels = detectPanels(pageIndex);
+    return panels.length;
+  }
+
+  /// Get the current panel, or null if not in panel mode or no panels.
+  Panel? getCurrentPanel() {
+    if (!_panelModeEnabled) return null;
+
+    final panels = detectPanels(_currentPageIndex);
+    if (panels.isEmpty || _currentPanelIndex >= panels.length) {
+      return null;
+    }
+
+    return panels[_currentPanelIndex];
+  }
+
+  /// Get all panels for the current page.
+  List<Panel> getCurrentPagePanels() {
+    return detectPanels(_currentPageIndex);
+  }
+
+  /// Navigate to a specific panel on the current page.
+  void goToPanel(int panelIndex) {
+    _ensureInitialized();
+
+    final panels = detectPanels(_currentPageIndex);
+    if (panels.isEmpty) return;
+
+    _currentPanelIndex = panelIndex.clamp(0, panels.length - 1);
+    _logger.info('Navigated to panel $_currentPanelIndex');
+  }
+
+  /// Navigate to the next panel.
+  ///
+  /// If at the last panel, advances to the first panel of the next page.
+  /// Returns true if navigation was successful.
+  Future<bool> nextPanel() async {
+    _ensureInitialized();
+    _ensureNotClosed();
+
+    if (!_panelModeEnabled) {
+      await nextChapter();
+      return true;
+    }
+
+    final panels = detectPanels(_currentPageIndex);
+
+    if (panels.isEmpty) {
+      // No panels detected, just go to next page
+      if (_currentPageIndex < _reader.pageCount - 1) {
+        await goToChapter(_currentPageIndex + 1);
+        _currentPanelIndex = 0;
+        return true;
+      }
+      return false;
+    }
+
+    if (_currentPanelIndex < panels.length - 1) {
+      // Go to next panel on same page
+      _currentPanelIndex++;
+      _logger.info('Moved to panel $_currentPanelIndex');
+      return true;
+    } else {
+      // Go to first panel of next page
+      if (_currentPageIndex < _reader.pageCount - 1) {
+        await goToChapter(_currentPageIndex + 1);
+        _currentPanelIndex = 0;
+        return true;
+      }
+      return false;
+    }
+  }
+
+  /// Navigate to the previous panel.
+  ///
+  /// If at the first panel, goes to the last panel of the previous page.
+  /// Returns true if navigation was successful.
+  Future<bool> previousPanel() async {
+    _ensureInitialized();
+    _ensureNotClosed();
+
+    if (!_panelModeEnabled) {
+      await previousChapter();
+      return true;
+    }
+
+    if (_currentPanelIndex > 0) {
+      // Go to previous panel on same page
+      _currentPanelIndex--;
+      _logger.info('Moved to panel $_currentPanelIndex');
+      return true;
+    } else {
+      // Go to last panel of previous page
+      if (_currentPageIndex > 0) {
+        await goToChapter(_currentPageIndex - 1);
+        final panels = detectPanels(_currentPageIndex);
+        _currentPanelIndex = panels.isEmpty ? 0 : panels.length - 1;
+        return true;
+      }
+      return false;
+    }
+  }
+
+  /// Get cropped image bytes for a specific panel.
+  ///
+  /// Returns null if the panel doesn't exist or image processing fails.
+  Uint8List? getPanelImage(int pageIndex, int panelIndex) {
+    _ensureInitialized();
+
+    final panels = detectPanels(pageIndex);
+    if (panels.isEmpty || panelIndex >= panels.length) {
+      return null;
+    }
+
+    final pageBytes = _reader.getPageBytes(pageIndex);
+    if (pageBytes == null) {
+      return null;
+    }
+
+    try {
+      final image = img.decodeImage(pageBytes);
+      if (image == null) {
+        return null;
+      }
+
+      final panel = panels[panelIndex];
+
+      // Crop the image to the panel bounds
+      final cropped = img.copyCrop(
+        image,
+        x: panel.x.clamp(0, image.width - 1),
+        y: panel.y.clamp(0, image.height - 1),
+        width: panel.width.clamp(1, image.width - panel.x),
+        height: panel.height.clamp(1, image.height - panel.y),
+      );
+
+      // Encode back to PNG
+      return Uint8List.fromList(img.encodePng(cropped));
+    } catch (e) {
+      _logger.warning('Failed to crop panel image: $e');
+      return null;
+    }
+  }
+
+  /// Get cropped image bytes for the current panel.
+  Uint8List? getCurrentPanelImage() {
+    if (!_panelModeEnabled) {
+      return getPageBytes(_currentPageIndex);
+    }
+
+    return getPanelImage(_currentPageIndex, _currentPanelIndex);
+  }
+
+  /// Clear the panel cache (e.g., when reading direction changes).
+  void clearPanelCache() {
+    _panelCache.clear();
+    _logger.info('Panel cache cleared');
   }
 
   void _ensureInitialized() {

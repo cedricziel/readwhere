@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 import '../../providers/audio_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/reader_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../themes/reading_themes.dart';
 import '../../../plugins/epub/readwhere_epub_controller.dart';
+import '../../../plugins/cbr/cbr_reader_controller.dart';
+import '../../../plugins/cbz/cbz_reader_controller.dart';
 import 'widgets/audio_controls.dart';
 import 'widgets/reader_content.dart';
 import 'widgets/reader_controls.dart';
@@ -295,55 +298,77 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   ),
 
                   // Overlay controls (top and bottom bars)
-                  ReaderControls(
-                    visible: _showControls,
-                    bookTitle: readerProvider.currentBook?.title ?? 'Unknown',
-                    currentChapter: readerProvider.currentChapterIndex,
-                    totalChapters: readerProvider.tableOfContents.length,
-                    progress: readerProvider.progressPercentage,
-                    onClose: () async {
-                      final navigator = Navigator.of(context);
-                      final audioProvider = context.read<AudioProvider>();
-                      await audioProvider.reset();
-                      await readerProvider.saveProgress();
-                      await readerProvider.closeBook();
-                      if (mounted) {
-                        navigator.pop();
-                      }
-                    },
-                    onBookmark: _handleBookmark,
-                    onSettings: _showReadingSettings,
-                    onTableOfContents: _showTableOfContents,
-                    onAudio: _toggleAudioControls,
-                    onProgressChanged: (value) {
-                      // Update progress slider
-                      final totalChapters =
-                          readerProvider.tableOfContents.length;
-                      if (totalChapters > 0) {
-                        final targetChapter = (value / 100 * totalChapters)
-                            .floor();
-                        if (targetChapter !=
-                            readerProvider.currentChapterIndex) {
-                          readerProvider.goToChapter(
-                            targetChapter.clamp(0, totalChapters - 1),
-                          );
+                  Consumer<SettingsProvider>(
+                    builder: (context, settingsProvider, _) {
+                      final controller = readerProvider.readerController;
+                      final isComic =
+                          controller is CbrReaderController ||
+                          controller is CbzReaderController;
+
+                      return ReaderControls(
+                        visible: _showControls,
+                        bookTitle:
+                            readerProvider.currentBook?.title ?? 'Unknown',
+                        currentChapter: readerProvider.currentChapterIndex,
+                        totalChapters: readerProvider.tableOfContents.length,
+                        progress: readerProvider.progressPercentage,
+                        isComic: isComic,
+                        panelModeEnabled:
+                            settingsProvider.comicPanelModeEnabled,
+                        readingDirection:
+                            settingsProvider.comicReadingDirection,
+                        onTogglePanelMode: isComic
+                            ? () => settingsProvider.toggleComicPanelMode()
+                            : null,
+                        onToggleReadingDirection: isComic
+                            ? () =>
+                                  settingsProvider.toggleComicReadingDirection()
+                            : null,
+                        onClose: () async {
+                          final navigator = Navigator.of(context);
+                          final audioProvider = context.read<AudioProvider>();
+                          await audioProvider.reset();
+                          await readerProvider.saveProgress();
+                          await readerProvider.closeBook();
+                          if (mounted) {
+                            navigator.pop();
+                          }
+                        },
+                        onBookmark: _handleBookmark,
+                        onSettings: _showReadingSettings,
+                        onTableOfContents: _showTableOfContents,
+                        onAudio: _toggleAudioControls,
+                        onProgressChanged: (value) {
+                          // Update progress slider
+                          final totalChapters =
+                              readerProvider.tableOfContents.length;
+                          if (totalChapters > 0) {
+                            final targetChapter = (value / 100 * totalChapters)
+                                .floor();
+                            if (targetChapter !=
+                                readerProvider.currentChapterIndex) {
+                              readerProvider.goToChapter(
+                                targetChapter.clamp(0, totalChapters - 1),
+                              );
+                              if (_scrollController.hasClients) {
+                                _scrollController.jumpTo(0);
+                              }
+                            }
+                          }
+                        },
+                        onPreviousChapter: () {
+                          readerProvider.previousChapter();
                           if (_scrollController.hasClients) {
                             _scrollController.jumpTo(0);
                           }
-                        }
-                      }
-                    },
-                    onPreviousChapter: () {
-                      readerProvider.previousChapter();
-                      if (_scrollController.hasClients) {
-                        _scrollController.jumpTo(0);
-                      }
-                    },
-                    onNextChapter: () {
-                      readerProvider.nextChapter();
-                      if (_scrollController.hasClients) {
-                        _scrollController.jumpTo(0);
-                      }
+                        },
+                        onNextChapter: () {
+                          readerProvider.nextChapter();
+                          if (_scrollController.hasClients) {
+                            _scrollController.jumpTo(0);
+                          }
+                        },
+                      );
                     },
                   ),
 
