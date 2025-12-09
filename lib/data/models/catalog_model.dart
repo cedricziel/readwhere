@@ -49,6 +49,8 @@ class CatalogModel extends Catalog {
         return CatalogType.kavita;
       case 'nextcloud':
         return CatalogType.nextcloud;
+      case 'rss':
+        return CatalogType.rss;
       case 'opds':
       default:
         return CatalogType.opds;

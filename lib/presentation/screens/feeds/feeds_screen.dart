@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/di/service_locator.dart';
 import '../../../domain/entities/catalog.dart';
 import '../../providers/catalogs_provider.dart';
 import '../../router/routes.dart';
@@ -28,7 +27,11 @@ class _FeedsScreenState extends State<FeedsScreen> {
     super.initState();
     // Load catalogs when screen is first shown
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      sl<CatalogsProvider>().loadCatalogs();
+      final catalogsProvider = Provider.of<CatalogsProvider>(
+        context,
+        listen: false,
+      );
+      catalogsProvider.loadCatalogs();
     });
   }
 
@@ -82,7 +85,7 @@ class _FeedsScreenState extends State<FeedsScreen> {
     );
 
     if (confirmed == true && mounted) {
-      final provider = sl<CatalogsProvider>();
+      final provider = Provider.of<CatalogsProvider>(context, listen: false);
       final success = await provider.removeCatalog(feed.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -100,37 +103,38 @@ class _FeedsScreenState extends State<FeedsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: sl<CatalogsProvider>(),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Feeds')),
-        body: Consumer<CatalogsProvider>(
-          builder: (context, provider, child) {
-            // Filter to only RSS feeds
-            final feeds = provider.catalogs.where((c) => c.isRss).toList();
+    return Consumer<CatalogsProvider>(
+      builder: (context, provider, child) {
+        // Filter to only RSS feeds
+        final feeds = provider.catalogs.where((c) => c.isRss).toList();
 
-            if (provider.isLoading && feeds.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (provider.error != null && feeds.isEmpty) {
-              return _buildErrorState(provider);
-            }
-
-            if (feeds.isEmpty) {
-              return _buildEmptyState();
-            }
-
-            return _buildFeedList(provider, feeds);
-          },
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _showAddFeedDialog,
-          icon: const Icon(Icons.add),
-          label: const Text('Subscribe'),
-        ),
-      ),
+        return Scaffold(
+          appBar: AppBar(title: const Text('Feeds')),
+          body: _buildBody(provider, feeds),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: _showAddFeedDialog,
+            icon: const Icon(Icons.add),
+            label: const Text('Subscribe'),
+          ),
+        );
+      },
     );
+  }
+
+  Widget _buildBody(CatalogsProvider provider, List<Catalog> feeds) {
+    if (provider.isLoading && feeds.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (provider.error != null && feeds.isEmpty) {
+      return _buildErrorState(provider);
+    }
+
+    if (feeds.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return _buildFeedList(provider, feeds);
   }
 
   Widget _buildEmptyState() {

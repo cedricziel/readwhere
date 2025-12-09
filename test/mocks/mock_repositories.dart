@@ -13,6 +13,7 @@ import 'package:readwhere/presentation/providers/update_provider.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
+import 'package:readwhere_rss/readwhere_rss.dart';
 import 'package:sqflite/sqflite.dart';
 
 @GenerateMocks([
@@ -30,9 +31,10 @@ import 'package:sqflite/sqflite.dart';
   // Plugins
   ReaderPlugin,
   ReaderController,
-  // OPDS/Kavita
+  // OPDS/Kavita/RSS
   OpdsClient,
   KavitaApiClient,
+  RssClient,
   // Providers (for UI tests)
   LibraryProvider,
   SettingsProvider,
