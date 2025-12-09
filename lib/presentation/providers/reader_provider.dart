@@ -8,8 +8,9 @@ import '../../domain/entities/reading_settings.dart';
 import '../../domain/entities/toc_entry.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
-import '../../plugins/epub/readwhere_epub_plugin.dart';
+import '../../plugins/plugin_registry.dart';
 import '../../plugins/epub/readwhere_epub_controller.dart';
+import '../../plugins/cbr/cbr_reader_controller.dart';
 import '../../plugins/reader_controller.dart';
 import 'catalogs_provider.dart';
 
@@ -28,7 +29,7 @@ class ReaderProvider extends ChangeNotifier {
   final BookmarkRepository _bookmarkRepository;
   final CatalogsProvider? _catalogsProvider;
   final Uuid _uuid = const Uuid();
-  final ReadwhereEpubPlugin _epubPlugin = ReadwhereEpubPlugin();
+  final PluginRegistry _pluginRegistry = PluginRegistry();
 
   ReaderProvider({
     required ReadingProgressRepository readingProgressRepository,
@@ -147,8 +148,10 @@ class ReaderProvider extends ChangeNotifier {
       _bookmarks = await _bookmarkRepository.getBookmarksForBook(book.id);
 
       // Open the book with the appropriate plugin
-      if (book.format.toLowerCase() == 'epub') {
-        _readerController = await _epubPlugin.openBook(book.filePath);
+      final plugins = _pluginRegistry.getPluginsByExtension(book.format);
+      final plugin = plugins.isNotEmpty ? plugins.first : null;
+      if (plugin != null) {
+        _readerController = await plugin.openBook(book.filePath);
 
         // Get table of contents from the controller
         _tableOfContents = _readerController!.tableOfContents;
@@ -159,9 +162,10 @@ class ReaderProvider extends ChangeNotifier {
         // Load the current chapter content
         await _loadChapterContent(_currentChapterIndex);
       } else {
-        // Fallback for unsupported formats
+        // No plugin found for this format
+        _error = 'No reader plugin found for format: ${book.format}';
         _tableOfContents = [];
-        _currentChapterHtml = '<p>Unsupported format: ${book.format}</p>';
+        _currentChapterHtml = '';
       }
     } catch (e) {
       _error = 'Failed to open book: ${e.toString()}';
@@ -216,6 +220,11 @@ class ReaderProvider extends ChangeNotifier {
 
         // Get images for this chapter
         _currentChapterImages = epubController.getChapterImages(chapterIndex);
+      } else if (_readerController is CbrReaderController) {
+        final cbrController = _readerController as CbrReaderController;
+        _currentChapterHtml = cbrController.getPageContent(chapterIndex);
+        _currentChapterCss = '';
+        _currentChapterImages = cbrController.getPageImages(chapterIndex);
       } else {
         _currentChapterHtml = '<p>Unsupported reader controller type</p>';
         _currentChapterCss = '';

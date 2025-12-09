@@ -33,10 +33,8 @@ class CbrReaderController implements ReaderController {
   bool _isInitialized = false;
   bool _isClosed = false;
 
-  CbrReaderController._({
-    required cbr.CbrReader reader,
-    required this.filePath,
-  }) : _reader = reader;
+  CbrReaderController._({required cbr.CbrReader reader, required this.filePath})
+    : _reader = reader;
 
   /// Create and initialize a controller.
   static Future<CbrReaderController> create(String filePath) async {
@@ -69,9 +67,7 @@ class CbrReaderController implements ReaderController {
       _tableOfContents = _buildTocFromPages();
 
       _isInitialized = true;
-      _logger.info(
-        'Controller initialized with ${_reader.pageCount} pages',
-      );
+      _logger.info('Controller initialized with ${_reader.pageCount} pages');
     } catch (e, stackTrace) {
       _logger.severe('Error initializing controller', e, stackTrace);
       rethrow;
@@ -257,7 +253,8 @@ class CbrReaderController implements ReaderController {
         final base64Image = base64Encode(pageBytes);
         final mimeType = page.mediaType;
 
-        htmlContent = '''
+        htmlContent =
+            '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -289,7 +286,8 @@ class CbrReaderController implements ReaderController {
         // Also provide raw image in images map
         images[page.filename] = pageBytes;
       } else {
-        htmlContent = '''
+        htmlContent =
+            '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -340,6 +338,95 @@ class CbrReaderController implements ReaderController {
     }
 
     return _reader.getPageBytes(index);
+  }
+
+  /// Get HTML content for a specific page.
+  ///
+  /// Returns the page as an HTML document with embedded base64 image.
+  String getPageContent(int index) {
+    _ensureInitialized();
+
+    if (index < 0 || index >= _reader.pageCount) {
+      return '<p>Page not found</p>';
+    }
+
+    final page = _reader.getPage(index);
+    final pageBytes = _reader.getPageBytes(index);
+
+    if (pageBytes == null) {
+      return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #1a1a1a;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <p>Failed to load page ${index + 1}</p>
+</body>
+</html>
+''';
+    }
+
+    final base64Image = base64Encode(pageBytes);
+    final mimeType = page.mediaType;
+
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #000;
+    }
+    img {
+      max-width: 100%;
+      max-height: 100vh;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <img src="data:$mimeType;base64,$base64Image" alt="Page ${index + 1}">
+</body>
+</html>
+''';
+  }
+
+  /// Get all images for the current page (for compatibility with reader UI).
+  Map<String, Uint8List> getPageImages(int index) {
+    _ensureInitialized();
+
+    if (index < 0 || index >= _reader.pageCount) {
+      return {};
+    }
+
+    final page = _reader.getPage(index);
+    final pageBytes = _reader.getPageBytes(index);
+
+    if (pageBytes == null) return {};
+
+    return {page.filename: pageBytes};
   }
 
   /// Get page metadata.
