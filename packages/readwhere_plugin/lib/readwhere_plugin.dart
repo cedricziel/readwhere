@@ -1,65 +1,61 @@
-/// Core plugin interfaces for ReadWhere catalog providers.
+/// Core plugin interfaces for ReadWhere.
 ///
-/// This package provides abstract interfaces and base classes for building
-/// catalog providers that integrate with various book sources like OPDS feeds,
-/// Nextcloud instances, Kavita servers, and more.
+/// This package provides abstract interfaces and base classes for:
+/// - **Catalog providers** - Integrate with book sources (OPDS, Kavita, etc.)
+/// - **Reader plugins** - Support book formats (EPUB, CBZ, CBR, PDF, etc.)
 ///
-/// ## Key Interfaces
+/// ## Catalog Provider Interfaces
 ///
 /// - [CatalogProvider] - Interface for browsing and downloading from catalogs
 /// - [AccountProvider] - Interface for authentication with catalog services
 /// - [CredentialStorage] - Interface for secure credential storage
-/// - [CatalogProviderRegistry] - Registry for managing providers
+/// - [CatalogProviderRegistry] - Registry for managing catalog providers
 ///
-/// ## Entity Interfaces
+/// ## Reader Plugin Interfaces
 ///
-/// - [CatalogInfo] - Information about a configured catalog
-/// - [AccountInfo] - Information about an authenticated account
-/// - [CatalogEntry] - An entry in a catalog (book, collection, navigation)
-/// - [CatalogFile] - A downloadable file
-/// - [CatalogLink] - A navigation link
-/// - [BrowseResult] - Result of browsing/searching a catalog
-/// - [ValidationResult] - Result of validating a catalog
+/// - [ReaderPlugin] - Interface for format-specific readers
+/// - [ReaderController] - Controls a reading session for an open book
+/// - [PluginRegistry] - Registry for managing reader plugins
 ///
-/// ## Authentication
+/// ## Data Types
 ///
-/// - [AuthType] - Types of authentication (basic, OAuth2, API key, etc.)
-/// - [AuthCredentials] - Base class for credential types
-/// - [BasicAuthCredentials], [OAuth2Credentials], etc. - Specific credentials
-/// - [OAuthFlowInit], [OAuthFlowResult] - OAuth flow data
+/// ### Catalog Entities
+/// - [CatalogInfo], [AccountInfo], [CatalogEntry], [CatalogFile], etc.
 ///
-/// ## Example
+/// ### Reader Entities
+/// - [BookMetadata] - Metadata extracted from a book file
+/// - [TocEntry] - Table of contents entry
+/// - [ReaderContent] - Content for rendering a chapter
+/// - [ReadingLocation] - A location within a book
+/// - [SearchResult] - A search match within a book
+///
+/// ## Example: Catalog Provider
 ///
 /// ```dart
-/// // Implement a catalog provider
 /// class MyProvider implements CatalogProvider {
 ///   @override
 ///   String get id => 'my_provider';
-///
-///   @override
-///   String get name => 'My Provider';
-///
-///   @override
-///   String get description => 'Access My Book Service';
-///
-///   @override
-///   Set<CatalogCapability> get capabilities => {
-///     CatalogCapability.browse,
-///     CatalogCapability.search,
-///     CatalogCapability.download,
-///   };
-///
 ///   // ... implement other methods
 /// }
 ///
-/// // Register the provider
-/// final registry = CatalogProviderRegistry();
-/// registry.register(MyProvider());
+/// CatalogProviderRegistry().register(MyProvider());
+/// ```
 ///
-/// // Use the provider
-/// final catalog = MyCatalog(...);
-/// final provider = registry.getForCatalog(catalog);
-/// final result = await provider?.browse(catalog);
+/// ## Example: Reader Plugin
+///
+/// ```dart
+/// class MyFormatPlugin implements ReaderPlugin {
+///   @override
+///   String get id => 'my_format';
+///
+///   @override
+///   Future<bool> canHandle(String filePath) async {
+///     return filePath.endsWith('.myformat');
+///   }
+///   // ... implement other methods
+/// }
+///
+/// PluginRegistry().register(MyFormatPlugin());
 /// ```
 library;
 
@@ -83,3 +79,13 @@ export 'src/entities/catalog_file.dart';
 export 'src/entities/catalog_info.dart';
 export 'src/entities/catalog_link.dart';
 export 'src/entities/validation_result.dart';
+
+// Reader
+export 'src/reader/book_metadata.dart';
+export 'src/reader/plugin_registry.dart';
+export 'src/reader/reader_content.dart';
+export 'src/reader/reader_controller.dart';
+export 'src/reader/reader_plugin.dart';
+export 'src/reader/reading_location.dart';
+export 'src/reader/search_result.dart';
+export 'src/reader/toc_entry.dart';

@@ -1,5 +1,5 @@
 name: readwhere_plugin
-description: Core plugin interfaces for ReadWhere catalog providers.
+description: Core plugin interfaces for ReadWhere (catalog providers and reader plugins).
 version: 0.1.0
 repository: https://github.com/cedricziel/readwhere
 
