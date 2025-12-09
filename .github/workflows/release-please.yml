@@ -20,6 +20,7 @@ jobs:
         id: release
         with:
           release-type: dart
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
   build-release-artifacts:
     needs: release-please

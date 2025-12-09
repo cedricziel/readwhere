@@ -592,54 +592,56 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
     int viewportHeight,
     ReaderProvider readerProvider,
   ) {
-    return Html(
-      data: htmlContent,
-      style: {
-        'html': Style(
-          margin: Margins.zero,
-          padding: HtmlPaddings.zero,
-          width: Width(viewportWidth.toDouble()),
-          height: Height(viewportHeight.toDouble()),
-        ),
-        'body': Style(
-          margin: Margins.zero,
-          padding: HtmlPaddings.zero,
-          width: Width(viewportWidth.toDouble()),
-          height: Height(viewportHeight.toDouble()),
-          color: readingTheme.textColor,
-        ),
-        // Fixed-layout EPUBs typically position elements absolutely
-        // so we don't apply much additional styling
-        'p': Style(margin: Margins.zero),
-        'div': Style(margin: Margins.zero),
-        'span': Style(color: readingTheme.textColor),
-        'img': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
-      },
-      onLinkTap: (url, attributes, element) {
-        if (url == null) return;
+    return SelectionArea(
+      child: Html(
+        data: htmlContent,
+        style: {
+          'html': Style(
+            margin: Margins.zero,
+            padding: HtmlPaddings.zero,
+            width: Width(viewportWidth.toDouble()),
+            height: Height(viewportHeight.toDouble()),
+          ),
+          'body': Style(
+            margin: Margins.zero,
+            padding: HtmlPaddings.zero,
+            width: Width(viewportWidth.toDouble()),
+            height: Height(viewportHeight.toDouble()),
+            color: readingTheme.textColor,
+          ),
+          // Fixed-layout EPUBs typically position elements absolutely
+          // so we don't apply much additional styling
+          'p': Style(margin: Margins.zero),
+          'div': Style(margin: Margins.zero),
+          'span': Style(color: readingTheme.textColor),
+          'img': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
+        },
+        onLinkTap: (url, attributes, element) {
+          if (url == null) return;
 
-        // Handle anchor links within current chapter
-        if (url.startsWith('#')) {
-          // TODO: Implement anchor navigation within chapter
-          debugPrint('Navigate to anchor: $url');
-          return;
-        }
+          // Handle anchor links within current chapter
+          if (url.startsWith('#')) {
+            // TODO: Implement anchor navigation within chapter
+            debugPrint('Navigate to anchor: $url');
+            return;
+          }
 
-        // Check if it's an external link (http/https/mailto/tel)
-        if (url.startsWith('http://') ||
-            url.startsWith('https://') ||
-            url.startsWith('mailto:') ||
-            url.startsWith('tel:')) {
-          // TODO: Open external link in browser
-          debugPrint('External link: $url');
-          return;
-        }
+          // Check if it's an external link (http/https/mailto/tel)
+          if (url.startsWith('http://') ||
+              url.startsWith('https://') ||
+              url.startsWith('mailto:') ||
+              url.startsWith('tel:')) {
+            // TODO: Open external link in browser
+            debugPrint('External link: $url');
+            return;
+          }
 
-        // Treat as internal EPUB link (chapter navigation)
-        // Links like 'chapter.xhtml', 'text/chapter.xhtml', 'chapter.xhtml#section'
-        debugPrint('Internal link: $url');
-        readerProvider.navigateToHref(url);
-      },
+          // Treat as internal EPUB link (chapter navigation)
+          // Links like 'chapter.xhtml', 'text/chapter.xhtml', 'chapter.xhtml#section'
+          debugPrint('Internal link: $url');
+          readerProvider.navigateToHref(url);
+        },
+      ),
     );
   }
 
