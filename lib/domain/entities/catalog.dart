@@ -7,6 +7,9 @@ enum CatalogType {
 
   /// Kavita server with OPDS + API support
   kavita,
+
+  /// Nextcloud server with WebDAV file access
+  nextcloud,
 }
 
 /// Represents an OPDS catalog source
@@ -27,6 +30,17 @@ class Catalog extends Equatable {
   /// Server version (populated after validation)
   final String? serverVersion;
 
+  // Nextcloud-specific fields
+
+  /// Username for Nextcloud authentication
+  final String? username;
+
+  /// Root folder for books in Nextcloud (default: '/Books')
+  final String? booksFolder;
+
+  /// Nextcloud user ID (from OCS API)
+  final String? userId;
+
   const Catalog({
     required this.id,
     required this.name,
@@ -37,6 +51,9 @@ class Catalog extends Equatable {
     this.apiKey,
     this.type = CatalogType.opds,
     this.serverVersion,
+    this.username,
+    this.booksFolder,
+    this.userId,
   });
 
   /// Whether this catalog requires authentication
@@ -44,6 +61,19 @@ class Catalog extends Equatable {
 
   /// Whether this is a Kavita server
   bool get isKavita => type == CatalogType.kavita;
+
+  /// Whether this is a Nextcloud server
+  bool get isNextcloud => type == CatalogType.nextcloud;
+
+  /// Get the WebDAV URL for Nextcloud file access
+  String get webdavUrl {
+    if (!isNextcloud || userId == null) return url;
+    final baseUrl = url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+    return '$baseUrl/remote.php/dav/files/$userId';
+  }
+
+  /// Get the effective books folder path (defaults to /Books)
+  String get effectiveBooksFolder => booksFolder ?? '/Books';
 
   /// Get the full OPDS URL (including API key for Kavita)
   String get opdsUrl {
@@ -68,6 +98,9 @@ class Catalog extends Equatable {
     String? apiKey,
     CatalogType? type,
     String? serverVersion,
+    String? username,
+    String? booksFolder,
+    String? userId,
   }) {
     return Catalog(
       id: id ?? this.id,
@@ -79,6 +112,9 @@ class Catalog extends Equatable {
       apiKey: apiKey ?? this.apiKey,
       type: type ?? this.type,
       serverVersion: serverVersion ?? this.serverVersion,
+      username: username ?? this.username,
+      booksFolder: booksFolder ?? this.booksFolder,
+      userId: userId ?? this.userId,
     );
   }
 
@@ -93,6 +129,9 @@ class Catalog extends Equatable {
     apiKey,
     type,
     serverVersion,
+    username,
+    booksFolder,
+    userId,
   ];
 
   @override

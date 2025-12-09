@@ -37,11 +37,21 @@ class AppRoutes {
   // Catalog browse route (full screen, outside shell)
   static const String catalogBrowse = '/catalogs/:catalogId/browse';
 
+  // Nextcloud browse route (full screen, outside shell)
+  static const String nextcloudBrowse = '/catalogs/:catalogId/nextcloud';
+
   /// Generates the catalog browse path with the given catalog ID.
   ///
   /// [catalogId] is the unique identifier of the catalog.
   static String catalogBrowsePath(String catalogId) {
     return '/catalogs/$catalogId/browse';
+  }
+
+  /// Generates the Nextcloud browse path with the given catalog ID.
+  ///
+  /// [catalogId] is the unique identifier of the Nextcloud catalog.
+  static String nextcloudBrowsePath(String catalogId) {
+    return '/catalogs/$catalogId/nextcloud';
   }
 
   // Navigation helper methods

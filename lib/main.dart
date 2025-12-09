@@ -5,6 +5,7 @@ import 'app.dart';
 import 'core/di/service_locator.dart';
 import 'core/utils/logger.dart';
 import 'plugins/plugin_registry.dart';
+import 'plugins/cbr/cbr_reader_plugin.dart';
 import 'plugins/epub/readwhere_epub_plugin.dart';
 import 'presentation/providers/audio_provider.dart';
 import 'presentation/providers/library_provider.dart';
@@ -26,9 +27,10 @@ Future<void> main() async {
   // Initialize dependency injection and wait for setup to complete
   await setupServiceLocator();
 
-  // Register EPUB plugin with PluginRegistry
+  // Register reader plugins with PluginRegistry
   final pluginRegistry = PluginRegistry();
   pluginRegistry.register(ReadwhereEpubPlugin());
+  pluginRegistry.register(CbrReaderPlugin());
 
   // Initialize providers from service locator
   final themeProvider = sl<ThemeProvider>();

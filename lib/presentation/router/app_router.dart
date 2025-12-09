@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../screens/library/library_screen.dart';
 import '../screens/catalogs/catalogs_screen.dart';
 import '../screens/catalogs/browse/catalog_browse_screen.dart';
+import '../screens/catalogs/browse/nextcloud_browser_screen.dart';
 import '../screens/feeds/feeds_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/reader/reader_screen.dart';
@@ -164,6 +165,23 @@ GoRouter createAppRouter() {
           }
 
           return CatalogBrowseScreen(catalogId: catalogId);
+        },
+      ),
+
+      // Nextcloud browse route (full screen, outside shell)
+      GoRoute(
+        path: AppRoutes.nextcloudBrowse,
+        builder: (context, state) {
+          final catalogId = state.pathParameters['catalogId'];
+          if (catalogId == null || catalogId.isEmpty) {
+            // Redirect to catalogs if no catalogId provided
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.go(AppRoutes.catalogs);
+            });
+            return const SizedBox.shrink();
+          }
+
+          return NextcloudBrowserScreen(catalogId: catalogId);
         },
       ),
     ],

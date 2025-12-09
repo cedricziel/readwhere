@@ -9,8 +9,11 @@ import '../../data/repositories/opds_cache_repository_impl.dart';
 import '../../data/repositories/reading_progress_repository_impl.dart';
 import '../../data/services/book_import_service.dart';
 import '../../data/services/kavita_api_service.dart';
+import '../../data/services/nextcloud_api_service.dart';
+import '../../data/services/nextcloud_webdav_service.dart';
 import '../../data/services/opds_cache_service.dart';
 import '../../data/services/opds_client_service.dart';
+import '../../data/services/secure_storage_service.dart';
 import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
@@ -83,6 +86,17 @@ Future<void> setupServiceLocator() async {
     () => OpdsCacheService(opdsClient: sl(), cacheRepository: sl()),
   );
 
+  // Nextcloud services
+  sl.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
+
+  sl.registerLazySingleton<NextcloudApiService>(
+    () => NextcloudApiService(http.Client()),
+  );
+
+  sl.registerLazySingleton<NextcloudWebDavService>(
+    () => NextcloudWebDavService(sl()),
+  );
+
   // Providers
   sl.registerLazySingleton<ThemeProvider>(() => ThemeProvider());
 
@@ -102,6 +116,9 @@ Future<void> setupServiceLocator() async {
       kavitaApiService: sl(),
       importService: sl(),
       bookRepository: sl(),
+      nextcloudApiService: sl(),
+      webDavService: sl(),
+      secureStorage: sl(),
     ),
   );
 

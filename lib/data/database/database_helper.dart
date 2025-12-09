@@ -28,7 +28,9 @@ class DatabaseHelper {
   ///            Added api_key, type, server_version to catalogs table
   /// Version 4: Added cached_opds_feeds, cached_opds_entries, cached_opds_links
   ///            for offline catalog browsing
-  static const int _databaseVersion = 4;
+  /// Version 5: Added username, books_folder, user_id to catalogs table
+  ///            for Nextcloud integration
+  static const int _databaseVersion = 5;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -127,6 +129,12 @@ class DatabaseHelper {
       }
       for (final index in CachedOpdsLinksTable.createIndices()) {
         await db.execute(index);
+      }
+    }
+    // Version 5: Add Nextcloud-specific columns to catalogs table
+    if (oldVersion < 5) {
+      for (final query in CatalogsTable.migrateFromV3()) {
+        await db.execute(query);
       }
     }
   }

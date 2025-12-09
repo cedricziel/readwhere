@@ -52,7 +52,11 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
   }
 
   void _openCatalog(Catalog catalog) {
-    context.push(AppRoutes.catalogBrowsePath(catalog.id));
+    if (catalog.isNextcloud) {
+      context.push(AppRoutes.nextcloudBrowsePath(catalog.id));
+    } else {
+      context.push(AppRoutes.catalogBrowsePath(catalog.id));
+    }
   }
 
   Future<void> _confirmDeleteCatalog(Catalog catalog) async {

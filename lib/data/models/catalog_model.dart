@@ -13,6 +13,9 @@ class CatalogModel extends Catalog {
     super.apiKey,
     super.type,
     super.serverVersion,
+    super.username,
+    super.booksFolder,
+    super.userId,
   });
 
   /// Create a CatalogModel from a Map (SQLite row)
@@ -33,6 +36,9 @@ class CatalogModel extends Catalog {
       apiKey: map[CatalogsTable.columnApiKey] as String?,
       type: _parseCatalogType(map[CatalogsTable.columnType] as String?),
       serverVersion: map[CatalogsTable.columnServerVersion] as String?,
+      username: map[CatalogsTable.columnUsername] as String?,
+      booksFolder: map[CatalogsTable.columnBooksFolder] as String?,
+      userId: map[CatalogsTable.columnUserId] as String?,
     );
   }
 
@@ -41,6 +47,8 @@ class CatalogModel extends Catalog {
     switch (value) {
       case 'kavita':
         return CatalogType.kavita;
+      case 'nextcloud':
+        return CatalogType.nextcloud;
       case 'opds':
       default:
         return CatalogType.opds;
@@ -59,6 +67,9 @@ class CatalogModel extends Catalog {
       apiKey: catalog.apiKey,
       type: catalog.type,
       serverVersion: catalog.serverVersion,
+      username: catalog.username,
+      booksFolder: catalog.booksFolder,
+      userId: catalog.userId,
     );
   }
 
@@ -75,6 +86,9 @@ class CatalogModel extends Catalog {
       CatalogsTable.columnApiKey: apiKey,
       CatalogsTable.columnType: type.name,
       CatalogsTable.columnServerVersion: serverVersion,
+      CatalogsTable.columnUsername: username,
+      CatalogsTable.columnBooksFolder: booksFolder,
+      CatalogsTable.columnUserId: userId,
     };
   }
 
@@ -90,6 +104,9 @@ class CatalogModel extends Catalog {
       apiKey: apiKey,
       type: type,
       serverVersion: serverVersion,
+      username: username,
+      booksFolder: booksFolder,
+      userId: userId,
     );
   }
 }

@@ -13,6 +13,11 @@ class CatalogsTable {
   static const String columnType = 'type';
   static const String columnServerVersion = 'server_version';
 
+  // Nextcloud-specific columns
+  static const String columnUsername = 'username';
+  static const String columnBooksFolder = 'books_folder';
+  static const String columnUserId = 'user_id';
+
   /// Map of column names for easy reference
   static const Map<String, String> columns = {
     'id': columnId,
@@ -24,6 +29,9 @@ class CatalogsTable {
     'apiKey': columnApiKey,
     'type': columnType,
     'serverVersion': columnServerVersion,
+    'username': columnUsername,
+    'booksFolder': columnBooksFolder,
+    'userId': columnUserId,
   };
 
   /// Returns the SQL query to create the catalogs table
@@ -39,6 +47,9 @@ class CatalogsTable {
         $columnApiKey TEXT,
         $columnType TEXT NOT NULL DEFAULT 'opds',
         $columnServerVersion TEXT,
+        $columnUsername TEXT,
+        $columnBooksFolder TEXT DEFAULT '/Books',
+        $columnUserId TEXT,
         UNIQUE($columnUrl)
       )
     ''';
@@ -58,6 +69,15 @@ class CatalogsTable {
       'ALTER TABLE $tableName ADD COLUMN $columnApiKey TEXT',
       "ALTER TABLE $tableName ADD COLUMN $columnType TEXT NOT NULL DEFAULT 'opds'",
       'ALTER TABLE $tableName ADD COLUMN $columnServerVersion TEXT',
+    ];
+  }
+
+  /// Returns SQL statements for migrating from v3 to v4 (Nextcloud support)
+  static List<String> migrateFromV3() {
+    return [
+      'ALTER TABLE $tableName ADD COLUMN $columnUsername TEXT',
+      "ALTER TABLE $tableName ADD COLUMN $columnBooksFolder TEXT DEFAULT '/Books'",
+      'ALTER TABLE $tableName ADD COLUMN $columnUserId TEXT',
     ];
   }
 }
