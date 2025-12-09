@@ -11,6 +11,14 @@ class AppConstants {
   static const String appVersion = '1.0.0';
   static const int appBuildNumber = 1;
 
+  /// User-Agent string for HTTP requests to external services.
+  /// Format matches Nextcloud client conventions for device identification.
+  static const String userAgent = 'ReadWhere/$appVersion (E-Reader App)';
+
+  /// User-Agent for Nextcloud specifically - shows in "Connected devices"
+  static const String nextcloudUserAgent =
+      'ReadWhere/$appVersion Nextcloud-WebDAV';
+
   // Database
   static const String databaseName = 'readwhere.db';
   static const int databaseVersion = 1;
@@ -27,6 +35,8 @@ class AppConstants {
     'mobi',
     'azw',
     'azw3',
+    'cbr',
+    'cbz',
   ];
 
   // Reading Preferences Defaults
