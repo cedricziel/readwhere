@@ -359,9 +359,10 @@ class BookListTile extends StatelessWidget {
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
             onPressed: () {
+              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
               libraryProvider.deleteBook(book.id);
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text('Deleted "${book.title}"'),
                   action: SnackBarAction(
