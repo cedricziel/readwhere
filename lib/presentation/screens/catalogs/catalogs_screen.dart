@@ -54,6 +54,8 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
   void _openCatalog(Catalog catalog) {
     if (catalog.isNextcloud) {
       context.push(AppRoutes.nextcloudBrowsePath(catalog.id));
+    } else if (catalog.isRss) {
+      context.push(AppRoutes.rssBrowsePath(catalog.id));
     } else {
       context.push(AppRoutes.catalogBrowsePath(catalog.id));
     }
@@ -107,15 +109,18 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
         appBar: AppBar(title: const Text('Servers')),
         body: Consumer<CatalogsProvider>(
           builder: (context, provider, child) {
-            if (provider.isLoading && provider.catalogs.isEmpty) {
+            // Filter out RSS feeds (they are managed in FeedsScreen)
+            final servers = provider.catalogs.where((c) => !c.isRss).toList();
+
+            if (provider.isLoading && servers.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (provider.error != null && provider.catalogs.isEmpty) {
+            if (provider.error != null && servers.isEmpty) {
               return _buildErrorState(provider);
             }
 
-            if (provider.catalogs.isEmpty) {
+            if (servers.isEmpty) {
               return _buildEmptyState();
             }
 
@@ -205,13 +210,20 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
   }
 
   Widget _buildCatalogList(CatalogsProvider provider) {
+    // Filter out RSS feeds (they are managed in FeedsScreen)
+    final servers = provider.catalogs.where((c) => !c.isRss).toList();
+
+    if (servers.isEmpty) {
+      return _buildEmptyState();
+    }
+
     return RefreshIndicator(
       onRefresh: () => provider.loadCatalogs(),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: provider.catalogs.length,
+        itemCount: servers.length,
         itemBuilder: (context, index) {
-          final catalog = provider.catalogs[index];
+          final catalog = servers[index];
           return CatalogCard(
             catalog: catalog,
             onTap: () => _openCatalog(catalog),

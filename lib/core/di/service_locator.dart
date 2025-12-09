@@ -194,6 +194,7 @@ Future<void> setupServiceLocator() async {
       catalogRepository: sl(),
       opdsClient: sl(),
       kavitaApiClient: sl(),
+      rssClient: sl(),
       nextcloudProvider: sl(),
       credentialStorage: sl(),
     ),

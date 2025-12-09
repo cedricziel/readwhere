@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
+import 'package:readwhere_rss/readwhere_rss.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../domain/entities/catalog.dart';
@@ -22,6 +23,7 @@ class CatalogsProvider extends ChangeNotifier {
   final CatalogRepository _catalogRepository;
   final OpdsClient _opdsClient;
   final KavitaApiClient _kavitaApiClient;
+  final RssClient _rssClient;
   final NextcloudProvider? _nextcloudProvider;
   final NextcloudCredentialStorage? _credentialStorage;
 
@@ -29,11 +31,13 @@ class CatalogsProvider extends ChangeNotifier {
     required CatalogRepository catalogRepository,
     required OpdsClient opdsClient,
     required KavitaApiClient kavitaApiClient,
+    required RssClient rssClient,
     NextcloudProvider? nextcloudProvider,
     NextcloudCredentialStorage? credentialStorage,
   }) : _catalogRepository = catalogRepository,
        _opdsClient = opdsClient,
        _kavitaApiClient = kavitaApiClient,
+       _rssClient = rssClient,
        _nextcloudProvider = nextcloudProvider,
        _credentialStorage = credentialStorage;
 
@@ -100,6 +104,20 @@ class CatalogsProvider extends ChangeNotifier {
       type: CatalogType.kavita,
       apiKey: apiKey,
       serverVersion: serverVersion,
+      iconUrl: iconUrl,
+    );
+  }
+
+  /// Add a new RSS feed catalog
+  Future<Catalog?> addRssCatalog({
+    required String name,
+    required String url,
+    String? iconUrl,
+  }) async {
+    return _addCatalog(
+      name: name,
+      url: url,
+      type: CatalogType.rss,
       iconUrl: iconUrl,
     );
   }
@@ -336,6 +354,26 @@ class CatalogsProvider extends ChangeNotifier {
         username,
         appPassword,
       );
+    } catch (e) {
+      _error = 'Validation failed: $e';
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Validate an RSS feed URL
+  ///
+  /// Returns the parsed feed if valid, throws exception otherwise.
+  Future<RssFeed> validateRssFeed(String url) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final feed = await _rssClient.fetchFeed(url);
+      return feed;
     } catch (e) {
       _error = 'Validation failed: $e';
       rethrow;

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
+import 'package:readwhere_rss/readwhere_rss.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/service_locator.dart';
@@ -11,7 +12,17 @@ import '../../../providers/catalogs_provider.dart';
 
 /// Dialog for adding a new catalog (server) connection
 class AddCatalogDialog extends StatefulWidget {
-  const AddCatalogDialog({super.key});
+  /// Optional initial catalog type to pre-select
+  final CatalogType? initialType;
+
+  /// Whether to show the type selector (set to false when called from FeedsScreen)
+  final bool showTypeSelector;
+
+  const AddCatalogDialog({
+    super.key,
+    this.initialType,
+    this.showTypeSelector = true,
+  });
 
   @override
   State<AddCatalogDialog> createState() => _AddCatalogDialogState();
@@ -32,7 +43,14 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
   final _usernameFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
-  CatalogType _catalogType = CatalogType.kavita;
+  late CatalogType _catalogType;
+
+  @override
+  void initState() {
+    super.initState();
+    _catalogType = widget.initialType ?? CatalogType.kavita;
+  }
+
   bool _isValidating = false;
   bool _isValidated = false;
   String? _validationError;
@@ -43,6 +61,9 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
   NextcloudServerInfo? _nextcloudServerInfo;
   bool _isOAuthPolling = false;
   Timer? _oAuthPollTimer;
+
+  // RSS-specific state
+  RssFeed? _validatedRssFeed;
 
   @override
   void dispose() {
@@ -69,6 +90,7 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
       _isValidated = false;
       _validatedFeed = null;
       _nextcloudServerInfo = null;
+      _validatedRssFeed = null;
     });
 
     try {
@@ -104,6 +126,18 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
           // Auto-fill name if empty
           if (_nameController.text.isEmpty) {
             _nameController.text = serverInfo.serverName;
+          }
+        });
+      } else if (_catalogType == CatalogType.rss) {
+        // Validate RSS feed
+        final feed = await provider.validateRssFeed(_urlController.text.trim());
+
+        setState(() {
+          _isValidated = true;
+          _validatedRssFeed = feed;
+          // Auto-fill name if empty
+          if (_nameController.text.isEmpty) {
+            _nameController.text = feed.title;
           }
         });
       } else {
@@ -250,6 +284,12 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
           apiKey: _apiKeyController.text.trim(),
           serverVersion: _serverVersion,
         );
+      } else if (_catalogType == CatalogType.rss) {
+        catalog = await provider.addRssCatalog(
+          name: _nameController.text.trim(),
+          url: _urlController.text.trim(),
+          iconUrl: _validatedRssFeed?.imageUrl,
+        );
       } else {
         catalog = await provider.addOpdsCatalog(
           name: _nameController.text.trim(),
@@ -285,8 +325,15 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Determine dialog title based on context
+    final dialogTitle = widget.showTypeSelector
+        ? 'Add Server'
+        : _catalogType == CatalogType.rss
+        ? 'Subscribe to Feed'
+        : 'Add Server';
+
     return AlertDialog(
-      title: const Text('Add Server'),
+      title: Text(dialogTitle),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -294,40 +341,48 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Server type selection
-              Text('Server Type', style: theme.textTheme.labelLarge),
-              const SizedBox(height: 8),
-              SegmentedButton<CatalogType>(
-                segments: const [
-                  ButtonSegment(
-                    value: CatalogType.kavita,
-                    label: Text('Kavita'),
-                    icon: Icon(Icons.menu_book),
-                  ),
-                  ButtonSegment(
-                    value: CatalogType.nextcloud,
-                    label: Text('Nextcloud'),
-                    icon: Icon(Icons.cloud),
-                  ),
-                  ButtonSegment(
-                    value: CatalogType.opds,
-                    label: Text('OPDS'),
-                    icon: Icon(Icons.public),
-                  ),
-                ],
-                selected: {_catalogType},
-                onSelectionChanged: (selected) {
-                  _cancelOAuth();
-                  setState(() {
-                    _catalogType = selected.first;
-                    _isValidated = false;
-                    _validatedFeed = null;
-                    _nextcloudServerInfo = null;
-                    _validationError = null;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
+              // Server type selection (hidden when called from FeedsScreen)
+              if (widget.showTypeSelector) ...[
+                Text('Server Type', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 8),
+                SegmentedButton<CatalogType>(
+                  segments: const [
+                    ButtonSegment(
+                      value: CatalogType.rss,
+                      label: Text('RSS'),
+                      icon: Icon(Icons.rss_feed),
+                    ),
+                    ButtonSegment(
+                      value: CatalogType.kavita,
+                      label: Text('Kavita'),
+                      icon: Icon(Icons.menu_book),
+                    ),
+                    ButtonSegment(
+                      value: CatalogType.nextcloud,
+                      label: Text('Nextcloud'),
+                      icon: Icon(Icons.cloud),
+                    ),
+                    ButtonSegment(
+                      value: CatalogType.opds,
+                      label: Text('OPDS'),
+                      icon: Icon(Icons.public),
+                    ),
+                  ],
+                  selected: {_catalogType},
+                  onSelectionChanged: (selected) {
+                    _cancelOAuth();
+                    setState(() {
+                      _catalogType = selected.first;
+                      _isValidated = false;
+                      _validatedFeed = null;
+                      _nextcloudServerInfo = null;
+                      _validatedRssFeed = null;
+                      _validationError = null;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Server URL
               TextFormField(
@@ -335,8 +390,12 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                 focusNode: _urlFocusNode,
                 autofocus: true,
                 decoration: InputDecoration(
-                  labelText: 'Server URL',
-                  hintText: _catalogType == CatalogType.kavita
+                  labelText: _catalogType == CatalogType.rss
+                      ? 'Feed URL'
+                      : 'Server URL',
+                  hintText: _catalogType == CatalogType.rss
+                      ? 'https://example.com/feed.xml'
+                      : _catalogType == CatalogType.kavita
                       ? 'https://your-kavita-server.com'
                       : _catalogType == CatalogType.nextcloud
                       ? 'https://your-nextcloud.com'
@@ -347,7 +406,9 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                 textInputAction: TextInputAction.next,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Server URL is required';
+                    return _catalogType == CatalogType.rss
+                        ? 'Feed URL is required'
+                        : 'Server URL is required';
                   }
                   if (!value.startsWith('http://') &&
                       !value.startsWith('https://')) {
@@ -361,6 +422,7 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                       _isValidated = false;
                       _validatedFeed = null;
                       _nextcloudServerInfo = null;
+                      _validatedRssFeed = null;
                     });
                   }
                 },
@@ -659,6 +721,59 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                 ),
               ],
 
+              // RSS validation success
+              if (_isValidated && _validatedRssFeed != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Connected to: ${_validatedRssFeed!.title}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_validatedRssFeed!.description != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          _validatedRssFeed!.description!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_validatedRssFeed!.items.length} items',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               // Server name
               if (_isValidated) ...[
                 const SizedBox(height: 16),
@@ -696,7 +811,9 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Add Server'),
+              : Text(
+                  _catalogType == CatalogType.rss ? 'Subscribe' : 'Add Server',
+                ),
         ),
       ],
     );
