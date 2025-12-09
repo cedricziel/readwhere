@@ -52,6 +52,7 @@ dependencies:
   readwhere_epub_plugin:
     path: packages/readwhere_epub_plugin
   flutter_html: ^3.0.0
+  flutter_widget_from_html: ^0.17.1
   html: ^0.15.6
   archive: ^4.0.7
   xml: ^6.6.1
@@ -145,6 +146,7 @@ dev_dependencies:
   mockito: ^5.6.1
   build_runner: ^2.10.4
   dart_pre_commit: ^6.1.0
+  sqflite_common_ffi: ^2.4.0
 
 flutter:
   uses-material-design: true

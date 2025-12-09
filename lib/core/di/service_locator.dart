@@ -1,13 +1,18 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'package:readwhere_rss/readwhere_rss.dart';
 import 'package:readwhere_rss_plugin/readwhere_rss_plugin.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/database/database_helper.dart';
+import 'plugin_context_factory.dart';
+import 'plugin_storage_impl.dart';
 import '../../data/repositories/book_repository_impl.dart';
 import '../../data/repositories/bookmark_repository_impl.dart';
 import '../../data/repositories/catalog_repository_impl.dart';
@@ -19,8 +24,11 @@ import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
 import '../../domain/repositories/opds_cache_repository.dart';
+import '../../domain/repositories/feed_item_repository.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
+import '../../data/repositories/feed_item_repository_impl.dart';
 import '../../presentation/providers/audio_provider.dart';
+import '../../presentation/providers/feed_reader_provider.dart';
 import '../../presentation/providers/catalogs_provider.dart';
 import '../../presentation/providers/library_provider.dart';
 import '../../presentation/providers/reader_provider.dart';
@@ -55,6 +63,62 @@ Future<void> setupServiceLocator() async {
   // Wait for DatabaseHelper to be ready before registering repositories
   await sl.isReady<DatabaseHelper>();
 
+  // ===== Unified Plugin System =====
+
+  // SharedPreferences (for plugin settings)
+  sl.registerLazySingletonAsync<SharedPreferences>(() async {
+    return await SharedPreferences.getInstance();
+  });
+  await sl.isReady<SharedPreferences>();
+
+  // FlutterSecureStorage (for plugin credentials)
+  sl.registerLazySingleton<FlutterSecureStorage>(
+    () => const FlutterSecureStorage(
+      aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+    ),
+  );
+
+  // PluginStorageFactory
+  sl.registerLazySingleton<PluginStorageFactory>(
+    () => PluginStorageFactoryImpl(
+      prefs: sl<SharedPreferences>(),
+      secureStorage: sl<FlutterSecureStorage>(),
+      dbHelper: sl<DatabaseHelper>(),
+    ),
+  );
+
+  // PluginContextFactory
+  sl.registerLazySingleton<PluginContextFactory>(
+    () => PluginContextFactoryImpl(
+      appConfig: PluginAppConfigBuilder.fromPlatform(
+        appVersion: '1.0.0', // TODO: Get from package_info_plus
+        isDarkMode: false, // TODO: Get from theme provider
+      ),
+    ),
+  );
+
+  // UnifiedPluginRegistry - register all plugins
+  sl.registerLazySingletonAsync<UnifiedPluginRegistry>(() async {
+    final registry = UnifiedPluginRegistry();
+    final storageFactory = sl<PluginStorageFactory>();
+    final contextFactory = sl<PluginContextFactory>();
+
+    // Register EPUB plugin
+    await registry.register(
+      ReadwhereEpubPlugin(),
+      storageFactory: storageFactory,
+      contextFactory: contextFactory,
+    );
+
+    // Additional plugins will be registered here as they're migrated
+    // await registry.register(CbzPlugin(), ...);
+    // await registry.register(CbrPlugin(), ...);
+
+    return registry;
+  });
+  await sl.isReady<UnifiedPluginRegistry>();
+
   // Repositories
   sl.registerLazySingleton<BookRepository>(() => BookRepositoryImpl(sl()));
 
@@ -72,6 +136,10 @@ Future<void> setupServiceLocator() async {
 
   sl.registerLazySingleton<OpdsCacheRepository>(
     () => OpdsCacheRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton<FeedItemRepository>(
+    () => FeedItemRepositoryImpl(sl()),
   );
 
   // Services
@@ -206,6 +274,10 @@ Future<void> setupServiceLocator() async {
       bookmarkRepository: sl(),
       kavitaProvider: sl(),
     ),
+  );
+
+  sl.registerLazySingleton<FeedReaderProvider>(
+    () => FeedReaderProvider(feedItemRepository: sl(), rssClient: sl()),
   );
 
   // Update Service

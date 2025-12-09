@@ -9,6 +9,8 @@ import 'tables/feeds_table.dart';
 import 'tables/cached_opds_feeds_table.dart';
 import 'tables/cached_opds_entries_table.dart';
 import 'tables/cached_opds_links_table.dart';
+import 'tables/plugin_cache_table.dart';
+import 'tables/feed_items_table.dart';
 
 /// SQLite database helper for the readwhere e-reader app
 ///
@@ -30,7 +32,9 @@ class DatabaseHelper {
   ///            for offline catalog browsing
   /// Version 5: Added username, books_folder, user_id to catalogs table
   ///            for Nextcloud integration
-  static const int _databaseVersion = 5;
+  /// Version 6: Added plugin_cache table for unified plugin storage
+  /// Version 7: Added feed_items table for RSS feed reader functionality
+  static const int _databaseVersion = 7;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -75,6 +79,10 @@ class DatabaseHelper {
     await db.execute(CachedOpdsFeedsTable.createTableQuery());
     await db.execute(CachedOpdsEntriesTable.createTableQuery());
     await db.execute(CachedOpdsLinksTable.createTableQuery());
+    // Plugin cache table for unified plugin storage
+    await db.execute(PluginCacheTable.createTableQuery());
+    // Feed items table for RSS feed reader
+    await db.execute(FeedItemsTable.createTableQuery());
 
     // Create indices for better query performance
     await _createIndices(db);
@@ -92,6 +100,8 @@ class DatabaseHelper {
       ...CachedOpdsFeedsTable.createIndices(),
       ...CachedOpdsEntriesTable.createIndices(),
       ...CachedOpdsLinksTable.createIndices(),
+      ...PluginCacheTable.createIndices(),
+      ...FeedItemsTable.createIndices(),
     ];
 
     for (final index in indices) {
@@ -134,6 +144,18 @@ class DatabaseHelper {
     // Version 5: Add Nextcloud-specific columns to catalogs table
     if (oldVersion < 5) {
       for (final query in CatalogsTable.migrateFromV3()) {
+        await db.execute(query);
+      }
+    }
+    // Version 6: Add plugin_cache table for unified plugin storage
+    if (oldVersion < 6) {
+      for (final query in PluginCacheTable.migrationV6()) {
+        await db.execute(query);
+      }
+    }
+    // Version 7: Add feed_items table for RSS feed reader
+    if (oldVersion < 7) {
+      for (final query in FeedItemsTable.allMigrationQueries()) {
         await db.execute(query);
       }
     }

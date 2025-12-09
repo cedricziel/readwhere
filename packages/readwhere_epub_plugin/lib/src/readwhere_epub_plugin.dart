@@ -12,8 +12,11 @@ import 'readwhere_epub_controller.dart';
 ///
 /// This plugin provides full EPUB 2 and EPUB 3 support using the
 /// custom readwhere_epub library for parsing and content extraction.
-class ReadwhereEpubPlugin implements ReaderPlugin {
-  static final _logger = Logger('ReadwhereEpubPlugin');
+///
+/// Implements the unified plugin architecture with [PluginBase] and
+/// [ReaderCapability] mixin.
+class ReadwhereEpubPlugin extends PluginBase with ReaderCapability {
+  late Logger _log;
 
   @override
   String get id => 'com.readwhere.epub';
@@ -25,6 +28,9 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
   String get description => 'Supports EPUB 2.0 and EPUB 3.0 format books';
 
   @override
+  String get version => '1.0.0';
+
+  @override
   List<String> get supportedExtensions => ['epub', 'epub3'];
 
   @override
@@ -34,7 +40,21 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
   ];
 
   @override
-  Future<bool> canHandle(String filePath) async {
+  List<String> get capabilityNames => ['ReaderCapability'];
+
+  @override
+  Future<void> initialize(PluginContext context) async {
+    _log = context.logger;
+    _log.info('EPUB plugin initialized');
+  }
+
+  @override
+  Future<void> dispose() async {
+    _log.info('EPUB plugin disposed');
+  }
+
+  @override
+  Future<bool> canHandleFile(String filePath) async {
     try {
       // Check file extension
       final extension = path.extension(filePath).toLowerCase();
@@ -62,7 +82,7 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
 
       return false;
     } catch (e) {
-      _logger.fine('Cannot handle file $filePath: $e');
+      _log.fine('Cannot handle file $filePath: $e');
       return false;
     }
   }
@@ -70,7 +90,7 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
   @override
   Future<BookMetadata> parseMetadata(String filePath) async {
     try {
-      _logger.info('Parsing metadata from: $filePath');
+      _log.info('Parsing metadata from: $filePath');
 
       final reader = await epub.EpubReader.open(filePath);
       final metadata = reader.metadata;
@@ -81,7 +101,7 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
         final cover = reader.getCoverImage();
         coverImage = cover?.bytes;
       } catch (e) {
-        _logger.warning('Failed to extract cover: $e');
+        _log.warning('Failed to extract cover: $e');
       }
 
       // Build table of contents
@@ -101,15 +121,15 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
       final hasMediaOverlays = reader.hasMediaOverlays;
 
       if (encryptionInfo.hasDrm) {
-        _logger.warning(
+        _log.warning(
           'Book has DRM: ${encryptionInfo.description} (${encryptionInfo.encryptedResourceCount} encrypted resources)',
         );
       }
       if (isFixedLayout) {
-        _logger.info('Book is fixed-layout EPUB');
+        _log.info('Book is fixed-layout EPUB');
       }
       if (hasMediaOverlays) {
-        _logger.info('Book has media overlays (audio sync)');
+        _log.info('Book has media overlays (audio sync)');
       }
 
       final bookMetadata = BookMetadata(
@@ -127,10 +147,10 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
         hasMediaOverlays: hasMediaOverlays,
       );
 
-      _logger.info('Parsed metadata: ${bookMetadata.title}');
+      _log.info('Parsed metadata: ${bookMetadata.title}');
       return bookMetadata;
     } catch (e, stackTrace) {
-      _logger.severe('Error parsing metadata from $filePath', e, stackTrace);
+      _log.severe('Error parsing metadata from $filePath', e, stackTrace);
       rethrow;
     }
   }
@@ -156,13 +176,13 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
   @override
   Future<Uint8List?> extractCover(String filePath) async {
     try {
-      _logger.info('Extracting cover from: $filePath');
+      _log.info('Extracting cover from: $filePath');
 
       final reader = await epub.EpubReader.open(filePath);
       final cover = reader.getCoverImage();
       return cover?.bytes;
     } catch (e, stackTrace) {
-      _logger.severe('Error extracting cover from $filePath', e, stackTrace);
+      _log.severe('Error extracting cover from $filePath', e, stackTrace);
       return null;
     }
   }
@@ -170,14 +190,14 @@ class ReadwhereEpubPlugin implements ReaderPlugin {
   @override
   Future<ReaderController> openBook(String filePath) async {
     try {
-      _logger.info('Opening book: $filePath');
+      _log.info('Opening book: $filePath');
 
       final controller = await ReadwhereEpubController.create(filePath);
 
-      _logger.info('Book opened successfully');
+      _log.info('Book opened successfully');
       return controller;
     } catch (e, stackTrace) {
-      _logger.severe('Error opening book $filePath', e, stackTrace);
+      _log.severe('Error opening book $filePath', e, stackTrace);
       rethrow;
     }
   }

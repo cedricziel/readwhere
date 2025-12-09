@@ -3,7 +3,6 @@ import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
 import 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
-import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
@@ -15,6 +14,7 @@ import 'presentation/providers/audio_provider.dart';
 import 'presentation/providers/catalogs_provider.dart';
 import 'presentation/providers/library_provider.dart';
 import 'presentation/providers/reader_provider.dart';
+import 'presentation/providers/feed_reader_provider.dart';
 import 'presentation/providers/settings_provider.dart';
 import 'presentation/providers/theme_provider.dart';
 
@@ -32,9 +32,10 @@ Future<void> main() async {
   // Initialize dependency injection and wait for setup to complete
   await setupServiceLocator();
 
-  // Register reader plugins with PluginRegistry
+  // Register reader plugins with legacy PluginRegistry
+  // Note: EPUB plugin is now registered via UnifiedPluginRegistry in service_locator
+  // CBZ and CBR plugins will be migrated in a future checkpoint
   final pluginRegistry = PluginRegistry();
-  pluginRegistry.register(ReadwhereEpubPlugin());
   pluginRegistry.register(CbzReaderPlugin());
   pluginRegistry.register(CbrReaderPlugin());
 
@@ -48,6 +49,7 @@ Future<void> main() async {
   final opdsProvider = sl<OpdsProvider>();
   final kavitaProvider = sl<KavitaProvider>();
   final nextcloudProvider = sl<NextcloudProvider>();
+  final feedReaderProvider = sl<FeedReaderProvider>();
 
   // Initialize settings (loads from SharedPreferences)
   await settingsProvider.initialize();
@@ -68,6 +70,9 @@ Future<void> main() async {
         ChangeNotifierProvider<KavitaProvider>.value(value: kavitaProvider),
         ChangeNotifierProvider<NextcloudProvider>.value(
           value: nextcloudProvider,
+        ),
+        ChangeNotifierProvider<FeedReaderProvider>.value(
+          value: feedReaderProvider,
         ),
       ],
       child: const ReadWhereApp(),
