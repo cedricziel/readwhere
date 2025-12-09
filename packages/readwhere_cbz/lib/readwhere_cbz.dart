@@ -61,5 +61,6 @@ export 'src/thumbnails/thumbnail_options.dart';
 export 'src/validation/cbz_validator.dart';
 
 // Utils
-export 'src/utils/image_utils.dart' show ImageFormat, ImageDimensions;
+export 'src/utils/image_utils.dart'
+    show ImageFormat, ImageDimensions, ImageUtils;
 export 'src/utils/natural_sort.dart';

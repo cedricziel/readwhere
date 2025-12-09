@@ -1,0 +1,25 @@
+name: readwhere_cbr
+description: A Flutter library for reading CBR comic book archives (RAR format).
+version: 0.1.0
+publish_to: none
+repository: https://github.com/cedricziel/readwhere
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=3.0.0"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  unrar_file: ^1.1.0
+  path: ^1.9.1
+  equatable: ^2.0.7
+  readwhere_cbz:
+    path: ../readwhere_cbz
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  test: ^1.25.0
