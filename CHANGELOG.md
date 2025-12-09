@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/cedricziel/readwhere/compare/v0.1.0...v0.1.1) (2025-12-09)
+
+
+### Bug Fixes
+
+* **ci:** add libsecret-1-dev for Linux build ([25fe6a0](https://github.com/cedricziel/readwhere/commit/25fe6a0543d94aca46bd66a5a2d0792cb00157b1))
+
 ## [0.1.0](https://github.com/cedricziel/readwhere/compare/v0.0.2...v0.1.0) (2025-12-09)
 
 
