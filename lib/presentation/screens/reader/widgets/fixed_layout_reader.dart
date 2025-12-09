@@ -154,6 +154,24 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
     _currentPanelIndex = 0;
   }
 
+  /// Navigate to the next page (full-page mode).
+  void _nextPage(ReaderProvider readerProvider, int totalPages) {
+    if (readerProvider.currentChapterIndex < totalPages - 1) {
+      readerProvider.goToChapter(readerProvider.currentChapterIndex + 1);
+      _resetPanelState();
+      _resetZoom();
+    }
+  }
+
+  /// Navigate to the previous page (full-page mode).
+  void _previousPage(ReaderProvider readerProvider, int totalPages) {
+    if (readerProvider.currentChapterIndex > 0) {
+      readerProvider.goToChapter(readerProvider.currentChapterIndex - 1);
+      _resetPanelState();
+      _resetZoom();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final readingTheme = context.readingTheme;
@@ -375,20 +393,48 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
         // Main image viewer with gesture detection
         GestureDetector(
           onDoubleTap: _resetZoom,
-          onHorizontalDragEnd: panelModeEnabled
-              ? (details) {
-                  // Swipe navigation in panel mode
-                  if (details.primaryVelocity != null) {
-                    if (details.primaryVelocity! < -200) {
-                      // Swipe left - next panel
-                      _nextPanel(readerProvider, controller, totalPages);
-                    } else if (details.primaryVelocity! > 200) {
-                      // Swipe right - previous panel
-                      _previousPanel(readerProvider, controller, totalPages);
-                    }
-                  }
+          onTapUp: (details) {
+            // Tap zone navigation - left third for previous, right third for next
+            final screenWidth = MediaQuery.of(context).size.width;
+            final tapX = details.globalPosition.dx;
+
+            if (tapX < screenWidth / 3) {
+              // Left third - previous page/panel
+              if (panelModeEnabled) {
+                _previousPanel(readerProvider, controller, totalPages);
+              } else {
+                _previousPage(readerProvider, totalPages);
+              }
+            } else if (tapX > screenWidth * 2 / 3) {
+              // Right third - next page/panel
+              if (panelModeEnabled) {
+                _nextPanel(readerProvider, controller, totalPages);
+              } else {
+                _nextPage(readerProvider, totalPages);
+              }
+            }
+            // Center third - no action (could toggle controls in future)
+          },
+          onHorizontalDragEnd: (details) {
+            // Swipe navigation - works in both panel mode and full-page mode
+            if (details.primaryVelocity != null) {
+              if (details.primaryVelocity! < -200) {
+                // Swipe left - next page/panel
+                if (panelModeEnabled) {
+                  _nextPanel(readerProvider, controller, totalPages);
+                } else {
+                  _nextPage(readerProvider, totalPages);
                 }
-              : null,
+              } else if (details.primaryVelocity! > 200) {
+                // Swipe right - previous page/panel
+                if (panelModeEnabled) {
+                  _previousPanel(readerProvider, controller, totalPages);
+                } else {
+                  _previousPage(readerProvider, totalPages);
+                }
+              }
+            }
+          },
           child: Container(
             color: Colors.black,
             child: InteractiveViewer(
