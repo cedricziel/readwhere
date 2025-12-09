@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:xml/xml.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../domain/entities/catalog.dart';
 import '../../domain/entities/nextcloud_file.dart';
 import 'secure_storage_service.dart';
@@ -25,7 +26,11 @@ class NextcloudWebDavService {
   final Dio _dio;
   final SecureStorageService _secureStorage;
 
-  NextcloudWebDavService(this._secureStorage, {Dio? dio}) : _dio = dio ?? Dio();
+  /// User-Agent for WebDAV requests - visible in Nextcloud's "Connected devices"
+  static const String _userAgent = AppConstants.nextcloudUserAgent;
+
+  NextcloudWebDavService(this._secureStorage, {Dio? dio})
+      : _dio = dio ?? Dio(BaseOptions(headers: {'User-Agent': _userAgent}));
 
   /// List files and directories at the given path
   ///

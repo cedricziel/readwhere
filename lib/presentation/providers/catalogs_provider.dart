@@ -745,15 +745,20 @@ class CatalogsProvider extends ChangeNotifier {
     String? booksFolder,
     String? serverVersion,
   }) async {
+    debugPrint('addNextcloudCatalog called: name=$name, url=$url, username=$username');
+
     if (_secureStorage == null) {
+      debugPrint('addNextcloudCatalog: Secure storage is null!');
       throw Exception('Secure storage not available');
     }
 
     try {
       final id = const Uuid().v4();
+      debugPrint('addNextcloudCatalog: Generated ID: $id');
 
       // Store password securely
       await _secureStorage.saveAppPassword(id, appPassword);
+      debugPrint('addNextcloudCatalog: Saved app password');
 
       final catalog = Catalog(
         id: id,
@@ -767,12 +772,17 @@ class CatalogsProvider extends ChangeNotifier {
         serverVersion: serverVersion,
       );
 
+      debugPrint('addNextcloudCatalog: Inserting catalog into repository...');
       await _catalogRepository.insert(catalog);
+      debugPrint('addNextcloudCatalog: Catalog inserted, reloading catalogs...');
       _catalogs = await _catalogRepository.getAll();
+      debugPrint('addNextcloudCatalog: Success! Total catalogs: ${_catalogs.length}');
       notifyListeners();
 
       return catalog;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('addNextcloudCatalog ERROR: $e');
+      debugPrint('Stack trace: $stackTrace');
       _error = 'Failed to add Nextcloud catalog: $e';
       notifyListeners();
       return null;

@@ -214,32 +214,57 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() {
+      _isValidating = true;
+      _validationError = null;
+    });
+
     final provider = sl<CatalogsProvider>();
     Catalog? catalog;
 
-    if (_catalogType == CatalogType.nextcloud) {
-      catalog = await provider.addNextcloudCatalog(
-        name: _nameController.text.trim(),
-        url: _urlController.text.trim(),
-        username: _usernameController.text.trim(),
-        appPassword: _passwordController.text.trim(),
-        userId: _nextcloudServerInfo?.userId,
-        serverVersion: _serverVersion,
-      );
-    } else {
-      catalog = await provider.addCatalog(
-        name: _nameController.text.trim(),
-        url: _urlController.text.trim(),
-        apiKey: _apiKeyController.text.trim().isNotEmpty
-            ? _apiKeyController.text.trim()
-            : null,
-        type: _catalogType,
-        serverVersion: _serverVersion,
-      );
-    }
+    try {
+      if (_catalogType == CatalogType.nextcloud) {
+        catalog = await provider.addNextcloudCatalog(
+          name: _nameController.text.trim(),
+          url: _urlController.text.trim(),
+          username: _usernameController.text.trim(),
+          appPassword: _passwordController.text.trim(),
+          userId: _nextcloudServerInfo?.userId,
+          serverVersion: _serverVersion,
+        );
+      } else {
+        catalog = await provider.addCatalog(
+          name: _nameController.text.trim(),
+          url: _urlController.text.trim(),
+          apiKey: _apiKeyController.text.trim().isNotEmpty
+              ? _apiKeyController.text.trim()
+              : null,
+          type: _catalogType,
+          serverVersion: _serverVersion,
+        );
+      }
 
-    if (mounted && catalog != null) {
-      Navigator.of(context).pop(catalog);
+      if (mounted) {
+        if (catalog != null) {
+          Navigator.of(context).pop(catalog);
+        } else {
+          setState(() {
+            _validationError = provider.error ?? 'Failed to add server';
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _validationError = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isValidating = false;
+        });
+      }
     }
   }
 
@@ -651,8 +676,14 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: _isValidated ? _save : null,
-          child: const Text('Add Server'),
+          onPressed: _isValidated && !_isValidating ? _save : null,
+          child: _isValidating && _isValidated
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Add Server'),
         ),
       ],
     );

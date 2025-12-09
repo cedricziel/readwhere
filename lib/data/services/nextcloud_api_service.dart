@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../../core/constants/app_constants.dart';
+
 /// Exception thrown when Nextcloud API calls fail
 class NextcloudApiException implements Exception {
   final String message;
@@ -65,7 +67,18 @@ class LoginFlowResult {
 class NextcloudApiService {
   final http.Client _client;
 
+  /// User-Agent header for all requests
+  static const String _userAgent = AppConstants.nextcloudUserAgent;
+
   NextcloudApiService(this._client);
+
+  /// Common headers for OCS API requests
+  Map<String, String> _ocsHeaders(String auth) => {
+        'Authorization': 'Basic $auth',
+        'OCS-APIRequest': 'true',
+        'Accept': 'application/json',
+        'User-Agent': _userAgent,
+      };
 
   /// Validate app password authentication and return server info
   ///
@@ -82,11 +95,7 @@ class NextcloudApiService {
       // Get user info from OCS API
       final userResponse = await _client.get(
         Uri.parse('$baseUrl/ocs/v2.php/cloud/user'),
-        headers: {
-          'Authorization': 'Basic $auth',
-          'OCS-APIRequest': 'true',
-          'Accept': 'application/json',
-        },
+        headers: _ocsHeaders(auth),
       );
 
       if (userResponse.statusCode != 200) {
@@ -107,11 +116,7 @@ class NextcloudApiService {
       // Get server capabilities for version info
       final capResponse = await _client.get(
         Uri.parse('$baseUrl/ocs/v2.php/cloud/capabilities'),
-        headers: {
-          'Authorization': 'Basic $auth',
-          'OCS-APIRequest': 'true',
-          'Accept': 'application/json',
-        },
+        headers: _ocsHeaders(auth),
       );
 
       String version = 'Unknown';
@@ -157,7 +162,10 @@ class NextcloudApiService {
     try {
       final response = await _client.post(
         Uri.parse('$baseUrl/index.php/login/v2'),
-        headers: {'Accept': 'application/json'},
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': _userAgent,
+        },
       );
 
       if (response.statusCode != 200) {
@@ -194,7 +202,10 @@ class NextcloudApiService {
     try {
       final response = await _client.post(
         Uri.parse(pollEndpoint),
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': _userAgent,
+        },
         body: 'token=$pollToken',
       );
 
