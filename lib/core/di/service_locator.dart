@@ -4,6 +4,8 @@ import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
+import 'package:readwhere_rss/readwhere_rss.dart';
+import 'package:readwhere_rss_plugin/readwhere_rss_plugin.dart';
 
 import '../../data/database/database_helper.dart';
 import '../../data/repositories/book_repository_impl.dart';
@@ -76,6 +78,8 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<BookImportService>(() => BookImportService());
 
   sl.registerLazySingleton<OpdsClient>(() => OpdsClient(http.Client()));
+
+  sl.registerLazySingleton<RssClient>(() => RssClient(http.Client()));
 
   sl.registerLazySingleton<KavitaApiClient>(
     () => KavitaApiClient(http.Client()),
@@ -163,6 +167,12 @@ Future<void> setupServiceLocator() async {
     registry.register(
       NextcloudCatalogProvider(sl<NextcloudClient>()),
       accountProvider: NextcloudAccountProvider(sl<OcsApiService>()),
+    );
+
+    // RSS Provider (RSS/Atom feeds)
+    registry.register(
+      RssCatalogProvider(sl<RssClient>()),
+      accountProvider: RssAccountProvider(),
     );
 
     return registry;

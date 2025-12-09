@@ -1,0 +1,19 @@
+name: readwhere_rss
+description: RSS and Atom feed parsing library for ReadWhere
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  xml: ^6.5.0
+  http: ^1.2.0
+  equatable: ^2.0.5
+  collection: ^1.18.0
+
+dev_dependencies:
+  test: ^1.25.0
+  mockito: ^5.4.0
+  build_runner: ^2.4.0

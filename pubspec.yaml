@@ -21,6 +21,9 @@ workspace:
   - packages/readwhere_epub_plugin
   - packages/readwhere_cbz_plugin
   - packages/readwhere_cbr_plugin
+  - packages/readwhere_rss
+  - packages/readwhere_opml
+  - packages/readwhere_rss_plugin
 
 dependencies:
   flutter:
@@ -91,6 +94,14 @@ dependencies:
   # Panel Detection for Comics
   readwhere_panel_detection:
     path: packages/readwhere_panel_detection
+
+  # RSS/Atom Feed Support
+  readwhere_rss:
+    path: packages/readwhere_rss
+  readwhere_opml:
+    path: packages/readwhere_opml
+  readwhere_rss_plugin:
+    path: packages/readwhere_rss_plugin
 
   # Networking
   http: ^1.6.0

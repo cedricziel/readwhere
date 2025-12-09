@@ -10,6 +10,9 @@ enum CatalogType {
 
   /// Nextcloud server with WebDAV file access
   nextcloud,
+
+  /// RSS/Atom feed
+  rss,
 }
 
 /// Represents an OPDS catalog source
@@ -64,6 +67,9 @@ class Catalog extends Equatable {
 
   /// Whether this is a Nextcloud server
   bool get isNextcloud => type == CatalogType.nextcloud;
+
+  /// Whether this is an RSS feed
+  bool get isRss => type == CatalogType.rss;
 
   /// Get the WebDAV URL for Nextcloud file access
   String get webdavUrl {

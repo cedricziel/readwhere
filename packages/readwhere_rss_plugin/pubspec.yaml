@@ -1,0 +1,24 @@
+name: readwhere_rss_plugin
+description: RSS and OPML integration plugin for ReadWhere
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  readwhere_rss:
+    path: ../readwhere_rss
+  readwhere_opml:
+    path: ../readwhere_opml
+  readwhere_plugin:
+    path: ../readwhere_plugin
+  http: ^1.2.0
+  equatable: ^2.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.0
+  build_runner: ^2.4.0
