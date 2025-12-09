@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/cedricziel/readwhere/compare/v0.1.1...v0.1.2) (2025-12-09)
+
+
+### Bug Fixes
+
+* **ci:** disable code signing for macOS CI build ([18ee9b6](https://github.com/cedricziel/readwhere/commit/18ee9b66579251c9b03b08e9f73cef4dc1e0f2a9))
+
 ## [0.1.1](https://github.com/cedricziel/readwhere/compare/v0.1.0...v0.1.1) (2025-12-09)
 
 
