@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
 import 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
 import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
+import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/book.dart';
@@ -10,7 +11,6 @@ import '../../domain/entities/bookmark.dart';
 import '../../domain/entities/reading_settings.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
-import 'catalogs_provider.dart';
 
 /// Provider for managing reader state and reading operations
 ///
@@ -25,17 +25,17 @@ import 'catalogs_provider.dart';
 class ReaderProvider extends ChangeNotifier {
   final ReadingProgressRepository _readingProgressRepository;
   final BookmarkRepository _bookmarkRepository;
-  final CatalogsProvider? _catalogsProvider;
+  final KavitaProvider? _kavitaProvider;
   final Uuid _uuid = const Uuid();
   final PluginRegistry _pluginRegistry = PluginRegistry();
 
   ReaderProvider({
     required ReadingProgressRepository readingProgressRepository,
     required BookmarkRepository bookmarkRepository,
-    CatalogsProvider? catalogsProvider,
+    KavitaProvider? kavitaProvider,
   }) : _readingProgressRepository = readingProgressRepository,
        _bookmarkRepository = bookmarkRepository,
-       _catalogsProvider = catalogsProvider;
+       _kavitaProvider = kavitaProvider;
 
   // State
   Book? _currentBook;
@@ -633,12 +633,15 @@ class ReaderProvider extends ChangeNotifier {
   /// If the book came from a Kavita catalog and the server progress is more
   /// recent than the local progress, updates the local progress.
   Future<void> _fetchKavitaProgress(Book book) async {
-    final catalogsProvider = _catalogsProvider;
-    if (catalogsProvider == null || !book.isFromCatalog) return;
+    final kavitaProvider = _kavitaProvider;
+    if (kavitaProvider == null || !book.isFromCatalog) return;
 
     try {
-      final kavitaProgress = await catalogsProvider.fetchProgressFromKavita(
-        book,
+      final kavitaProgress = await kavitaProvider.fetchProgressFromKavita(
+        KavitaBookInfo(
+          sourceCatalogId: book.sourceCatalogId,
+          sourceEntryId: book.sourceEntryId,
+        ),
       );
 
       if (kavitaProgress != null && kavitaProgress.pageNum > 0) {
@@ -665,10 +668,10 @@ class ReaderProvider extends ChangeNotifier {
   /// Sends the current reading progress to the Kavita server for books
   /// that were downloaded from a Kavita catalog.
   Future<void> _syncKavitaProgress(Book book) async {
-    final catalogsProvider = _catalogsProvider;
+    final kavitaProvider = _kavitaProvider;
     final progress = _progress;
 
-    if (catalogsProvider == null || !book.isFromCatalog || progress == null) {
+    if (kavitaProvider == null || !book.isFromCatalog || progress == null) {
       return;
     }
 
@@ -676,9 +679,11 @@ class ReaderProvider extends ChangeNotifier {
       // Calculate page number from progress (0-100 scale for Kavita)
       final pageNum = (progress.progress * 100).round();
 
-      await catalogsProvider.syncProgressToKavita(
-        book: book,
-        progress: progress.progress,
+      await kavitaProvider.syncProgressToKavita(
+        book: KavitaBookInfo(
+          sourceCatalogId: book.sourceCatalogId,
+          sourceEntryId: book.sourceEntryId,
+        ),
         pageNum: pageNum,
       );
 

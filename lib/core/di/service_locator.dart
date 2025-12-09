@@ -103,6 +103,40 @@ Future<void> setupServiceLocator() async {
     () => NextcloudProvider(sl<NextcloudClient>()),
   );
 
+  // OPDS Provider (state management for OPDS browsing)
+  sl.registerLazySingleton<OpdsProvider>(
+    () => OpdsProvider(
+      opdsClient: sl<OpdsClient>(),
+      cache: sl<OpdsCacheService>(),
+      importBook: (filePath, {sourceCatalogId, sourceEntryId}) async {
+        final book = await sl<BookImportService>().importBook(filePath);
+        final bookWithSource = book.copyWith(
+          sourceCatalogId: sourceCatalogId,
+          sourceEntryId: sourceEntryId,
+        );
+        final savedBook = await sl<BookRepository>().insert(bookWithSource);
+        return savedBook.id;
+      },
+    ),
+  );
+
+  // Kavita Provider (state management for Kavita browsing + progress sync)
+  sl.registerLazySingleton<KavitaProvider>(
+    () => KavitaProvider(
+      kavitaClient: sl<KavitaApiClient>(),
+      opdsProvider: sl<OpdsProvider>(),
+      catalogLookup: (catalogId) async {
+        final catalog = await sl<CatalogRepository>().getById(catalogId);
+        if (catalog == null) return null;
+        return KavitaCatalogInfo(
+          id: catalog.id,
+          url: catalog.url,
+          apiKey: catalog.apiKey,
+        );
+      },
+    ),
+  );
+
   // Catalog Provider Registry (plugin system)
   sl.registerLazySingleton<CatalogProviderRegistry>(() {
     final registry = CatalogProviderRegistry();
@@ -149,10 +183,7 @@ Future<void> setupServiceLocator() async {
     () => CatalogsProvider(
       catalogRepository: sl(),
       opdsClient: sl(),
-      cacheService: sl(),
       kavitaApiClient: sl(),
-      importService: sl(),
-      bookRepository: sl(),
       nextcloudProvider: sl(),
       credentialStorage: sl(),
     ),
@@ -162,7 +193,7 @@ Future<void> setupServiceLocator() async {
     () => ReaderProvider(
       readingProgressRepository: sl(),
       bookmarkRepository: sl(),
-      catalogsProvider: sl(),
+      kavitaProvider: sl(),
     ),
   );
 

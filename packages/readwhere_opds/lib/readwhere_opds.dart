@@ -24,6 +24,7 @@ export 'src/client/opds_exception.dart';
 // Providers
 export 'src/provider/opds_catalog_provider.dart';
 export 'src/provider/opds_account_provider.dart';
+export 'src/provider/opds_provider.dart';
 
 // Cache interface
 export 'src/cache/opds_cache_interface.dart';

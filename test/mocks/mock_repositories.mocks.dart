@@ -1988,54 +1988,14 @@ class MockCatalogsProvider extends _i1.Mock implements _i33.CatalogsProvider {
           as List<_i5.Catalog>);
 
   @override
-  List<_i9.OpdsFeed> get navigationStack =>
-      (super.noSuchMethod(
-            Invocation.getter(#navigationStack),
-            returnValue: <_i9.OpdsFeed>[],
-          )
-          as List<_i9.OpdsFeed>);
-
-  @override
   bool get isLoading =>
       (super.noSuchMethod(Invocation.getter(#isLoading), returnValue: false)
           as bool);
 
   @override
-  String get searchQuery =>
-      (super.noSuchMethod(
-            Invocation.getter(#searchQuery),
-            returnValue: _i21.dummyValue<String>(
-              this,
-              Invocation.getter(#searchQuery),
-            ),
-          )
-          as String);
-
-  @override
   int get catalogCount =>
       (super.noSuchMethod(Invocation.getter(#catalogCount), returnValue: 0)
           as int);
-
-  @override
-  bool get isFromCache =>
-      (super.noSuchMethod(Invocation.getter(#isFromCache), returnValue: false)
-          as bool);
-
-  @override
-  bool get isCacheFresh =>
-      (super.noSuchMethod(Invocation.getter(#isCacheFresh), returnValue: false)
-          as bool);
-
-  @override
-  String get cacheAgeText =>
-      (super.noSuchMethod(
-            Invocation.getter(#cacheAgeText),
-            returnValue: _i21.dummyValue<String>(
-              this,
-              Invocation.getter(#cacheAgeText),
-            ),
-          )
-          as String);
 
   @override
   bool get isPollingOAuth =>
@@ -2046,66 +2006,9 @@ class MockCatalogsProvider extends _i1.Mock implements _i33.CatalogsProvider {
           as bool);
 
   @override
-  String get currentNextcloudPath =>
-      (super.noSuchMethod(
-            Invocation.getter(#currentNextcloudPath),
-            returnValue: _i21.dummyValue<String>(
-              this,
-              Invocation.getter(#currentNextcloudPath),
-            ),
-          )
-          as String);
-
-  @override
-  List<_i14.NextcloudFile> get nextcloudFiles =>
-      (super.noSuchMethod(
-            Invocation.getter(#nextcloudFiles),
-            returnValue: <_i14.NextcloudFile>[],
-          )
-          as List<_i14.NextcloudFile>);
-
-  @override
-  bool get canNavigateNextcloudBack =>
-      (super.noSuchMethod(
-            Invocation.getter(#canNavigateNextcloudBack),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  bool get canNavigateBack =>
-      (super.noSuchMethod(
-            Invocation.getter(#canNavigateBack),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  List<String> get breadcrumbs =>
-      (super.noSuchMethod(
-            Invocation.getter(#breadcrumbs),
-            returnValue: <String>[],
-          )
-          as List<String>);
-
-  @override
-  List<String> get nextcloudBreadcrumbs =>
-      (super.noSuchMethod(
-            Invocation.getter(#nextcloudBreadcrumbs),
-            returnValue: <String>[],
-          )
-          as List<String>);
-
-  @override
   bool get hasListeners =>
       (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
           as bool);
-
-  @override
-  void dispose() => super.noSuchMethod(
-    Invocation.method(#dispose, []),
-    returnValueForMissingStub: null,
-  );
 
   @override
   _i7.Future<void> loadCatalogs() =>
@@ -2117,51 +2020,67 @@ class MockCatalogsProvider extends _i1.Mock implements _i33.CatalogsProvider {
           as _i7.Future<void>);
 
   @override
-  String? getBookIdForEntry(String? entryId) =>
-      (super.noSuchMethod(Invocation.method(#getBookIdForEntry, [entryId]))
-          as String?);
-
-  @override
-  _i7.Future<_i9.OpdsFeed> validateCatalog(
-    String? url, {
-    String? apiKey,
-    _i5.CatalogType? type = _i5.CatalogType.opds,
-  }) =>
+  _i7.Future<_i5.Catalog?> getCatalogById(String? id) =>
       (super.noSuchMethod(
-            Invocation.method(
-              #validateCatalog,
-              [url],
-              {#apiKey: apiKey, #type: type},
-            ),
-            returnValue: _i7.Future<_i9.OpdsFeed>.value(
-              _FakeOpdsFeed_14(
-                this,
-                Invocation.method(
-                  #validateCatalog,
-                  [url],
-                  {#apiKey: apiKey, #type: type},
-                ),
-              ),
-            ),
+            Invocation.method(#getCatalogById, [id]),
+            returnValue: _i7.Future<_i5.Catalog?>.value(),
           )
-          as _i7.Future<_i9.OpdsFeed>);
+          as _i7.Future<_i5.Catalog?>);
 
   @override
-  _i7.Future<_i5.Catalog?> addCatalog({
+  _i7.Future<_i5.Catalog?> addOpdsCatalog({
     required String? name,
     required String? url,
-    String? apiKey,
-    _i5.CatalogType? type = _i5.CatalogType.opds,
     String? iconUrl,
-    String? serverVersion,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#addCatalog, [], {
+            Invocation.method(#addOpdsCatalog, [], {
+              #name: name,
+              #url: url,
+              #iconUrl: iconUrl,
+            }),
+            returnValue: _i7.Future<_i5.Catalog?>.value(),
+          )
+          as _i7.Future<_i5.Catalog?>);
+
+  @override
+  _i7.Future<_i5.Catalog?> addKavitaCatalog({
+    required String? name,
+    required String? url,
+    required String? apiKey,
+    String? serverVersion,
+    String? iconUrl,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#addKavitaCatalog, [], {
               #name: name,
               #url: url,
               #apiKey: apiKey,
-              #type: type,
+              #serverVersion: serverVersion,
               #iconUrl: iconUrl,
+            }),
+            returnValue: _i7.Future<_i5.Catalog?>.value(),
+          )
+          as _i7.Future<_i5.Catalog?>);
+
+  @override
+  _i7.Future<_i5.Catalog?> addNextcloudCatalog({
+    required String? name,
+    required String? url,
+    required String? username,
+    required String? appPassword,
+    String? userId,
+    String? booksFolder,
+    String? serverVersion,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#addNextcloudCatalog, [], {
+              #name: name,
+              #url: url,
+              #username: username,
+              #appPassword: appPassword,
+              #userId: userId,
+              #booksFolder: booksFolder,
               #serverVersion: serverVersion,
             }),
             returnValue: _i7.Future<_i5.Catalog?>.value(),
@@ -2185,136 +2104,42 @@ class MockCatalogsProvider extends _i1.Mock implements _i33.CatalogsProvider {
           as _i7.Future<bool>);
 
   @override
-  _i7.Future<void> openCatalog(
-    _i5.Catalog? catalog, {
-    _i9.FetchStrategy? strategy,
-  }) =>
+  _i7.Future<void> updateLastAccessed(String? catalogId) =>
       (super.noSuchMethod(
-            Invocation.method(#openCatalog, [catalog], {#strategy: strategy}),
+            Invocation.method(#updateLastAccessed, [catalogId]),
             returnValue: _i7.Future<void>.value(),
             returnValueForMissingStub: _i7.Future<void>.value(),
           )
           as _i7.Future<void>);
 
   @override
-  _i7.Future<void> navigateToFeed(
-    _i9.OpdsLink? link, {
-    _i9.FetchStrategy? strategy,
-  }) =>
+  _i7.Future<_i9.OpdsFeed> validateOpdsCatalog(String? url) =>
       (super.noSuchMethod(
-            Invocation.method(#navigateToFeed, [link], {#strategy: strategy}),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            Invocation.method(#validateOpdsCatalog, [url]),
+            returnValue: _i7.Future<_i9.OpdsFeed>.value(
+              _FakeOpdsFeed_14(
+                this,
+                Invocation.method(#validateOpdsCatalog, [url]),
+              ),
+            ),
           )
-          as _i7.Future<void>);
+          as _i7.Future<_i9.OpdsFeed>);
 
   @override
-  void navigateBack() => super.noSuchMethod(
-    Invocation.method(#navigateBack, []),
-    returnValueForMissingStub: null,
-  );
-
-  @override
-  void closeCatalog() => super.noSuchMethod(
-    Invocation.method(#closeCatalog, []),
-    returnValueForMissingStub: null,
-  );
-
-  @override
-  _i7.Future<void> refreshCurrentFeed() =>
+  _i7.Future<_i12.KavitaServerInfo> validateKavitaServer(
+    String? serverUrl,
+    String? apiKey,
+  ) =>
       (super.noSuchMethod(
-            Invocation.method(#refreshCurrentFeed, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            Invocation.method(#validateKavitaServer, [serverUrl, apiKey]),
+            returnValue: _i7.Future<_i12.KavitaServerInfo>.value(
+              _FakeKavitaServerInfo_15(
+                this,
+                Invocation.method(#validateKavitaServer, [serverUrl, apiKey]),
+              ),
+            ),
           )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<void> loadNextPage() =>
-      (super.noSuchMethod(
-            Invocation.method(#loadNextPage, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<void> search(String? query) =>
-      (super.noSuchMethod(
-            Invocation.method(#search, [query]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  void clearSearch() => super.noSuchMethod(
-    Invocation.method(#clearSearch, []),
-    returnValueForMissingStub: null,
-  );
-
-  @override
-  bool isBookInLibrary(String? entryId) =>
-      (super.noSuchMethod(
-            Invocation.method(#isBookInLibrary, [entryId]),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  double getDownloadProgress(String? entryId) =>
-      (super.noSuchMethod(
-            Invocation.method(#getDownloadProgress, [entryId]),
-            returnValue: 0.0,
-          )
-          as double);
-
-  @override
-  bool isDownloading(String? entryId) =>
-      (super.noSuchMethod(
-            Invocation.method(#isDownloading, [entryId]),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  _i7.Future<_i2.Book?> downloadAndImportBook(_i9.OpdsEntry? entry) =>
-      (super.noSuchMethod(
-            Invocation.method(#downloadAndImportBook, [entry]),
-            returnValue: _i7.Future<_i2.Book?>.value(),
-          )
-          as _i7.Future<_i2.Book?>);
-
-  @override
-  _i7.Future<void> syncProgressToKavita({
-    required _i2.Book? book,
-    required double? progress,
-    required int? pageNum,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(#syncProgressToKavita, [], {
-              #book: book,
-              #progress: progress,
-              #pageNum: pageNum,
-            }),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<_i27.KavitaProgress?> fetchProgressFromKavita(_i2.Book? book) =>
-      (super.noSuchMethod(
-            Invocation.method(#fetchProgressFromKavita, [book]),
-            returnValue: _i7.Future<_i27.KavitaProgress?>.value(),
-          )
-          as _i7.Future<_i27.KavitaProgress?>);
-
-  @override
-  void clearError() => super.noSuchMethod(
-    Invocation.method(#clearError, []),
-    returnValueForMissingStub: null,
-  );
+          as _i7.Future<_i12.KavitaServerInfo>);
 
   @override
   _i7.Future<_i14.NextcloudServerInfo> validateNextcloud(
@@ -2365,87 +2190,10 @@ class MockCatalogsProvider extends _i1.Mock implements _i33.CatalogsProvider {
   );
 
   @override
-  _i7.Future<_i5.Catalog?> addNextcloudCatalog({
-    required String? name,
-    required String? url,
-    required String? username,
-    required String? appPassword,
-    String? userId,
-    String? booksFolder,
-    String? serverVersion,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(#addNextcloudCatalog, [], {
-              #name: name,
-              #url: url,
-              #username: username,
-              #appPassword: appPassword,
-              #userId: userId,
-              #booksFolder: booksFolder,
-              #serverVersion: serverVersion,
-            }),
-            returnValue: _i7.Future<_i5.Catalog?>.value(),
-          )
-          as _i7.Future<_i5.Catalog?>);
-
-  @override
-  _i7.Future<void> openNextcloudBrowser(_i5.Catalog? catalog) =>
-      (super.noSuchMethod(
-            Invocation.method(#openNextcloudBrowser, [catalog]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<void> navigateNextcloudTo(String? path) =>
-      (super.noSuchMethod(
-            Invocation.method(#navigateNextcloudTo, [path]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<void> navigateNextcloudBack() =>
-      (super.noSuchMethod(
-            Invocation.method(#navigateNextcloudBack, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<void> refreshNextcloudDirectory() =>
-      (super.noSuchMethod(
-            Invocation.method(#refreshNextcloudDirectory, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  void closeNextcloudBrowser() => super.noSuchMethod(
-    Invocation.method(#closeNextcloudBrowser, []),
+  void clearError() => super.noSuchMethod(
+    Invocation.method(#clearError, []),
     returnValueForMissingStub: null,
   );
-
-  @override
-  _i7.Future<_i2.Book?> downloadNextcloudBook(_i14.NextcloudFile? file) =>
-      (super.noSuchMethod(
-            Invocation.method(#downloadNextcloudBook, [file]),
-            returnValue: _i7.Future<_i2.Book?>.value(),
-          )
-          as _i7.Future<_i2.Book?>);
-
-  @override
-  _i7.Future<void> removeNextcloudCatalog(_i5.Catalog? catalog) =>
-      (super.noSuchMethod(
-            Invocation.method(#removeNextcloudCatalog, [catalog]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
 
   @override
   void addListener(_i29.VoidCallback? listener) => super.noSuchMethod(
@@ -2456,6 +2204,12 @@ class MockCatalogsProvider extends _i1.Mock implements _i33.CatalogsProvider {
   @override
   void removeListener(_i29.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void dispose() => super.noSuchMethod(
+    Invocation.method(#dispose, []),
     returnValueForMissingStub: null,
   );
 

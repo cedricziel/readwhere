@@ -91,14 +91,25 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
             _nameController.text = serverInfo.serverName;
           }
         });
-      } else {
-        // Validate OPDS/Kavita connection
-        final feed = await provider.validateCatalog(
+      } else if (_catalogType == CatalogType.kavita) {
+        // Validate Kavita connection
+        final serverInfo = await provider.validateKavitaServer(
           _urlController.text.trim(),
-          apiKey: _apiKeyController.text.trim().isNotEmpty
-              ? _apiKeyController.text.trim()
-              : null,
-          type: _catalogType,
+          _apiKeyController.text.trim(),
+        );
+
+        setState(() {
+          _isValidated = true;
+          _serverVersion = serverInfo.version;
+          // Auto-fill name if empty
+          if (_nameController.text.isEmpty) {
+            _nameController.text = serverInfo.serverName;
+          }
+        });
+      } else {
+        // Validate OPDS connection
+        final feed = await provider.validateOpdsCatalog(
+          _urlController.text.trim(),
         );
 
         setState(() {
@@ -232,15 +243,17 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
           userId: _nextcloudServerInfo?.userId,
           serverVersion: _serverVersion,
         );
-      } else {
-        catalog = await provider.addCatalog(
+      } else if (_catalogType == CatalogType.kavita) {
+        catalog = await provider.addKavitaCatalog(
           name: _nameController.text.trim(),
           url: _urlController.text.trim(),
-          apiKey: _apiKeyController.text.trim().isNotEmpty
-              ? _apiKeyController.text.trim()
-              : null,
-          type: _catalogType,
+          apiKey: _apiKeyController.text.trim(),
           serverVersion: _serverVersion,
+        );
+      } else {
+        catalog = await provider.addOpdsCatalog(
+          name: _nameController.text.trim(),
+          url: _urlController.text.trim(),
         );
       }
 

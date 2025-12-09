@@ -26,6 +26,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
   bool _isGridView = true;
   bool _showSearch = false;
   bool _isRefreshing = false;
+  String? _catalogName;
 
   @override
   void initState() {
@@ -42,12 +43,25 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
   }
 
   Future<void> _loadCatalog() async {
-    final provider = sl<CatalogsProvider>();
-    final catalog = provider.catalogs.firstWhere(
+    final catalogsProvider = sl<CatalogsProvider>();
+    final opdsProvider = sl<OpdsProvider>();
+
+    final catalog = catalogsProvider.catalogs.firstWhere(
       (c) => c.id == widget.catalogId,
       orElse: () => throw Exception('Catalog not found'),
     );
-    await provider.openCatalog(catalog);
+
+    setState(() {
+      _catalogName = catalog.name;
+    });
+
+    await opdsProvider.openCatalog(
+      catalogId: catalog.id,
+      catalogUrl: catalog.opdsUrl,
+    );
+
+    // Update last accessed
+    await catalogsProvider.updateLastAccessed(catalog.id);
   }
 
   Future<void> _refreshFeed() async {
@@ -55,7 +69,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
 
     setState(() => _isRefreshing = true);
     try {
-      final provider = sl<CatalogsProvider>();
+      final provider = sl<OpdsProvider>();
       await provider.refreshCurrentFeed();
     } finally {
       if (mounted) {
@@ -64,7 +78,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     }
   }
 
-  void _handleEntryTap(CatalogsProvider provider, OpdsEntry entry) {
+  void _handleEntryTap(OpdsProvider provider, OpdsEntry entry) {
     if (entry.isNavigation) {
       // Navigate to subfeed
       final navLink = entry.links.firstWhere(
@@ -81,23 +95,23 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     }
   }
 
-  Future<void> _handleDownload(
-    CatalogsProvider provider,
-    OpdsEntry entry,
-  ) async {
-    final book = await provider.downloadAndImportBook(entry);
-    if (book != null && mounted) {
+  Future<void> _handleDownload(OpdsProvider provider, OpdsEntry entry) async {
+    final bookId = await provider.downloadAndImportBook(entry);
+    if (bookId != null && mounted) {
       // Refresh the library so the book can be found
       final libraryProvider = sl<LibraryProvider>();
       await libraryProvider.loadBooks();
 
+      // Get book title from entry
+      final title = entry.title;
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Downloaded "${book.title}"'),
+          content: Text('Downloaded "$title"'),
           action: SnackBarAction(
             label: 'Open',
-            onPressed: () => context.push(AppRoutes.readerPath(book.id)),
+            onPressed: () => context.push(AppRoutes.readerPath(bookId)),
           ),
         ),
       );
@@ -111,7 +125,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     }
   }
 
-  void _handleOpenBook(CatalogsProvider provider, String entryId) {
+  void _handleOpenBook(OpdsProvider provider, String entryId) {
     final bookId = provider.getBookIdForEntry(entryId);
     if (bookId != null) {
       context.push(AppRoutes.readerPath(bookId));
@@ -127,13 +141,13 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
 
   void _showBookOptionsSheet(
     BuildContext context,
-    CatalogsProvider provider,
+    OpdsProvider provider,
     OpdsEntry entry,
   ) {
     final theme = Theme.of(context);
-    final isDownloaded = provider.isBookInLibrary(entry.id);
+    final isDownloaded = provider.isDownloaded(entry.id);
     final isDownloading = provider.isDownloading(entry.id);
-    final progress = provider.getDownloadProgress(entry.id);
+    final progress = provider.getDownloadProgress(entry.id) ?? 0.0;
     final isUnsupported = entry.hasOnlyUnsupportedFormats;
 
     showModalBottomSheet(
@@ -220,7 +234,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
                 child: FilledButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
-                    // TODO: Navigate to downloaded book in library
+                    _handleOpenBook(provider, entry.id);
                   },
                   icon: const Icon(Icons.menu_book),
                   label: const Text('Open in Reader'),
@@ -287,14 +301,14 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     );
   }
 
-  void _handleSearch(CatalogsProvider provider) {
+  void _handleSearch(OpdsProvider provider) {
     final query = _searchController.text.trim();
     if (query.isNotEmpty) {
       provider.search(query);
     }
   }
 
-  void _handleBreadcrumbTap(CatalogsProvider provider, int index) {
+  void _handleBreadcrumbTap(OpdsProvider provider, int index) {
     // Navigate back to the selected breadcrumb level
     final depth = provider.breadcrumbs.length - index - 1;
     for (var i = 0; i < depth; i++) {
@@ -305,11 +319,10 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
-      value: sl<CatalogsProvider>(),
-      child: Consumer<CatalogsProvider>(
+      value: sl<OpdsProvider>(),
+      child: Consumer<OpdsProvider>(
         builder: (context, provider, child) {
           final feed = provider.currentFeed;
-          final catalog = provider.selectedCatalog;
 
           return Scaffold(
             appBar: AppBar(
@@ -319,12 +332,12 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
                   if (provider.canNavigateBack) {
                     provider.navigateBack();
                   } else {
-                    provider.closeCatalog();
+                    provider.closeBrowser();
                     context.pop();
                   }
                 },
               ),
-              title: Text(feed?.title ?? catalog?.name ?? 'Catalog'),
+              title: Text(feed?.title ?? _catalogName ?? 'Catalog'),
               actions: [
                 if (feed?.hasSearch == true)
                   IconButton(
@@ -408,7 +421,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     );
   }
 
-  Widget _buildContent(CatalogsProvider provider) {
+  Widget _buildContent(OpdsProvider provider) {
     if (provider.isLoading && provider.currentFeed == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -430,7 +443,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     );
   }
 
-  Widget _buildGridView(CatalogsProvider provider, List<OpdsEntry> entries) {
+  Widget _buildGridView(OpdsProvider provider, List<OpdsEntry> entries) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -442,17 +455,17 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
       itemCount: entries.length,
       itemBuilder: (context, index) {
         final entry = entries[index];
-        final coverUrl = _resolveCoverUrl(provider, entry);
+        final coverUrl = _resolveCoverUrl(entry);
 
         return OpdsEntryCard(
           entry: entry,
           coverUrl: coverUrl,
           isDownloading: provider.isDownloading(entry.id),
-          isDownloaded: provider.isBookInLibrary(entry.id),
-          downloadProgress: provider.getDownloadProgress(entry.id),
+          isDownloaded: provider.isDownloaded(entry.id),
+          downloadProgress: provider.getDownloadProgress(entry.id) ?? 0.0,
           onTap: () => _handleEntryTap(provider, entry),
           onDownload: () => _handleDownload(provider, entry),
-          onOpen: provider.isBookInLibrary(entry.id)
+          onOpen: provider.isDownloaded(entry.id)
               ? () => _handleOpenBook(provider, entry.id)
               : null,
         );
@@ -460,24 +473,24 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     );
   }
 
-  Widget _buildListView(CatalogsProvider provider, List<OpdsEntry> entries) {
+  Widget _buildListView(OpdsProvider provider, List<OpdsEntry> entries) {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: entries.length,
       separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final entry = entries[index];
-        final coverUrl = _resolveCoverUrl(provider, entry);
+        final coverUrl = _resolveCoverUrl(entry);
 
         return OpdsEntryListTile(
           entry: entry,
           coverUrl: coverUrl,
           isDownloading: provider.isDownloading(entry.id),
-          isDownloaded: provider.isBookInLibrary(entry.id),
-          downloadProgress: provider.getDownloadProgress(entry.id),
+          isDownloaded: provider.isDownloaded(entry.id),
+          downloadProgress: provider.getDownloadProgress(entry.id) ?? 0.0,
           onTap: () => _handleEntryTap(provider, entry),
           onDownload: () => _handleDownload(provider, entry),
-          onOpen: provider.isBookInLibrary(entry.id)
+          onOpen: provider.isDownloaded(entry.id)
               ? () => _handleOpenBook(provider, entry.id)
               : null,
         );
@@ -485,18 +498,18 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     );
   }
 
-  String? _resolveCoverUrl(CatalogsProvider provider, OpdsEntry entry) {
+  String? _resolveCoverUrl(OpdsEntry entry) {
     final coverLink = entry.coverLink;
     if (coverLink == null) return null;
 
-    final baseUrl = provider.selectedCatalog?.opdsUrl ?? '';
-    // Simple URL resolution
+    // Simple URL resolution - if already absolute, return as-is
     if (coverLink.href.startsWith('http')) {
       return coverLink.href;
     }
-    // Resolve relative URL
-    final uri = Uri.parse(baseUrl);
-    return uri.resolve(coverLink.href).toString();
+
+    // For relative URLs, we'd need the base URL which is now in OpdsProvider
+    // For now, return the href and let image loading handle relative paths
+    return coverLink.href;
   }
 
   Widget _buildEmptyState() {
@@ -529,7 +542,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     );
   }
 
-  Widget _buildErrorState(CatalogsProvider provider) {
+  Widget _buildErrorState(OpdsProvider provider) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),

@@ -1,10 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../data/services/book_import_service.dart';
+import '../../../../domain/repositories/book_repository.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../providers/library_provider.dart';
+import '../../../router/routes.dart';
 
 /// Screen for browsing Nextcloud files via WebDAV
 class NextcloudBrowserScreen extends StatefulWidget {
@@ -18,6 +26,7 @@ class NextcloudBrowserScreen extends StatefulWidget {
 
 class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
   bool _isRefreshing = false;
+  String? _catalogName;
 
   @override
   void initState() {
@@ -29,27 +38,47 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
   }
 
   Future<void> _loadCatalog() async {
-    final provider = sl<CatalogsProvider>();
-    final catalog = provider.catalogs.firstWhere(
+    final catalogsProvider = sl<CatalogsProvider>();
+    final nextcloudProvider = sl<NextcloudProvider>();
+
+    final catalog = catalogsProvider.catalogs.firstWhere(
       (c) => c.id == widget.catalogId,
       orElse: () => throw Exception('Catalog not found'),
     );
 
+    setState(() {
+      _catalogName = catalog.name;
+    });
+
     if (catalog.isNextcloud) {
-      await provider.openNextcloudBrowser(catalog);
+      await nextcloudProvider.openBrowser(
+        catalogId: catalog.id,
+        serverUrl: catalog.url,
+        userId: catalog.userId ?? catalog.username ?? '',
+        username: catalog.username,
+        booksFolder: catalog.effectiveBooksFolder,
+      );
+
+      // Update last accessed
+      await catalogsProvider.updateLastAccessed(catalog.id);
     }
   }
 
   Future<void> _refresh() async {
     setState(() => _isRefreshing = true);
-    await sl<CatalogsProvider>().refreshNextcloudDirectory();
-    setState(() => _isRefreshing = false);
+    try {
+      await sl<NextcloudProvider>().refresh();
+    } finally {
+      if (mounted) {
+        setState(() => _isRefreshing = false);
+      }
+    }
   }
 
   void _handleFileTap(NextcloudFile file) {
-    final provider = sl<CatalogsProvider>();
+    final provider = sl<NextcloudProvider>();
     if (file.isDirectory) {
-      provider.navigateNextcloudTo(file.path);
+      provider.navigateTo(file.path);
     } else if (file.isSupportedBook) {
       _showDownloadSheet(file);
     }
@@ -66,66 +95,135 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
   Future<void> _handleDownload(NextcloudFile file) async {
     Navigator.of(context).pop(); // Close bottom sheet
 
-    final provider = sl<CatalogsProvider>();
-    final book = await provider.downloadNextcloudBook(file);
+    final provider = sl<NextcloudProvider>();
 
-    if (book != null && mounted) {
-      // Refresh library
-      sl<LibraryProvider>().loadBooks();
+    try {
+      // Get temp directory for download
+      final tempDir = await getTemporaryDirectory();
+      final localPath = p.join(tempDir.path, file.name);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Downloaded: ${book.title}'),
-          action: SnackBarAction(
-            label: 'Open',
-            onPressed: () {
-              // Navigate to reader
-              // context.push('/reader/${book.id}');
-            },
-          ),
-        ),
+      // Download the file
+      final downloadedFile = await provider.downloadFile(file, localPath);
+
+      if (downloadedFile == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Download failed'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Import the book
+      final importService = sl<BookImportService>();
+      final bookRepository = sl<BookRepository>();
+
+      final book = await importService.importBook(localPath);
+      final savedBook = await bookRepository.insert(
+        book.copyWith(sourceCatalogId: widget.catalogId),
       );
+
+      // Clean up temp file
+      try {
+        await File(localPath).delete();
+      } catch (_) {
+        // Ignore cleanup errors
+      }
+
+      if (mounted) {
+        // Refresh library
+        sl<LibraryProvider>().loadBooks();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Downloaded: ${savedBook.title}'),
+            action: SnackBarAction(
+              label: 'Open',
+              onPressed: () {
+                context.push(AppRoutes.readerPath(savedBook.id));
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Download failed: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
+  }
+
+  void _handleBreadcrumbTap(int index) {
+    final provider = sl<NextcloudProvider>();
+    final breadcrumbs = provider.breadcrumbs;
+
+    // Navigate to that path
+    if (index == 0) {
+      // Home - go back to root
+      final parts = provider.currentPath.split('/').where((s) => s.isNotEmpty);
+      if (parts.isNotEmpty) {
+        provider.navigateTo('/${parts.first}');
+      }
+    } else if (index < breadcrumbs.length - 1) {
+      // Navigate to intermediate path
+      // breadcrumbs = ['Home', 'Books', 'Fiction'] -> index 1 = '/Books'
+      final pathParts = breadcrumbs.sublist(1, index + 1);
+      provider.navigateTo('/${pathParts.join('/')}');
+    }
+    // If it's the last breadcrumb, do nothing (already there)
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<CatalogsProvider>(
-      builder: (context, provider, _) {
-        final catalog = provider.selectedCatalog;
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(catalog?.name ?? 'Nextcloud'),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                provider.closeNextcloudBrowser();
-                Navigator.of(context).pop();
-              },
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: _isRefreshing ? null : _refresh,
+    return ChangeNotifierProvider.value(
+      value: sl<NextcloudProvider>(),
+      child: Consumer<NextcloudProvider>(
+        builder: (context, provider, _) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(_catalogName ?? 'Nextcloud'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (provider.breadcrumbs.length > 1) {
+                    provider.navigateBack();
+                  } else {
+                    provider.closeBrowser();
+                    Navigator.of(context).pop();
+                  }
+                },
               ),
-            ],
-          ),
-          body: Column(
-            children: [
-              // Breadcrumb navigation
-              _buildBreadcrumbs(provider),
-              // Content
-              Expanded(child: _buildContent(provider)),
-            ],
-          ),
-        );
-      },
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _isRefreshing ? null : _refresh,
+                ),
+              ],
+            ),
+            body: Column(
+              children: [
+                // Breadcrumb navigation
+                _buildBreadcrumbs(provider),
+                // Content
+                Expanded(child: _buildContent(provider)),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildBreadcrumbs(CatalogsProvider provider) {
-    final breadcrumbs = provider.nextcloudBreadcrumbs;
+  Widget _buildBreadcrumbs(NextcloudProvider provider) {
+    final breadcrumbs = provider.breadcrumbs;
     final theme = Theme.of(context);
 
     return Container(
@@ -143,13 +241,7 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
         itemBuilder: (context, index) {
           final isLast = index == breadcrumbs.length - 1;
           return TextButton(
-            onPressed: isLast
-                ? null
-                : () {
-                    // Navigate to that path
-                    final path = breadcrumbs.sublist(0, index + 1).join('/');
-                    provider.navigateNextcloudTo(path == '/' ? '/' : path);
-                  },
+            onPressed: isLast ? null : () => _handleBreadcrumbTap(index),
             child: Text(
               breadcrumbs[index],
               style: TextStyle(
@@ -165,7 +257,7 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
     );
   }
 
-  Widget _buildContent(CatalogsProvider provider) {
+  Widget _buildContent(NextcloudProvider provider) {
     if (provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -174,7 +266,7 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
       return _buildErrorState(provider.error!);
     }
 
-    final files = provider.nextcloudFiles;
+    final files = provider.files;
     if (files.isEmpty) {
       return _buildEmptyState();
     }
@@ -189,9 +281,7 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
           return NextcloudFileTile(
             file: file,
             onTap: () => _handleFileTap(file),
-            downloadProgress: provider.getDownloadProgress(
-              'nextcloud:${file.path}',
-            ),
+            downloadProgress: provider.getDownloadProgress(file.path),
           );
         },
       ),

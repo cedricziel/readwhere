@@ -60,6 +60,7 @@
 library;
 
 // Catalog
+export 'src/catalog/browsing_provider.dart';
 export 'src/catalog/catalog_capability.dart';
 export 'src/catalog/catalog_provider.dart';
 export 'src/catalog/catalog_provider_registry.dart';

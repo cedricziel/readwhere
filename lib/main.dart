@@ -4,11 +4,15 @@ import 'package:provider/provider.dart';
 import 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
 import 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
 import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
+import 'package:readwhere_kavita/readwhere_kavita.dart';
+import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
+import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'app.dart';
 import 'core/di/service_locator.dart';
 import 'core/utils/logger.dart';
 import 'presentation/providers/audio_provider.dart';
+import 'presentation/providers/catalogs_provider.dart';
 import 'presentation/providers/library_provider.dart';
 import 'presentation/providers/reader_provider.dart';
 import 'presentation/providers/settings_provider.dart';
@@ -40,6 +44,10 @@ Future<void> main() async {
   final libraryProvider = sl<LibraryProvider>();
   final readerProvider = sl<ReaderProvider>();
   final audioProvider = sl<AudioProvider>();
+  final catalogsProvider = sl<CatalogsProvider>();
+  final opdsProvider = sl<OpdsProvider>();
+  final kavitaProvider = sl<KavitaProvider>();
+  final nextcloudProvider = sl<NextcloudProvider>();
 
   // Initialize settings (loads from SharedPreferences)
   await settingsProvider.initialize();
@@ -55,6 +63,12 @@ Future<void> main() async {
         ChangeNotifierProvider<LibraryProvider>.value(value: libraryProvider),
         ChangeNotifierProvider<ReaderProvider>.value(value: readerProvider),
         ChangeNotifierProvider<AudioProvider>.value(value: audioProvider),
+        ChangeNotifierProvider<CatalogsProvider>.value(value: catalogsProvider),
+        ChangeNotifierProvider<OpdsProvider>.value(value: opdsProvider),
+        ChangeNotifierProvider<KavitaProvider>.value(value: kavitaProvider),
+        ChangeNotifierProvider<NextcloudProvider>.value(
+          value: nextcloudProvider,
+        ),
       ],
       child: const ReadWhereApp(),
     ),

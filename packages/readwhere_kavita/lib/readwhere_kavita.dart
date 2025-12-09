@@ -18,3 +18,4 @@ export 'src/models/kavita_progress.dart';
 // Providers
 export 'src/provider/kavita_account_provider.dart';
 export 'src/provider/kavita_catalog_provider.dart';
+export 'src/provider/kavita_provider.dart';
