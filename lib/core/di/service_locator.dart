@@ -9,6 +9,8 @@ import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'package:readwhere_rss/readwhere_rss.dart';
+import 'package:readwhere_kavita_plugin/readwhere_kavita_plugin.dart';
+import 'package:readwhere_opds_plugin/readwhere_opds_plugin.dart';
 import 'package:readwhere_rss_plugin/readwhere_rss_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -120,6 +122,23 @@ Future<void> setupServiceLocator() async {
     );
     await registry.register(
       CbrReaderPlugin(),
+      storageFactory: storageFactory,
+      contextFactory: contextFactory,
+    );
+
+    // Register unified catalog plugins
+    await registry.register(
+      RssPlugin(),
+      storageFactory: storageFactory,
+      contextFactory: contextFactory,
+    );
+    await registry.register(
+      OpdsPlugin(),
+      storageFactory: storageFactory,
+      contextFactory: contextFactory,
+    );
+    await registry.register(
+      KavitaPlugin(),
       storageFactory: storageFactory,
       contextFactory: contextFactory,
     );
