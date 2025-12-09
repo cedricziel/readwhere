@@ -1,0 +1,23 @@
+name: readwhere_epub_plugin
+description: EPUB reader plugin implementation for ReadWhere.
+version: 0.1.0
+repository: https://github.com/cedricziel/readwhere
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+resolution: workspace
+
+dependencies:
+  readwhere_plugin:
+    path: ../readwhere_plugin
+  readwhere_epub:
+    path: ../readwhere_epub
+  logging: ^1.3.0
+  path: ^1.9.1
+
+dev_dependencies:
+  test: ^1.25.0
+  mockito: ^5.6.1
+  build_runner: ^2.10.4

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ReadWhere is a cross-platform e-reader Flutter application for open formats. It supports EPUB reading with a plugin-based architecture for format extensibility.
+ReadWhere is a cross-platform e-reader Flutter application for open formats. It supports EPUB, CBZ, CBR comics, and integrates with OPDS catalogs and Kavita servers via a plugin-based architecture.
 
 ## Context
 
@@ -36,6 +36,9 @@ dart test packages/readwhere_epub/test/validation/epub_validator_test.dart
 
 # Generate mocks
 dart run build_runner build
+
+# Download sample test media for integration testing
+dart run readwhere_sample_media:download
 
 # Dependencies
 flutter pub get
@@ -71,7 +74,7 @@ Reader plugins provide format support via `lib/plugins/`:
 - `ReaderPlugin` - Abstract interface defining `canHandle()`, `parseMetadata()`, `openBook()`, `extractCover()`
 - `PluginRegistry` - Singleton for plugin registration/lookup by extension or MIME type
 - `ReaderController` - Controls reading session state
-- EPUB plugin implementation at `lib/plugins/epub/`
+- Format plugins: EPUB (`epub/`), CBZ (`cbz/`), CBR (`cbr/`)
 
 ### State Management
 
@@ -87,11 +90,42 @@ Uses `get_it` package. Service locator at `lib/core/di/service_locator.dart`. Ca
 
 ## Workspace Structure
 
-This is a Dart workspace with:
-- **Main app** (`/`) - Flutter application
-- **readwhere_epub** (`packages/readwhere_epub/`) - Pure Dart EPUB 3.3 parsing library
+This is a Dart workspace with multiple packages:
 
-The EPUB package uses `test` package (not `flutter_test`) and has its own test suite.
+```
+packages/
+├── readwhere_epub/            # Pure Dart EPUB 3.3 parsing library
+├── readwhere_cbz/             # CBZ comic archive support
+├── readwhere_cbr/             # CBR comic archive support
+├── readwhere_rar/             # RAR 4.x decompression
+├── readwhere_plugin/          # Base plugin interfaces
+├── readwhere_*_plugin/        # Format-specific reader plugins
+├── readwhere_opds/            # OPDS catalog protocol
+├── readwhere_kavita/          # Kavita server integration
+├── readwhere_nextcloud/       # Nextcloud integration
+├── readwhere_webdav/          # WebDAV protocol
+├── readwhere_panel_detection/ # Comic panel detection
+└── readwhere_sample_media/    # Test media downloader
+```
+
+Pure Dart packages use `test` package (not `flutter_test`) and have their own test suites.
+
+## Sample Test Media
+
+The `readwhere_sample_media` package downloads sample EPUB, CBZ, CBR, PDF files for integration testing:
+
+```bash
+dart run readwhere_sample_media:download
+```
+
+Files are cached in `.dart_tool/sample_media/` (~10 MB). Use in tests:
+
+```dart
+import 'package:readwhere_sample_media/readwhere_sample_media.dart';
+
+final epubs = SampleMediaPaths.epubFiles;
+final cbzFiles = SampleMediaPaths.cbzFiles;
+```
 
 ## Test Coverage
 
