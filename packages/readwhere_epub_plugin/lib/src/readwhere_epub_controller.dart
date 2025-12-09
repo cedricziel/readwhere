@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:logging/logging.dart';
 import 'package:readwhere_epub/readwhere_epub.dart' as epub;
-
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 /// Reader controller using the readwhere_epub library.
@@ -15,6 +14,8 @@ class ReadwhereEpubController implements ReaderController {
   static final _logger = Logger('ReadwhereEpubController');
 
   final epub.EpubReader _reader;
+
+  /// The file path of the EPUB being read.
   final String filePath;
 
   late String _bookId;

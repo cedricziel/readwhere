@@ -6,7 +6,6 @@ import 'package:image/image.dart' as img;
 import 'package:logging/logging.dart';
 import 'package:readwhere_cbz/readwhere_cbz.dart' as cbz;
 import 'package:readwhere_panel_detection/readwhere_panel_detection.dart';
-
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 /// Reader controller for CBZ comic books.
@@ -18,6 +17,8 @@ class CbzReaderController implements ReaderController {
   static final _logger = Logger('CbzReaderController');
 
   final cbz.CbzReader _reader;
+
+  /// The file path of the CBZ being read.
   final String filePath;
 
   late String _bookId;

@@ -6,8 +6,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:readwhere_epub/readwhere_epub.dart' as epub;
-
-import '../../plugins/epub/readwhere_epub_controller.dart';
+import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
 
 /// Provider for managing EPUB media overlay audio playback.
 ///

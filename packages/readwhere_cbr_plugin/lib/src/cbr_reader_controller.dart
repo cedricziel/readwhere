@@ -6,7 +6,6 @@ import 'package:image/image.dart' as img;
 import 'package:logging/logging.dart';
 import 'package:readwhere_cbr/readwhere_cbr.dart' as cbr;
 import 'package:readwhere_panel_detection/readwhere_panel_detection.dart';
-
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 /// Reader controller for CBR comic books.
@@ -18,6 +17,8 @@ class CbrReaderController implements ReaderController {
   static final _logger = Logger('CbrReaderController');
 
   final cbr.CbrReader _reader;
+
+  /// The file path of the CBR being read.
   final String filePath;
 
   late String _bookId;

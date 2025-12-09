@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
+import 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
+import 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
+import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'app.dart';
 import 'core/di/service_locator.dart';
 import 'core/utils/logger.dart';
-import 'package:readwhere_plugin/readwhere_plugin.dart';
-import 'plugins/cbr/cbr_reader_plugin.dart';
-import 'plugins/cbz/cbz_reader_plugin.dart';
-import 'plugins/epub/readwhere_epub_plugin.dart';
 import 'presentation/providers/audio_provider.dart';
 import 'presentation/providers/library_provider.dart';
 import 'presentation/providers/reader_provider.dart';

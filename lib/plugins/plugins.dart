@@ -32,7 +32,7 @@ export 'package:readwhere_plugin/readwhere_plugin.dart'
         TocEntry,
         EpubEncryptionType;
 
-// Export plugin implementations
-export 'cbr/cbr.dart';
-export 'cbz/cbz.dart';
-export 'epub/epub.dart';
+// Re-export plugin implementations from packages
+export 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
+export 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
+export 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';

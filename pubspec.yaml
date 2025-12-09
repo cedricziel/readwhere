@@ -18,6 +18,9 @@ workspace:
   - packages/readwhere_kavita
   - packages/readwhere_panel_detection
   - packages/readwhere_sample_media
+  - packages/readwhere_epub_plugin
+  - packages/readwhere_cbz_plugin
+  - packages/readwhere_cbr_plugin
 
 dependencies:
   flutter:
@@ -43,6 +46,8 @@ dependencies:
   # EPUB Support
   readwhere_epub:
     path: packages/readwhere_epub
+  readwhere_epub_plugin:
+    path: packages/readwhere_epub_plugin
   flutter_html: ^3.0.0
   html: ^0.15.6
   archive: ^4.0.7
@@ -54,10 +59,14 @@ dependencies:
   # CBZ Support
   readwhere_cbz:
     path: packages/readwhere_cbz
+  readwhere_cbz_plugin:
+    path: packages/readwhere_cbz_plugin
 
   # CBR Support
   readwhere_cbr:
     path: packages/readwhere_cbr
+  readwhere_cbr_plugin:
+    path: packages/readwhere_cbr_plugin
 
   # WebDAV Support
   readwhere_webdav:

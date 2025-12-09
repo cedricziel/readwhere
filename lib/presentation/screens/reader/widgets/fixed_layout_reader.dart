@@ -8,9 +8,9 @@ import 'package:readwhere_panel_detection/readwhere_panel_detection.dart';
 import '../../../providers/reader_provider.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../themes/reading_themes.dart';
-import '../../../../plugins/epub/readwhere_epub_controller.dart';
-import '../../../../plugins/cbr/cbr_reader_controller.dart';
-import '../../../../plugins/cbz/cbz_reader_controller.dart';
+import 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
+import 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
+import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
 
 /// Widget for displaying fixed-layout content (comics, pre-paginated EPUBs).
 ///

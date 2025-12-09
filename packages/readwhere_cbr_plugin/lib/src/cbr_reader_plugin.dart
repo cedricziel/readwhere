@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:readwhere_cbr/readwhere_cbr.dart' as cbr;
-
 import 'package:readwhere_plugin/readwhere_plugin.dart';
+
 import 'cbr_reader_controller.dart';
 
 /// CBR plugin using the readwhere_cbr library.

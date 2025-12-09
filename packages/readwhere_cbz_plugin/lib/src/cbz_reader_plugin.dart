@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:readwhere_cbz/readwhere_cbz.dart' as cbz;
-
 import 'package:readwhere_plugin/readwhere_plugin.dart';
+
 import 'cbz_reader_controller.dart';
 
 /// CBZ plugin using the readwhere_cbz library.
