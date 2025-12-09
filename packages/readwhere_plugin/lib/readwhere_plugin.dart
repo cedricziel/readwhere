@@ -1,21 +1,57 @@
 /// Core plugin interfaces for ReadWhere.
 ///
 /// This package provides abstract interfaces and base classes for:
+/// - **Unified Plugin System** - Single plugin class with capability mixins
 /// - **Catalog providers** - Integrate with book sources (OPDS, Kavita, etc.)
 /// - **Reader plugins** - Support book formats (EPUB, CBZ, CBR, PDF, etc.)
 ///
-/// ## Catalog Provider Interfaces
+/// ## Unified Plugin System (New)
 ///
-/// - [CatalogProvider] - Interface for browsing and downloading from catalogs
-/// - [AccountProvider] - Interface for authentication with catalog services
-/// - [CredentialStorage] - Interface for secure credential storage
-/// - [CatalogProviderRegistry] - Registry for managing catalog providers
+/// The new unified plugin architecture uses a single [PluginBase] class
+/// with capability mixins for different functionality:
 ///
-/// ## Reader Plugin Interfaces
+/// - [PluginBase] - Base class for all plugins
+/// - [CatalogCapability] - Browse and download from catalogs
+/// - [ReaderCapability] - Read book files in specific formats
+/// - [AccountCapability] - Authentication management
+/// - [ProgressSyncCapability] - Sync reading progress to servers
+/// - [UnifiedPluginRegistry] - Registry for all plugins
+/// - [PluginStorage] - Unified storage interface
 ///
-/// - [ReaderPlugin] - Interface for format-specific readers
-/// - [ReaderController] - Controls a reading session for an open book
-/// - [PluginRegistry] - Registry for managing reader plugins
+/// ## Example: Unified Plugin
+///
+/// ```dart
+/// class KavitaPlugin extends PluginBase
+///     with CatalogCapability, AccountCapability, ProgressSyncCapability {
+///   @override
+///   String get id => 'com.readwhere.kavita';
+///
+///   @override
+///   String get name => 'Kavita';
+///
+///   @override
+///   String get version => '1.0.0';
+///
+///   // ... implement capability methods
+/// }
+///
+/// await UnifiedPluginRegistry().register(
+///   KavitaPlugin(),
+///   storageFactory: myStorageFactory,
+///   contextFactory: myContextFactory,
+/// );
+/// ```
+///
+/// ## Legacy Interfaces (Deprecated)
+///
+/// The following interfaces are maintained for backward compatibility
+/// but will be removed in a future version:
+///
+/// - [CatalogProvider] - Use [CatalogCapability] mixin instead
+/// - [AccountProvider] - Use [AccountCapability] mixin instead
+/// - [ReaderPlugin] - Use [ReaderCapability] mixin instead
+/// - [PluginRegistry] - Use [UnifiedPluginRegistry] instead
+/// - [CatalogProviderRegistry] - Use [UnifiedPluginRegistry] instead
 ///
 /// ## Data Types
 ///
@@ -28,51 +64,41 @@
 /// - [ReaderContent] - Content for rendering a chapter
 /// - [ReadingLocation] - A location within a book
 /// - [SearchResult] - A search match within a book
-///
-/// ## Example: Catalog Provider
-///
-/// ```dart
-/// class MyProvider implements CatalogProvider {
-///   @override
-///   String get id => 'my_provider';
-///   // ... implement other methods
-/// }
-///
-/// CatalogProviderRegistry().register(MyProvider());
-/// ```
-///
-/// ## Example: Reader Plugin
-///
-/// ```dart
-/// class MyFormatPlugin implements ReaderPlugin {
-///   @override
-///   String get id => 'my_format';
-///
-///   @override
-///   Future<bool> canHandle(String filePath) async {
-///     return filePath.endsWith('.myformat');
-///   }
-///   // ... implement other methods
-/// }
-///
-/// PluginRegistry().register(MyFormatPlugin());
-/// ```
 library;
 
-// Catalog
+// ===== New Unified Plugin System =====
+
+// Core
+export 'src/core/plugin_base.dart';
+export 'src/core/plugin_context.dart';
+export 'src/core/unified_plugin_registry.dart';
+
+// Capabilities
+export 'src/capabilities/account_capability.dart';
+export 'src/capabilities/catalog_capability.dart';
+export 'src/capabilities/progress_sync_capability.dart';
+export 'src/capabilities/reader_capability.dart';
+
+// Storage
+export 'src/storage/plugin_storage.dart';
+
+// ===== Legacy Interfaces (maintained for backward compatibility) =====
+
+// Catalog (Legacy)
 export 'src/catalog/browsing_provider.dart';
-export 'src/catalog/catalog_capability.dart';
+export 'src/catalog/catalog_capability.dart'; // Legacy CatalogCapability enum
 export 'src/catalog/catalog_provider.dart';
 export 'src/catalog/catalog_provider_registry.dart';
 
-// Account
+// Account (Legacy)
 export 'src/account/account_provider.dart';
 export 'src/account/auth_credentials.dart';
 
-// Storage
+// Storage (Legacy)
 export 'src/storage/credential_storage.dart';
 
-// Entities
+// ===== Shared Entities =====
+
 export 'src/entities/account_info.dart';
 export 'src/entities/browse_result.dart';
 export 'src/entities/catalog_entry.dart';
@@ -81,7 +107,8 @@ export 'src/entities/catalog_info.dart';
 export 'src/entities/catalog_link.dart';
 export 'src/entities/validation_result.dart';
 
-// Reader
+// ===== Reader =====
+
 export 'src/reader/book_metadata.dart';
 export 'src/reader/plugin_registry.dart';
 export 'src/reader/reader_content.dart';
