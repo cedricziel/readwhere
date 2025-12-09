@@ -15,14 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          sdk: stable
+          flutter-version: "3.x"
+          channel: stable
+          cache: true
 
       - name: Install dependencies
-        run: dart pub get
-        working-directory: packages/readwhere_epub
+        run: flutter pub get
 
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed packages/readwhere_epub
