@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -213,6 +214,26 @@ class ReaderContentWidget extends StatelessWidget {
                 builder: (extensionContext) {
                   final src = extensionContext.attributes['src'];
                   if (src != null) {
+                    // Handle base64 data URIs (used by CBR/CBZ)
+                    if (src.startsWith('data:image/')) {
+                      return Container(
+                        margin: EdgeInsets.symmetric(
+                          vertical: readingTheme.fontSize,
+                        ),
+                        child: Image.memory(
+                          _decodeDataUri(src),
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildImagePlaceholder(
+                              '${src.substring(0, 30)}...',
+                              readingTheme,
+                              error: 'Failed to decode image',
+                            );
+                          },
+                        ),
+                      );
+                    }
+
                     // Try to find the image in the chapter images
                     final images = readerProvider.currentChapterImages;
                     final imageBytes = _findImageBytes(src, images);
@@ -329,6 +350,18 @@ class ReaderContentWidget extends StatelessWidget {
         You are currently reading: <strong>$bookTitle</strong>
       </p>
     ''';
+  }
+
+  /// Decode a base64 data URI to bytes.
+  ///
+  /// Handles data URIs in the format: data:image/jpeg;base64,...
+  Uint8List _decodeDataUri(String dataUri) {
+    final commaIndex = dataUri.indexOf(',');
+    if (commaIndex == -1) {
+      return Uint8List(0);
+    }
+    final base64Data = dataUri.substring(commaIndex + 1);
+    return base64Decode(base64Data);
   }
 
   /// Find image bytes from the images map, handling path variations.
