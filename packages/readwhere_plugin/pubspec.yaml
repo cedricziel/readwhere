@@ -1,0 +1,17 @@
+name: readwhere_plugin
+description: Core plugin interfaces for ReadWhere catalog providers.
+version: 0.1.0
+repository: https://github.com/cedricziel/readwhere
+
+environment:
+  sdk: ^3.10.0
+
+resolution: workspace
+
+dependencies:
+  equatable: ^2.0.7
+  collection: ^1.19.1
+
+dev_dependencies:
+  test: ^1.25.0
+  coverage: ^1.7.0

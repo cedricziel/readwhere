@@ -13,6 +13,7 @@ workspace:
   - packages/readwhere_rar
   - packages/readwhere_webdav
   - packages/readwhere_nextcloud
+  - packages/readwhere_plugin
 
 dependencies:
   flutter:
