@@ -85,3 +85,20 @@ class CbrExtractionException extends CbrException {
   @override
   String toString() => 'CbrExtractionException: $message';
 }
+
+/// Exception thrown when the archive format is not supported.
+class CbrFormatException extends CbrException {
+  @override
+  final String message;
+
+  @override
+  Object? get cause => null;
+
+  @override
+  StackTrace? get stackTrace => null;
+
+  CbrFormatException(this.message);
+
+  @override
+  String toString() => 'CbrFormatException: $message';
+}

@@ -270,7 +270,6 @@ class CbrReader {
 
   /// Disposes the reader and releases resources.
   ///
-  /// This cleans up the temp directory used for extraction.
   /// After calling dispose, the reader can no longer be used.
   Future<void> dispose() async {
     if (_disposed) return;

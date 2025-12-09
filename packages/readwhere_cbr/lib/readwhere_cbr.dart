@@ -1,11 +1,11 @@
 /// A Flutter library for reading CBR comic book archives (RAR format).
 ///
-/// This library provides support for reading CBR (Comic Book RAR) files,
-/// reusing the metadata parsing and thumbnail generation from readwhere_cbz.
+/// This library provides pure Dart support for reading CBR (Comic Book RAR)
+/// files, reusing the metadata parsing and thumbnail generation from
+/// readwhere_cbz.
 ///
-/// **Note:** Unlike the CBZ package, this requires extracting to a temp
-/// directory because the underlying RAR library doesn't support in-memory
-/// extraction.
+/// Uses the readwhere_rar package for RAR 4.x archive parsing. No external
+/// tools or native dependencies required.
 ///
 /// ## Basic Usage
 ///
@@ -24,14 +24,14 @@
 ///   print('Page ${page.index}: ${page.filename}');
 /// }
 ///
-/// await reader.dispose(); // Important: cleans up temp files
+/// await reader.dispose();
 /// ```
 ///
-/// ## Password-Protected Archives
+/// ## Limitations
 ///
-/// ```dart
-/// final reader = await CbrReader.open('comic.cbr', password: 'secret');
-/// ```
+/// - Only RAR 4.x format is supported (RAR 5.x requires external tools)
+/// - Only STORE-compressed files can be extracted (no decompression)
+/// - Password-protected archives are not supported
 library;
 
 // Reader - Main entry point

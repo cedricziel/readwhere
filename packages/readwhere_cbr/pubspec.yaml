@@ -19,6 +19,8 @@ dependencies:
   equatable: ^2.0.7
   readwhere_cbz:
     path: ../readwhere_cbz
+  readwhere_rar:
+    path: ../readwhere_rar
 
 dev_dependencies:
   flutter_test:

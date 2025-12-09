@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
 import 'package:readwhere_cbz/readwhere_cbz.dart' show naturalSort;
+import 'package:readwhere_rar/readwhere_rar.dart';
 
 import '../errors/cbr_exception.dart';
 
@@ -13,22 +14,22 @@ const kImageExtensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'};
 const kComicInfoFilename = 'ComicInfo.xml';
 const kMetronInfoFilename = 'MetronInfo.xml';
 
-/// High-level CBR container abstraction.
+/// High-level CBR container abstraction using pure Dart RAR parsing.
 ///
-/// Unlike [CbzContainer], this requires extracting to a temp directory
-/// because the unrar_file package only supports file-based extraction.
+/// This implementation uses the readwhere_rar package for pure Dart
+/// RAR 4.x archive reading. No external tools are required.
 class CbrContainer {
-  final Directory _tempDir;
+  final RarArchive _archive;
   final String _originalPath;
   List<String>? _sortedImagePaths;
   List<String>? _allFilePaths;
 
-  CbrContainer._(this._tempDir, this._originalPath);
+  CbrContainer._(this._archive, this._originalPath);
 
-  /// Opens a CBR file and extracts it to a temp directory.
+  /// Opens a CBR file.
   ///
   /// Throws [CbrReadException] if the file cannot be read.
-  /// Throws [CbrExtractionException] if extraction fails.
+  /// Throws [CbrFormatException] if the file is not a valid RAR archive.
   static Future<CbrContainer> fromFile(
     String filePath, {
     String? password,
@@ -41,141 +42,38 @@ class CbrContainer {
       );
     }
 
-    // Create temp directory for extraction
-    final tempDir = await Directory.systemTemp.createTemp('cbr_');
+    // Password-protected archives are not supported in pure Dart mode
+    if (password != null) {
+      throw CbrExtractionException(
+        'Password-protected archives are not supported. '
+        'Pure Dart RAR parsing does not support encryption.',
+      );
+    }
 
     try {
-      // Extract RAR to temp directory using platform-appropriate method
-      await _extractRar(filePath, tempDir.path, password: password);
-
-      return CbrContainer._(tempDir, filePath);
-    } catch (e, st) {
-      // Clean up temp dir on failure
-      await tempDir.delete(recursive: true);
-
-      if (e is CbrException) rethrow;
+      final archive = await RarArchive.fromFile(filePath);
+      return CbrContainer._(archive, filePath);
+    } on RarVersionException catch (e) {
+      throw CbrFormatException(
+        'RAR 5.x format is not supported: ${e.message}',
+      );
+    } on RarEncryptedArchiveException catch (e) {
       throw CbrExtractionException(
-        'Failed to extract CBR file: $e',
+        'Encrypted archives are not supported: ${e.message}',
+      );
+    } on RarException catch (e, st) {
+      throw CbrExtractionException(
+        'Failed to parse CBR file: ${e.message}',
+        cause: e,
+        stackTrace: st,
+      );
+    } catch (e, st) {
+      throw CbrExtractionException(
+        'Failed to open CBR file: $e',
         cause: e,
         stackTrace: st,
       );
     }
-  }
-
-  /// Extract RAR archive using command-line unrar tool.
-  ///
-  /// Requires unrar to be installed on the system.
-  static Future<void> _extractRar(
-    String filePath,
-    String destPath, {
-    String? password,
-  }) async {
-    final unrarPath = await _findUnrar();
-    if (unrarPath == null) {
-      throw CbrExtractionException(
-        'unrar command not found.\n$_installInstructions',
-      );
-    }
-
-    await _extractWithCommandLine(
-      filePath,
-      destPath,
-      unrarPath: unrarPath,
-      password: password,
-    );
-  }
-
-  static String get _installInstructions {
-    if (Platform.isMacOS) {
-      return '''Please install unrar:
-  brew install --cask rar
-
-If blocked by Gatekeeper, run:
-  xattr -d com.apple.quarantine /opt/homebrew/bin/unrar''';
-    } else if (Platform.isLinux) {
-      return 'Please install unrar: sudo apt install unrar';
-    } else if (Platform.isWindows) {
-      return 'Please install unrar from https://www.rarlab.com/rar_add.htm';
-    } else {
-      return 'CBR files require the unrar command-line tool.';
-    }
-  }
-
-  /// Extract using command-line unrar tool.
-  static Future<void> _extractWithCommandLine(
-    String filePath,
-    String destPath, {
-    required String unrarPath,
-    String? password,
-  }) async {
-    final args = <String>[
-      'x', // Extract with full paths
-      '-o+', // Overwrite existing files
-      '-y', // Assume yes to all queries
-    ];
-
-    if (password != null && password.isNotEmpty) {
-      args.add('-p$password');
-    } else {
-      args.add('-p-'); // No password
-    }
-
-    args.add(filePath);
-    args.add('$destPath/');
-
-    final result = await Process.run(unrarPath, args);
-
-    if (result.exitCode != 0) {
-      final stderr = result.stderr.toString();
-      if (stderr.contains('password') || stderr.contains('encrypted')) {
-        throw CbrExtractionException(
-          'Archive requires a password or password is incorrect',
-        );
-      }
-      throw CbrExtractionException(
-        'unrar failed with exit code ${result.exitCode}: ${result.stderr}',
-      );
-    }
-  }
-
-  /// Find the unrar executable on the system.
-  static Future<String?> _findUnrar() async {
-    // Check absolute paths first (more reliable than PATH lookup)
-    final absolutePaths = <String>[
-      '/opt/homebrew/bin/unrar', // Homebrew on Apple Silicon Mac
-      '/usr/local/bin/unrar', // Homebrew on Intel Mac
-      '/usr/bin/unrar', // Linux system install
-      r'C:\Program Files\WinRAR\UnRAR.exe', // Windows WinRAR
-      r'C:\Program Files (x86)\WinRAR\UnRAR.exe', // Windows WinRAR x86
-    ];
-
-    for (final path in absolutePaths) {
-      final file = File(path);
-      if (await file.exists()) {
-        return path;
-      }
-    }
-
-    // Try PATH lookup as fallback (using 'which' on Unix, 'where' on Windows)
-    try {
-      if (Platform.isWindows) {
-        final result = await Process.run('where', ['unrar']);
-        if (result.exitCode == 0) {
-          final path = result.stdout.toString().trim().split('\n').first;
-          if (path.isNotEmpty) return path;
-        }
-      } else {
-        final result = await Process.run('which', ['unrar']);
-        if (result.exitCode == 0) {
-          final path = result.stdout.toString().trim();
-          if (path.isNotEmpty) return path;
-        }
-      }
-    } catch (_) {
-      // which/where not available
-    }
-
-    return null;
   }
 
   /// Opens a CBR file from a [File] object.
@@ -186,26 +84,10 @@ If blocked by Gatekeeper, run:
     return fromFile(file.path, password: password);
   }
 
-  /// Returns all file paths in the extracted archive.
+  /// Returns all file paths in the archive.
   List<String> get allFilePaths {
-    _allFilePaths ??= _scanDirectory();
+    _allFilePaths ??= _archive.filePaths;
     return _allFilePaths!;
-  }
-
-  /// Scans the temp directory for all files.
-  List<String> _scanDirectory() {
-    final files = <String>[];
-    final entities = _tempDir.listSync(recursive: true);
-
-    for (final entity in entities) {
-      if (entity is File) {
-        // Store relative path from temp dir
-        final relativePath = p.relative(entity.path, from: _tempDir.path);
-        files.add(relativePath);
-      }
-    }
-
-    return files;
   }
 
   /// Returns all image file paths in natural sort order.
@@ -243,6 +125,12 @@ If blocked by Gatekeeper, run:
   /// Returns the total number of files in the archive.
   int get fileCount => allFilePaths.length;
 
+  /// Whether all files can be extracted (STORE method, not encrypted).
+  bool get allFilesExtractable => _archive.allFilesExtractable;
+
+  /// Files that use unsupported compression.
+  List<RarFileEntry> get unsupportedFiles => _archive.unsupportedFiles;
+
   /// Checks if the archive contains ComicInfo.xml.
   bool get hasComicInfo => _findFile(kComicInfoFilename) != null;
 
@@ -260,32 +148,49 @@ If blocked by Gatekeeper, run:
     return null;
   }
 
-  /// Gets the full path to a file in the temp directory.
-  String _getFullPath(String relativePath) {
-    return p.join(_tempDir.path, relativePath);
-  }
-
   /// Reads ComicInfo.xml content if present.
   String? readComicInfo() {
     final path = _findFile(kComicInfoFilename);
     if (path == null) return null;
-    return File(_getFullPath(path)).readAsStringSync();
+    try {
+      return _archive.readFileString(path);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Reads MetronInfo.xml content if present.
   String? readMetronInfo() {
     final path = _findFile(kMetronInfoFilename);
     if (path == null) return null;
-    return File(_getFullPath(path)).readAsStringSync();
+    try {
+      return _archive.readFileString(path);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Reads an image file as bytes.
+  ///
+  /// Throws [CbrExtractionException] if the file uses compression.
   Uint8List readImageBytes(String relativePath) {
-    final fullPath = _getFullPath(relativePath);
-    return File(fullPath).readAsBytesSync();
+    try {
+      return _archive.readFileBytes(relativePath);
+    } on RarUnsupportedCompressionException catch (e) {
+      throw CbrExtractionException(
+        'File uses unsupported compression: ${e.fileName}. '
+        'This archive requires decompression which is not supported in pure Dart.',
+      );
+    } on RarException catch (e) {
+      throw CbrExtractionException(
+        'Failed to read file $relativePath: ${e.message}',
+      );
+    }
   }
 
   /// Reads a page by its index (0-based).
+  ///
+  /// Throws [CbrPageNotFoundException] if the index is out of bounds.
   Uint8List readPageBytes(int index) {
     if (index < 0 || index >= pageCount) {
       throw CbrPageNotFoundException(index);
@@ -303,52 +208,42 @@ If blocked by Gatekeeper, run:
   Uint8List? readCoverBytes() {
     final path = coverImagePath;
     if (path == null) return null;
-    return readImageBytes(path);
+    try {
+      return readImageBytes(path);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Returns the size of a file in bytes.
   int? getFileSize(String relativePath) {
-    final fullPath = _getFullPath(relativePath);
-    final file = File(fullPath);
-    if (!file.existsSync()) return null;
-    return file.lengthSync();
+    return _archive.getFileSize(relativePath);
   }
 
   /// Checks if a file exists in the archive.
   bool hasFile(String relativePath) {
-    return File(_getFullPath(relativePath)).existsSync();
+    return _archive.hasFile(relativePath);
   }
 
   /// Reads a page by its path.
   Uint8List? readPageByPath(String relativePath) {
-    if (!hasFile(relativePath)) return null;
-    return readImageBytes(relativePath);
+    return _archive.tryReadFileBytes(relativePath);
   }
 
-  /// Closes the container and cleans up the temp directory.
+  /// Closes the container and releases resources.
+  ///
+  /// For pure Dart mode, this is a no-op as no temp files are created.
   Future<void> close() async {
     _sortedImagePaths = null;
     _allFilePaths = null;
-
-    // Clean up temp directory
-    if (await _tempDir.exists()) {
-      await _tempDir.delete(recursive: true);
-    }
   }
 
   /// Synchronously closes the container.
   void closeSync() {
     _sortedImagePaths = null;
     _allFilePaths = null;
-
-    if (_tempDir.existsSync()) {
-      _tempDir.deleteSync(recursive: true);
-    }
   }
 
   /// The original file path.
   String get originalPath => _originalPath;
-
-  /// The temp directory path (for debugging).
-  String get tempPath => _tempDir.path;
 }
