@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
@@ -5,14 +7,20 @@ import 'package:provider/provider.dart';
 import '../../../providers/reader_provider.dart';
 import '../../../themes/reading_themes.dart';
 import '../../../../plugins/epub/readwhere_epub_controller.dart';
+import '../../../../plugins/cbr/cbr_reader_controller.dart';
+import '../../../../plugins/cbz/cbz_reader_controller.dart';
 
-/// Widget for displaying fixed-layout (pre-paginated) EPUB content.
+/// Widget for displaying fixed-layout content (comics, pre-paginated EPUBs).
 ///
-/// This widget renders fixed-layout EPUBs with:
-/// - Proper viewport sizing based on the EPUB's specified dimensions
+/// This widget renders fixed-layout content with:
+/// - Proper viewport sizing based on content dimensions
 /// - Zoom and pan using InteractiveViewer
 /// - Horizontal page navigation (swipe-based)
 /// - Page fitting to screen while preserving aspect ratio
+///
+/// Supports:
+/// - Fixed-layout EPUBs (HTML rendering with viewport constraints)
+/// - CBR/CBZ comics (direct image rendering)
 class FixedLayoutReader extends StatefulWidget {
   const FixedLayoutReader({super.key});
 
@@ -63,8 +71,28 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
           );
         }
 
-        // Get viewport dimensions from the controller
         final controller = readerProvider.readerController;
+
+        // Handle comic formats (CBR/CBZ) - render images directly
+        if (controller is CbrReaderController) {
+          return _buildComicViewer(
+            readingTheme,
+            controller.getPageBytes(controller.currentChapterIndex),
+            readerProvider.currentChapterIndex,
+            readerProvider.tableOfContents.length,
+          );
+        }
+
+        if (controller is CbzReaderController) {
+          return _buildComicViewer(
+            readingTheme,
+            controller.getPageBytes(controller.currentChapterIndex),
+            readerProvider.currentChapterIndex,
+            readerProvider.tableOfContents.length,
+          );
+        }
+
+        // Handle fixed-layout EPUBs - render HTML with viewport constraints
         int viewportWidth = 1024; // default
         int viewportHeight = 768; // default
 
@@ -134,6 +162,78 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
           },
         );
       },
+    );
+  }
+
+  /// Build the comic viewer with direct image rendering.
+  ///
+  /// Uses InteractiveViewer for zoom/pan functionality on comic pages.
+  Widget _buildComicViewer(
+    ReadingThemeData readingTheme,
+    Uint8List? imageBytes,
+    int currentPage,
+    int totalPages,
+  ) {
+    if (imageBytes == null || imageBytes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.broken_image_outlined,
+              size: 64,
+              color: readingTheme.textColor.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load page ${currentPage + 1}',
+              style: TextStyle(
+                color: readingTheme.textColor.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onDoubleTap: _resetZoom,
+      child: Container(
+        color: Colors.black,
+        child: InteractiveViewer(
+          transformationController: _transformationController,
+          minScale: 0.5,
+          maxScale: 4.0,
+          boundaryMargin: const EdgeInsets.all(100),
+          child: Center(
+            child: Image.memory(
+              imageBytes,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: readingTheme.textColor.withValues(alpha: 0.3),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error loading image',
+                        style: TextStyle(
+                          color: readingTheme.textColor.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 

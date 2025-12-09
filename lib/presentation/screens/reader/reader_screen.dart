@@ -186,16 +186,17 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   /// Build the appropriate content widget based on whether
-  /// the EPUB is fixed-layout or reflowable.
+  /// the content is fixed-layout or reflowable.
   Widget _buildContentWidget(ReaderProvider readerProvider) {
     final controller = readerProvider.readerController;
 
-    // Check if this is a fixed-layout EPUB
-    if (controller is ReadwhereEpubController && controller.isFixedLayout) {
+    // Check if this is fixed-layout content (comics, fixed-layout EPUBs)
+    // Uses InteractiveViewer for zoom/pan functionality
+    if (controller != null && controller.isFixedLayout) {
       return const FixedLayoutReader();
     }
 
-    // Default to reflowable reader
+    // Default to reflowable reader for text-based content
     return ReaderContentWidget(scrollController: _scrollController);
   }
 

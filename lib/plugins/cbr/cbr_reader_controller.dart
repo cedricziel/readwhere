@@ -128,6 +128,9 @@ class CbrReaderController implements ReaderController {
   Stream<ReaderContent> get contentStream => _contentController.stream;
 
   @override
+  bool get isFixedLayout => true;
+
+  @override
   Future<void> goToChapter(int index) async {
     _ensureInitialized();
     _ensureNotClosed();

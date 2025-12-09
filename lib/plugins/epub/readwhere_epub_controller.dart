@@ -166,6 +166,7 @@ class ReadwhereEpubController implements ReaderController {
   }
 
   /// Whether this EPUB is a fixed-layout (pre-paginated) book.
+  @override
   bool get isFixedLayout {
     _ensureInitialized();
     return _isFixedLayout;

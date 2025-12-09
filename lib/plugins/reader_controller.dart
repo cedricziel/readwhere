@@ -57,4 +57,11 @@ abstract class ReaderController {
 
   /// Clean up resources when the controller is no longer needed
   Future<void> dispose();
+
+  /// Whether this content should use fixed-layout rendering (InteractiveViewer)
+  ///
+  /// Fixed-layout content (comics, image-heavy books) benefits from zoom/pan
+  /// rather than reflowable text rendering.
+  /// Defaults to false for text-based content.
+  bool get isFixedLayout => false;
 }
