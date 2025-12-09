@@ -1,7 +1,7 @@
 name: readwhere
 description: "A cross-platform e-reader for open formats - Read Anywhere"
 publish_to: 'none'
-version: 1.0.0+1
+version: 0.0.1+1
 
 environment:
   sdk: ^3.10.0

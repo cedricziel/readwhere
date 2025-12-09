@@ -3,7 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart' as package_info;
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../core/di/service_locator.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/update_provider.dart';
+import '../../widgets/update_dialog.dart';
 
 /// The settings screen for configuring app preferences.
 ///
@@ -321,12 +326,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// Builds about information section
   Widget _buildAboutInfo() {
+    final updateProvider = sl<UpdateProvider>();
+
     return Column(
       children: [
         ListTile(
           leading: const Icon(Icons.info),
           title: const Text('App Version'),
           subtitle: Text(_appVersion.isEmpty ? 'Loading...' : _appVersion),
+        ),
+        ListenableBuilder(
+          listenable: updateProvider,
+          builder: (context, _) {
+            return ListTile(
+              leading: Icon(
+                updateProvider.updateAvailable
+                    ? Icons.system_update
+                    : Icons.refresh,
+                color: updateProvider.updateAvailable
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+              ),
+              title: const Text('Check for Updates'),
+              subtitle: updateProvider.isChecking
+                  ? const Text('Checking...')
+                  : updateProvider.updateAvailable
+                  ? Text(
+                      'Version ${updateProvider.updateInfo?.version} available',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    )
+                  : updateProvider.error != null
+                  ? Text(
+                      'Error: ${updateProvider.error}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    )
+                  : const Text('Check for new versions'),
+              trailing: updateProvider.isChecking
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : updateProvider.updateAvailable
+                  ? Badge(
+                      label: const Text('NEW'),
+                      child: const Icon(Icons.chevron_right),
+                    )
+                  : const Icon(Icons.chevron_right),
+              onTap: updateProvider.isChecking
+                  ? null
+                  : () => _checkForUpdates(),
+            );
+          },
         ),
         ListTile(
           leading: const Icon(Icons.description),
@@ -346,28 +401,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: const Text('Source Code'),
           subtitle: const Text('View on GitHub'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            // TODO: Open GitHub repository
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('GitHub repository link not configured'),
-              ),
-            );
-          },
+          onTap: () => _openUrl('https://github.com/cedricziel/readwhere'),
         ),
         ListTile(
           leading: const Icon(Icons.bug_report),
           title: const Text('Report Issue'),
           subtitle: const Text('Report bugs or request features'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            // TODO: Open issue tracker
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Issue tracker link not configured'),
-              ),
-            );
-          },
+          onTap: () =>
+              _openUrl('https://github.com/cedricziel/readwhere/issues'),
         ),
         const SizedBox(height: 16),
         TextButton(
@@ -382,6 +424,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 16),
       ],
     );
+  }
+
+  /// Opens a URL in the external browser
+  Future<void> _openUrl(String urlString) async {
+    final url = Uri.parse(urlString);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Could not open link')));
+      }
+    }
+  }
+
+  /// Checks for app updates
+  Future<void> _checkForUpdates() async {
+    final updateProvider = sl<UpdateProvider>();
+    final result = await updateProvider.checkForUpdates(force: true);
+
+    if (!mounted) return;
+
+    if (result.updateAvailable && result.updateInfo != null) {
+      await UpdateDialog.show(
+        context,
+        updateInfo: result.updateInfo!,
+        currentVersion: result.currentVersion,
+        onDismiss: () => updateProvider.dismissUpdate(),
+      );
+    } else if (result.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Update check failed: ${result.error}')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You are using the latest version')),
+      );
+    }
   }
 
   /// Shows a dialog to confirm settings reset

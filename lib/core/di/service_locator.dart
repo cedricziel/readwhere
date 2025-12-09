@@ -24,6 +24,8 @@ import '../../presentation/providers/library_provider.dart';
 import '../../presentation/providers/reader_provider.dart';
 import '../../presentation/providers/settings_provider.dart';
 import '../../presentation/providers/theme_provider.dart';
+import '../../presentation/providers/update_provider.dart';
+import '../services/update_service.dart';
 
 /// Global service locator instance for dependency injection.
 ///
@@ -162,6 +164,15 @@ Future<void> setupServiceLocator() async {
       bookmarkRepository: sl(),
       catalogsProvider: sl(),
     ),
+  );
+
+  // Update Service
+  sl.registerLazySingleton<UpdateService>(
+    () => UpdateService(httpClient: http.Client()),
+  );
+
+  sl.registerLazySingleton<UpdateProvider>(
+    () => UpdateProvider(updateService: sl()),
   );
 }
 
