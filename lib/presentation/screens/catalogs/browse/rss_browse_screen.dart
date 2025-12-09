@@ -4,14 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:readwhere_rss/readwhere_rss.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../data/services/book_import_service.dart';
+import '../../../../domain/entities/feed_item.dart';
 import '../../../../domain/repositories/book_repository.dart';
 import '../../../providers/catalogs_provider.dart';
+import '../../../providers/feed_reader_provider.dart';
 import '../../../providers/library_provider.dart';
 import '../../../router/routes.dart';
+
+/// Filter options for RSS feed items
+enum FeedFilter { all, downloadable, unread }
 
 /// Extracts file extension from an enclosure URL
 String? _getEnclosureExtension(RssEnclosure enclosure) {
@@ -55,7 +61,8 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
   bool _isRefreshing = false;
   String? _error;
   String? _catalogName;
-  RssFeed? _feed;
+  String? _catalogUrl;
+  FeedFilter _filter = FeedFilter.all;
   final Map<String, double> _downloadProgress = {};
   final Set<String> _downloadedIds = {};
 
@@ -69,6 +76,7 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
 
   Future<void> _loadFeed() async {
     final catalogsProvider = sl<CatalogsProvider>();
+    final feedReaderProvider = sl<FeedReaderProvider>();
 
     try {
       final catalog = catalogsProvider.catalogs.firstWhere(
@@ -78,15 +86,18 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
 
       setState(() {
         _catalogName = catalog.name;
+        _catalogUrl = catalog.url;
         _isLoading = true;
         _error = null;
       });
 
-      final rssClient = sl<RssClient>();
-      final feed = await rssClient.fetchFeed(catalog.url);
+      // First load from database (cached items)
+      await feedReaderProvider.loadFeedItems(widget.catalogId);
+
+      // Then refresh from network
+      await feedReaderProvider.refreshFeed(widget.catalogId, catalog.url);
 
       setState(() {
-        _feed = feed;
         _isLoading = false;
       });
 
@@ -101,11 +112,12 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
   }
 
   Future<void> _refresh() async {
-    if (_isRefreshing) return;
+    if (_isRefreshing || _catalogUrl == null) return;
 
     setState(() => _isRefreshing = true);
     try {
-      await _loadFeed();
+      final feedReaderProvider = sl<FeedReaderProvider>();
+      await feedReaderProvider.refreshFeed(widget.catalogId, _catalogUrl!);
     } finally {
       if (mounted) {
         setState(() => _isRefreshing = false);
@@ -113,18 +125,12 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
     }
   }
 
-  void _handleItemTap(RssItem item) {
-    if (item.hasSupportedEnclosures) {
-      _showDownloadSheet(item);
-    } else if (item.link != null) {
-      // TODO: Open external link
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Opening: ${item.link}')));
-    }
+  void _handleItemTap(FeedItem item) {
+    // Navigate to article screen
+    context.push(AppRoutes.articlePath(widget.catalogId, item.id));
   }
 
-  void _showDownloadSheet(RssItem item) {
+  void _showDownloadSheet(FeedItem item) {
     final theme = Theme.of(context);
     final enclosures = item.supportedEnclosures;
     final isDownloaded = _downloadedIds.contains(item.id);
@@ -249,7 +255,7 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
     );
   }
 
-  Future<void> _handleDownload(RssItem item, RssEnclosure enclosure) async {
+  Future<void> _handleDownload(FeedItem item, RssEnclosure enclosure) async {
     setState(() {
       _downloadProgress[item.id] = 0.0;
     });
@@ -328,19 +334,96 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
     }
   }
 
+  void _markAllAsRead() async {
+    final feedReaderProvider = sl<FeedReaderProvider>();
+    await feedReaderProvider.markAllAsRead(widget.catalogId);
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Marked all as read')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_feed?.title ?? _catalogName ?? 'RSS Feed'),
+        title: Consumer<FeedReaderProvider>(
+          builder: (context, provider, child) {
+            final unreadCount = provider.getUnreadCount(widget.catalogId);
+            final title = _catalogName ?? 'RSS Feed';
+            if (unreadCount > 0) {
+              return Text('$title ($unreadCount)');
+            }
+            return Text(title);
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _isRefreshing ? null : _refresh,
           ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'mark_all_read':
+                  _markAllAsRead();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'mark_all_read',
+                child: ListTile(
+                  leading: Icon(Icons.done_all),
+                  title: Text('Mark all as read'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
-      body: _buildContent(),
+      body: Column(
+        children: [
+          // Filter chips
+          _buildFilterChips(),
+          // Content
+          Expanded(child: _buildContent()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          FilterChip(
+            selected: _filter == FeedFilter.all,
+            label: const Text('All'),
+            onSelected: (selected) {
+              if (selected) setState(() => _filter = FeedFilter.all);
+            },
+          ),
+          const SizedBox(width: 8),
+          FilterChip(
+            selected: _filter == FeedFilter.unread,
+            label: const Text('Unread'),
+            onSelected: (selected) {
+              if (selected) setState(() => _filter = FeedFilter.unread);
+            },
+          ),
+          const SizedBox(width: 8),
+          FilterChip(
+            selected: _filter == FeedFilter.downloadable,
+            label: const Text('Downloads'),
+            onSelected: (selected) {
+              if (selected) setState(() => _filter = FeedFilter.downloadable);
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -353,59 +436,59 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
       return _buildErrorState();
     }
 
-    final feed = _feed;
-    if (feed == null || feed.items.isEmpty) {
-      return _buildEmptyState();
-    }
+    return Consumer<FeedReaderProvider>(
+      builder: (context, provider, child) {
+        var items = provider.getItems(widget.catalogId);
 
-    // Filter to only show items with supported enclosures
-    final items = feed.supportedItems;
-    if (items.isEmpty) {
-      return _buildNoSupportedItemsState(feed);
-    }
+        // Apply filter
+        switch (_filter) {
+          case FeedFilter.unread:
+            items = items.where((item) => !item.isRead).toList();
+          case FeedFilter.downloadable:
+            items = items.where((item) => item.hasSupportedEnclosures).toList();
+          case FeedFilter.all:
+            break;
+        }
 
-    return RefreshIndicator(
-      onRefresh: _refresh,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return _RssItemTile(
-            item: item,
-            isDownloading: _downloadProgress.containsKey(item.id),
-            isDownloaded: _downloadedIds.contains(item.id),
-            downloadProgress: _downloadProgress[item.id] ?? 0.0,
-            onTap: () => _handleItemTap(item),
-          );
-        },
-      ),
+        if (items.isEmpty) {
+          return _buildEmptyState();
+        }
+
+        return RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return _FeedItemTile(
+                item: item,
+                isDownloading: _downloadProgress.containsKey(item.id),
+                isDownloaded: _downloadedIds.contains(item.id),
+                downloadProgress: _downloadProgress[item.id] ?? 0.0,
+                onTap: () => _handleItemTap(item),
+                onDownloadTap: item.hasSupportedEnclosures
+                    ? () => _showDownloadSheet(item)
+                    : null,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.rss_feed,
-            size: 64,
-            color: Theme.of(context).colorScheme.outline,
-          ),
-          const SizedBox(height: 16),
-          Text('Feed is empty', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Text(
-            'This feed has no items',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
-    );
-  }
+    String message;
+    switch (_filter) {
+      case FeedFilter.unread:
+        message = 'All caught up! No unread items.';
+      case FeedFilter.downloadable:
+        message = 'No downloadable content in this feed (EPUB, PDF, CBZ, CBR).';
+      case FeedFilter.all:
+        message = 'This feed has no items.';
+    }
 
-  Widget _buildNoSupportedItemsState(RssFeed feed) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -413,22 +496,21 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.info_outline,
+              _filter == FeedFilter.unread
+                  ? Icons.check_circle_outline
+                  : Icons.rss_feed,
               size: 64,
               color: Theme.of(context).colorScheme.outline,
             ),
             const SizedBox(height: 16),
-            Text(
-              'No downloadable content',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'This feed has ${feed.items.length} items, but none contain '
-              'downloadable ebooks or comics (EPUB, PDF, CBZ, CBR).',
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
+            Text(message, style: Theme.of(context).textTheme.titleMedium),
+            if (_filter != FeedFilter.all) ...[
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => setState(() => _filter = FeedFilter.all),
+                child: const Text('Show all items'),
+              ),
+            ],
           ],
         ),
       ),
@@ -471,21 +553,40 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
   }
 }
 
-/// List tile for an RSS item
-class _RssItemTile extends StatelessWidget {
-  final RssItem item;
+/// List tile for a feed item
+class _FeedItemTile extends StatelessWidget {
+  final FeedItem item;
   final bool isDownloading;
   final bool isDownloaded;
   final double downloadProgress;
   final VoidCallback onTap;
+  final VoidCallback? onDownloadTap;
 
-  const _RssItemTile({
+  const _FeedItemTile({
     required this.item,
     required this.isDownloading,
     required this.isDownloaded,
     required this.downloadProgress,
     required this.onTap,
+    this.onDownloadTap,
   });
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inDays == 0) {
+      if (diff.inHours == 0) {
+        return '${diff.inMinutes}m';
+      }
+      return '${diff.inHours}h';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays}d';
+    } else {
+      return '${date.day}/${date.month}';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -510,36 +611,64 @@ class _RssItemTile extends StatelessWidget {
               ),
             )
           : _buildPlaceholder(context),
-      title: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+      title: Text(
+        item.title,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontWeight: item.isRead ? FontWeight.normal : FontWeight.bold,
+        ),
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (item.author != null)
-            Text(
-              item.author!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-            ),
-          const SizedBox(height: 4),
-          Wrap(
-            spacing: 4,
-            children: formatChips.map((String format) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  format,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onPrimaryContainer,
+          Row(
+            children: [
+              if (item.author != null) ...[
+                Flexible(
+                  child: Text(
+                    item.author!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              );
-            }).toList(),
+                const SizedBox(width: 8),
+              ],
+              if (item.pubDate != null)
+                Text(
+                  _formatDate(item.pubDate),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+            ],
           ),
+          if (formatChips.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 4,
+              children: formatChips.map((String format) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    format,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
       trailing: _buildTrailing(context),
@@ -555,29 +684,63 @@ class _RssItemTile extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Icon(Icons.book, color: Theme.of(context).colorScheme.outline),
+      child: Icon(
+        item.hasSupportedEnclosures ? Icons.book : Icons.article,
+        color: Theme.of(context).colorScheme.outline,
+      ),
     );
   }
 
   Widget? _buildTrailing(BuildContext context) {
-    if (isDownloaded) {
-      return Icon(
-        Icons.check_circle,
-        color: Theme.of(context).colorScheme.primary,
-      );
-    }
+    // Unread indicator
+    final List<Widget> trailing = [];
 
-    if (isDownloading) {
-      return SizedBox(
-        width: 24,
-        height: 24,
-        child: CircularProgressIndicator(
-          value: downloadProgress,
-          strokeWidth: 2,
+    if (!item.isRead) {
+      trailing.add(
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            shape: BoxShape.circle,
+          ),
         ),
       );
     }
 
-    return const Icon(Icons.download_outlined);
+    // Download status/button
+    if (item.hasSupportedEnclosures) {
+      if (isDownloaded) {
+        trailing.add(
+          Icon(
+            Icons.check_circle,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      } else if (isDownloading) {
+        trailing.add(
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              value: downloadProgress,
+              strokeWidth: 2,
+            ),
+          ),
+        );
+      } else {
+        trailing.add(
+          IconButton(
+            icon: const Icon(Icons.download_outlined),
+            onPressed: onDownloadTap,
+            tooltip: 'Download',
+          ),
+        );
+      }
+    }
+
+    if (trailing.isEmpty) return null;
+
+    return Row(mainAxisSize: MainAxisSize.min, children: trailing);
   }
 }

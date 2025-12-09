@@ -43,6 +43,9 @@ class AppRoutes {
   // RSS browse route (full screen, outside shell)
   static const String rssBrowse = '/catalogs/:catalogId/rss';
 
+  // Article route (full screen, for reading feed items)
+  static const String article = '/feeds/:feedId/article/:itemId';
+
   /// Generates the catalog browse path with the given catalog ID.
   ///
   /// [catalogId] is the unique identifier of the catalog.
@@ -62,6 +65,14 @@ class AppRoutes {
   /// [catalogId] is the unique identifier of the RSS catalog.
   static String rssBrowsePath(String catalogId) {
     return '/catalogs/$catalogId/rss';
+  }
+
+  /// Generates the article path with the given feed and item IDs.
+  ///
+  /// [feedId] is the unique identifier of the feed (catalog).
+  /// [itemId] is the unique identifier of the feed item.
+  static String articlePath(String feedId, String itemId) {
+    return '/feeds/$feedId/article/$itemId';
   }
 
   // Navigation helper methods

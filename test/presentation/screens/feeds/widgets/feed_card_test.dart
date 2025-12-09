@@ -1,21 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:provider/provider.dart';
+import 'package:readwhere/presentation/providers/feed_reader_provider.dart';
 import 'package:readwhere/presentation/screens/feeds/widgets/feed_card.dart';
 
 import '../../../../helpers/catalog_test_helpers.dart';
+import '../../../../mocks/mock_repositories.mocks.dart';
 
 void main() {
+  late MockFeedReaderProvider mockFeedReaderProvider;
+
+  setUp(() {
+    mockFeedReaderProvider = MockFeedReaderProvider();
+    // Default stub: return 0 unread count for any feed
+    when(mockFeedReaderProvider.getUnreadCount(any)).thenReturn(0);
+  });
+
+  /// Wraps a widget with the necessary providers for FeedCard tests
+  Widget buildTestWidget(Widget child) {
+    return MaterialApp(
+      home: ChangeNotifierProvider<FeedReaderProvider>.value(
+        value: mockFeedReaderProvider,
+        child: Scaffold(body: child),
+      ),
+    );
+  }
+
   group('FeedCard', () {
     group('rendering', () {
       testWidgets('displays feed name', (tester) async {
         final feed = createTestRssFeed(name: 'My Awesome Feed');
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.text('My Awesome Feed'), findsOneWidget);
@@ -25,11 +43,7 @@ void main() {
         final feed = createTestRssFeed(url: 'https://example.com/feed.xml');
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         // URL should be formatted without https://
@@ -40,11 +54,7 @@ void main() {
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.byIcon(Icons.rss_feed), findsOneWidget);
@@ -56,11 +66,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.textContaining('Last viewed:'), findsOneWidget);
@@ -71,11 +77,7 @@ void main() {
         final feed = createTestRssFeed(lastAccessedAt: null);
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.textContaining('Last viewed:'), findsNothing);
@@ -87,11 +89,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.textContaining('Just now'), findsOneWidget);
@@ -103,11 +101,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.textContaining('3 days ago'), findsOneWidget);
@@ -119,11 +113,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.textContaining('1 day ago'), findsOneWidget);
@@ -133,11 +123,7 @@ void main() {
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.byType(Card), findsOneWidget);
@@ -147,11 +133,7 @@ void main() {
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.byIcon(Icons.more_vert), findsOneWidget);
@@ -164,14 +146,8 @@ void main() {
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(
-                feed: feed,
-                onTap: () => tapped = true,
-                onDelete: () {},
-              ),
-            ),
+          buildTestWidget(
+            FeedCard(feed: feed, onTap: () => tapped = true, onDelete: () {}),
           ),
         );
 
@@ -187,11 +163,7 @@ void main() {
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         // Tap the more options button
@@ -209,14 +181,8 @@ void main() {
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(
-                feed: feed,
-                onTap: () {},
-                onDelete: () => deleted = true,
-              ),
-            ),
+          buildTestWidget(
+            FeedCard(feed: feed, onTap: () {}, onDelete: () => deleted = true),
           ),
         );
 
@@ -235,11 +201,7 @@ void main() {
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         // Open menu
@@ -255,11 +217,7 @@ void main() {
         final feed = createTestRssFeed(url: 'https://example.com/feed');
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.text('example.com/feed'), findsOneWidget);
@@ -270,11 +228,7 @@ void main() {
         final feed = createTestRssFeed(url: 'http://example.com/feed');
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.text('example.com/feed'), findsOneWidget);
@@ -284,11 +238,7 @@ void main() {
         final feed = createTestRssFeed(url: 'https://example.com/feed/');
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
-            ),
-          ),
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
         );
 
         expect(find.text('example.com/feed'), findsOneWidget);
@@ -302,8 +252,11 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
+            home: ChangeNotifierProvider<FeedReaderProvider>.value(
+              value: mockFeedReaderProvider,
+              child: Scaffold(
+                body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
+              ),
             ),
           ),
         );
@@ -317,13 +270,60 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.dark(),
-            home: Scaffold(
-              body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
+            home: ChangeNotifierProvider<FeedReaderProvider>.value(
+              value: mockFeedReaderProvider,
+              child: Scaffold(
+                body: FeedCard(feed: feed, onTap: () {}, onDelete: () {}),
+              ),
             ),
           ),
         );
 
         expect(find.byType(FeedCard), findsOneWidget);
+      });
+    });
+
+    group('unread badge', () {
+      testWidgets('displays unread count when greater than 0', (tester) async {
+        final feed = createTestRssFeed(id: 'test-feed-id');
+        when(
+          mockFeedReaderProvider.getUnreadCount('test-feed-id'),
+        ).thenReturn(5);
+
+        await tester.pumpWidget(
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
+        );
+
+        expect(find.text('5'), findsOneWidget);
+      });
+
+      testWidgets('does not display badge when unread count is 0', (
+        tester,
+      ) async {
+        final feed = createTestRssFeed(id: 'test-feed-id');
+        when(
+          mockFeedReaderProvider.getUnreadCount('test-feed-id'),
+        ).thenReturn(0);
+
+        await tester.pumpWidget(
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
+        );
+
+        // The badge container should not be visible
+        expect(find.text('0'), findsNothing);
+      });
+
+      testWidgets('displays 99+ when count exceeds 99', (tester) async {
+        final feed = createTestRssFeed(id: 'test-feed-id');
+        when(
+          mockFeedReaderProvider.getUnreadCount('test-feed-id'),
+        ).thenReturn(150);
+
+        await tester.pumpWidget(
+          buildTestWidget(FeedCard(feed: feed, onTap: () {}, onDelete: () {})),
+        );
+
+        expect(find.text('99+'), findsOneWidget);
       });
     });
   });

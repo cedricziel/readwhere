@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../domain/entities/catalog.dart';
 import '../../providers/catalogs_provider.dart';
+import '../../providers/feed_reader_provider.dart';
 import '../../router/routes.dart';
 import '../catalogs/widgets/add_catalog_dialog.dart';
 import 'widgets/feed_card.dart';
@@ -25,13 +26,20 @@ class _FeedsScreenState extends State<FeedsScreen> {
   @override
   void initState() {
     super.initState();
-    // Load catalogs when screen is first shown
+    // Load catalogs and unread counts when screen is first shown
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final catalogsProvider = Provider.of<CatalogsProvider>(
         context,
         listen: false,
       );
       catalogsProvider.loadCatalogs();
+
+      // Load unread counts for badge display
+      final feedReaderProvider = Provider.of<FeedReaderProvider>(
+        context,
+        listen: false,
+      );
+      feedReaderProvider.loadAllUnreadCounts();
     });
   }
 

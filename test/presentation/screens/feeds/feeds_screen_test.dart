@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:readwhere/presentation/providers/catalogs_provider.dart';
+import 'package:readwhere/presentation/providers/feed_reader_provider.dart';
 import 'package:readwhere/presentation/screens/feeds/feeds_screen.dart';
 import 'package:readwhere/presentation/screens/feeds/widgets/feed_card.dart';
 
@@ -11,21 +12,34 @@ import '../../../mocks/mock_repositories.mocks.dart';
 
 void main() {
   late MockCatalogsProvider mockCatalogsProvider;
+  late MockFeedReaderProvider mockFeedReaderProvider;
 
   setUp(() {
     mockCatalogsProvider = MockCatalogsProvider();
+    mockFeedReaderProvider = MockFeedReaderProvider();
 
-    // Default stubs
+    // Default stubs for CatalogsProvider
     when(mockCatalogsProvider.isLoading).thenReturn(false);
     when(mockCatalogsProvider.error).thenReturn(null);
     when(mockCatalogsProvider.catalogs).thenReturn([]);
     when(mockCatalogsProvider.loadCatalogs()).thenAnswer((_) async {});
+
+    // Default stubs for FeedReaderProvider
+    when(mockFeedReaderProvider.getUnreadCount(any)).thenReturn(0);
+    when(mockFeedReaderProvider.loadAllUnreadCounts()).thenAnswer((_) async {});
   });
 
   Widget buildTestWidget() {
     return MaterialApp(
-      home: ChangeNotifierProvider<CatalogsProvider>.value(
-        value: mockCatalogsProvider,
+      home: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<CatalogsProvider>.value(
+            value: mockCatalogsProvider,
+          ),
+          ChangeNotifierProvider<FeedReaderProvider>.value(
+            value: mockFeedReaderProvider,
+          ),
+        ],
         child: const FeedsScreen(),
       ),
     );
@@ -247,8 +261,15 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.light(),
-            home: ChangeNotifierProvider<CatalogsProvider>.value(
-              value: mockCatalogsProvider,
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider<CatalogsProvider>.value(
+                  value: mockCatalogsProvider,
+                ),
+                ChangeNotifierProvider<FeedReaderProvider>.value(
+                  value: mockFeedReaderProvider,
+                ),
+              ],
               child: const FeedsScreen(),
             ),
           ),
@@ -263,8 +284,15 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData.dark(),
-            home: ChangeNotifierProvider<CatalogsProvider>.value(
-              value: mockCatalogsProvider,
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider<CatalogsProvider>.value(
+                  value: mockCatalogsProvider,
+                ),
+                ChangeNotifierProvider<FeedReaderProvider>.value(
+                  value: mockFeedReaderProvider,
+                ),
+              ],
               child: const FeedsScreen(),
             ),
           ),

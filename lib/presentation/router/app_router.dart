@@ -6,6 +6,7 @@ import '../screens/catalogs/browse/catalog_browse_screen.dart';
 import '../screens/catalogs/browse/nextcloud_browser_screen.dart';
 import '../screens/catalogs/browse/rss_browse_screen.dart';
 import '../screens/feeds/feeds_screen.dart';
+import '../screens/feeds/article_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/reader/reader_screen.dart';
 import '../widgets/adaptive/adaptive_scaffold.dart';
@@ -200,6 +201,27 @@ GoRouter createAppRouter() {
           }
 
           return RssBrowseScreen(catalogId: catalogId);
+        },
+      ),
+
+      // Article route (full screen, for reading feed items)
+      GoRoute(
+        path: AppRoutes.article,
+        builder: (context, state) {
+          final feedId = state.pathParameters['feedId'];
+          final itemId = state.pathParameters['itemId'];
+          if (feedId == null ||
+              feedId.isEmpty ||
+              itemId == null ||
+              itemId.isEmpty) {
+            // Redirect to feeds if parameters missing
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.go(AppRoutes.feeds);
+            });
+            return const SizedBox.shrink();
+          }
+
+          return ArticleScreen(feedId: feedId, itemId: itemId);
         },
       ),
     ],

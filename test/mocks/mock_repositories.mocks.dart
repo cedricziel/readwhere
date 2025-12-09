@@ -18,6 +18,7 @@ import 'package:readwhere/data/services/opds_cache_service.dart' as _i25;
 import 'package:readwhere/domain/entities/book.dart' as _i2;
 import 'package:readwhere/domain/entities/bookmark.dart' as _i3;
 import 'package:readwhere/domain/entities/catalog.dart' as _i5;
+import 'package:readwhere/domain/entities/feed_item.dart' as _i38;
 import 'package:readwhere/domain/entities/import_result.dart' as _i8;
 import 'package:readwhere/domain/entities/reading_progress.dart' as _i4;
 import 'package:readwhere/domain/entities/reading_settings.dart' as _i15;
@@ -30,6 +31,8 @@ import 'package:readwhere/domain/repositories/reading_progress_repository.dart'
     as _i20;
 import 'package:readwhere/presentation/providers/catalogs_provider.dart'
     as _i35;
+import 'package:readwhere/presentation/providers/feed_reader_provider.dart'
+    as _i37;
 import 'package:readwhere/presentation/providers/library_provider.dart' as _i30;
 import 'package:readwhere/presentation/providers/settings_provider.dart'
     as _i32;
@@ -2486,6 +2489,192 @@ class MockUpdateProvider extends _i1.Mock implements _i36.UpdateProvider {
             returnValueForMissingStub: _i7.Future<void>.value(),
           )
           as _i7.Future<void>);
+
+  @override
+  void addListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#addListener, [listener]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void removeListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#removeListener, [listener]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void dispose() => super.noSuchMethod(
+    Invocation.method(#dispose, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+    Invocation.method(#notifyListeners, []),
+    returnValueForMissingStub: null,
+  );
+}
+
+/// A class which mocks [FeedReaderProvider].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockFeedReaderProvider extends _i1.Mock
+    implements _i37.FeedReaderProvider {
+  MockFeedReaderProvider() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  bool get hasError =>
+      (super.noSuchMethod(Invocation.getter(#hasError), returnValue: false)
+          as bool);
+
+  @override
+  bool get isLoading =>
+      (super.noSuchMethod(Invocation.getter(#isLoading), returnValue: false)
+          as bool);
+
+  @override
+  Map<String, int> get allUnreadCounts =>
+      (super.noSuchMethod(
+            Invocation.getter(#allUnreadCounts),
+            returnValue: <String, int>{},
+          )
+          as Map<String, int>);
+
+  @override
+  int get totalUnreadCount =>
+      (super.noSuchMethod(Invocation.getter(#totalUnreadCount), returnValue: 0)
+          as int);
+
+  @override
+  bool get hasListeners =>
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
+
+  @override
+  bool isFeedLoading(String? feedId) =>
+      (super.noSuchMethod(
+            Invocation.method(#isFeedLoading, [feedId]),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  List<_i38.FeedItem> getItems(String? feedId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getItems, [feedId]),
+            returnValue: <_i38.FeedItem>[],
+          )
+          as List<_i38.FeedItem>);
+
+  @override
+  int getUnreadCount(String? feedId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getUnreadCount, [feedId]),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  _i7.Future<void> loadFeedItems(String? feedId, {bool? unreadOnly = false}) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #loadFeedItems,
+              [feedId],
+              {#unreadOnly: unreadOnly},
+            ),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> refreshFeed(String? feedId, String? feedUrl) =>
+      (super.noSuchMethod(
+            Invocation.method(#refreshFeed, [feedId, feedUrl]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> loadAllUnreadCounts() =>
+      (super.noSuchMethod(
+            Invocation.method(#loadAllUnreadCounts, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> markAsRead(String? itemId) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAsRead, [itemId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> markAsUnread(String? itemId) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAsUnread, [itemId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> markAllAsRead(String? feedId) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAllAsRead, [feedId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> toggleStarred(String? itemId) =>
+      (super.noSuchMethod(
+            Invocation.method(#toggleStarred, [itemId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<_i38.FeedItem?> getItem(String? itemId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getItem, [itemId]),
+            returnValue: _i7.Future<_i38.FeedItem?>.value(),
+          )
+          as _i7.Future<_i38.FeedItem?>);
+
+  @override
+  _i7.Future<List<_i38.FeedItem>> getStarredItems() =>
+      (super.noSuchMethod(
+            Invocation.method(#getStarredItems, []),
+            returnValue: _i7.Future<List<_i38.FeedItem>>.value(
+              <_i38.FeedItem>[],
+            ),
+          )
+          as _i7.Future<List<_i38.FeedItem>>);
+
+  @override
+  _i7.Future<void> deleteItemsForFeed(String? feedId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteItemsForFeed, [feedId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  void clearError() => super.noSuchMethod(
+    Invocation.method(#clearError, []),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void addListener(_i31.VoidCallback? listener) => super.noSuchMethod(

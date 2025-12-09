@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../domain/entities/catalog.dart';
+import '../../../providers/feed_reader_provider.dart';
 
 /// A card widget displaying an RSS feed entry
 class FeedCard extends StatelessWidget {
@@ -28,20 +30,8 @@ class FeedCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // RSS icon
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.rss_feed,
-                  color: theme.colorScheme.onPrimaryContainer,
-                  size: 28,
-                ),
-              ),
+              // RSS icon with badge
+              _buildIconWithBadge(context, theme),
               const SizedBox(width: 16),
               // Feed info
               Expanded(
@@ -102,6 +92,60 @@ class FeedCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildIconWithBadge(BuildContext context, ThemeData theme) {
+    return Consumer<FeedReaderProvider>(
+      builder: (context, provider, child) {
+        final unreadCount = provider.getUnreadCount(feed.id);
+
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.rss_feed,
+                color: theme.colorScheme.onPrimaryContainer,
+                size: 28,
+              ),
+            ),
+            if (unreadCount > 0)
+              Positioned(
+                right: -6,
+                top: -6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
+                  child: Text(
+                    unreadCount > 99 ? '99+' : unreadCount.toString(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
