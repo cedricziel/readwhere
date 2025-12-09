@@ -148,9 +148,8 @@ class ReaderProvider extends ChangeNotifier {
       // Load bookmarks
       _bookmarks = await _bookmarkRepository.getBookmarksForBook(book.id);
 
-      // Open the book with the appropriate plugin
-      final plugins = _pluginRegistry.getPluginsByExtension(book.format);
-      final plugin = plugins.isNotEmpty ? plugins.first : null;
+      // Open the book with the appropriate plugin (checks magic bytes via canHandle)
+      final plugin = await _pluginRegistry.getPluginForFile(book.filePath);
       if (plugin != null) {
         _readerController = await plugin.openBook(book.filePath);
 
