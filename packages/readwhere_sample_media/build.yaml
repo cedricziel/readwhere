@@ -1,0 +1,9 @@
+builders:
+  sample_media_downloader:
+    import: "package:readwhere_sample_media/src/builder/sample_media_builder.dart"
+    builder_factories: ["sampleMediaBuilder"]
+    build_extensions:
+      "sample_media_trigger.txt":
+        - ".sample_media_marker"
+    auto_apply: none
+    build_to: cache

@@ -1,0 +1,7 @@
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+
+linter:
+  rules:
+    avoid_print: false  # This is a dev tool package, print is appropriate in CLI

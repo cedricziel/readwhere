@@ -1,0 +1,9 @@
+# Sample Media Trigger File
+#
+# This file triggers the sample_media_builder when build_runner runs.
+# Update the version below to force a re-download of sample media.
+#
+# Source: https://github.com/clach04/sample_reading_media
+# License: LGPL-2.1
+
+version: v0.2

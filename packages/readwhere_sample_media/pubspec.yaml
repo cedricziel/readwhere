@@ -1,0 +1,19 @@
+name: readwhere_sample_media
+description: Downloads sample test media for ReadWhere test packages via build_runner.
+version: 0.1.0
+repository: https://github.com/cedricziel/readwhere
+
+environment:
+  sdk: ^3.5.0
+
+resolution: workspace
+
+dependencies:
+  build: ^4.0.0
+  archive: ^4.0.7
+  http: ^1.2.0
+  path: ^1.9.1
+
+dev_dependencies:
+  test: ^1.25.0
+  build_runner: ^2.10.4
