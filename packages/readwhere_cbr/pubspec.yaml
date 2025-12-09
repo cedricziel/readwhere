@@ -13,7 +13,8 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  unrar_file: ^1.1.0
+  # NOTE: unrar_file removed - it only supports Android/iOS and causes
+  # MissingPluginException on desktop. Using command-line unrar instead.
   path: ^1.9.1
   equatable: ^2.0.7
   readwhere_cbz:

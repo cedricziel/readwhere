@@ -1,10 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:path/path.dart' as p;
 import 'package:readwhere_cbz/readwhere_cbz.dart' show naturalSort;
-import 'package:unrar_file/unrar_file.dart';
 
 import '../errors/cbr_exception.dart';
 
@@ -64,59 +62,43 @@ class CbrContainer {
     }
   }
 
-  /// Platform-aware RAR extraction.
+  /// Extract RAR archive using command-line unrar tool.
   ///
-  /// Strategy:
-  /// 1. Try command-line `unrar` first (works on all platforms if installed)
-  /// 2. If not available, try the unrar_file plugin (Android/iOS only)
-  /// 3. Provide helpful error messages for each platform
+  /// Requires unrar to be installed on the system.
   static Future<void> _extractRar(
     String filePath,
     String destPath, {
     String? password,
   }) async {
-    // First, try command-line unrar (available on all platforms if installed)
     final unrarPath = await _findUnrar();
-    if (unrarPath != null) {
-      await _extractWithCommandLine(
-        filePath,
-        destPath,
-        unrarPath: unrarPath,
-        password: password,
+    if (unrarPath == null) {
+      throw CbrExtractionException(
+        'unrar command not found.\n$_installInstructions',
       );
-      return;
     }
 
-    // Command-line not available, try plugin on mobile platforms
-    if (!_isDesktopPlatform()) {
-      try {
-        await _extractWithPlugin(filePath, destPath, password: password);
-        return;
-      } on MissingPluginException {
-        // Plugin not available on this platform, fall through to error
-      }
-    }
-
-    // No extraction method available
-    throw CbrExtractionException(
-      'No RAR extraction method available.\n'
-      '${_isDesktopPlatform() ? _desktopInstallInstructions : _mobileInstallInstructions}',
+    await _extractWithCommandLine(
+      filePath,
+      destPath,
+      unrarPath: unrarPath,
+      password: password,
     );
   }
 
-  static const _desktopInstallInstructions = '''
-Please install unrar:
-  macOS: brew install --cask rar
-         (If blocked by Gatekeeper, run: xattr -d com.apple.quarantine /opt/homebrew/bin/unrar)
-  Linux: sudo apt install unrar
-  Windows: Download from https://www.rarlab.com/rar_add.htm''';
+  static String get _installInstructions {
+    if (Platform.isMacOS) {
+      return '''Please install unrar:
+  brew install --cask rar
 
-  static const _mobileInstallInstructions =
-      'CBR support requires the unrar_file plugin which is not available on this platform.';
-
-  /// Check if running on a desktop platform.
-  static bool _isDesktopPlatform() {
-    return Platform.isMacOS || Platform.isLinux || Platform.isWindows;
+If blocked by Gatekeeper, run:
+  xattr -d com.apple.quarantine /opt/homebrew/bin/unrar''';
+    } else if (Platform.isLinux) {
+      return 'Please install unrar: sudo apt install unrar';
+    } else if (Platform.isWindows) {
+      return 'Please install unrar from https://www.rarlab.com/rar_add.htm';
+    } else {
+      return 'CBR files require the unrar command-line tool.';
+    }
   }
 
   /// Extract using command-line unrar tool.
@@ -194,22 +176,6 @@ Please install unrar:
     }
 
     return null;
-  }
-
-  /// Extract using the unrar_file plugin (Android/iOS only).
-  ///
-  /// Throws [MissingPluginException] if the plugin is not available.
-  static Future<void> _extractWithPlugin(
-    String filePath,
-    String destPath, {
-    String? password,
-  }) async {
-    // Call the plugin directly - will throw MissingPluginException on desktop
-    await UnrarFile.extract_rar(
-      filePath,
-      destPath,
-      password: password ?? '',
-    );
   }
 
   /// Opens a CBR file from a [File] object.

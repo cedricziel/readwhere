@@ -1205,14 +1205,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
-  unrar_file:
-    dependency: transitive
-    description:
-      name: unrar_file
-      sha256: "3560f36828f6050ddb904912b0a5f64a4cb4fd80aa9fd50cb55037e105c9c184"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.0"
   url_launcher:
     dependency: "direct main"
     description:
