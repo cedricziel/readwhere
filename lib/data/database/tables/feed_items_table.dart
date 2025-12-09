@@ -17,6 +17,8 @@ class FeedItemsTable {
   static const String columnIsRead = 'is_read';
   static const String columnIsStarred = 'is_starred';
   static const String columnFetchedAt = 'fetched_at';
+  static const String columnFullContent = 'full_content';
+  static const String columnContentScrapedAt = 'content_scraped_at';
 
   /// SQL query to create the feed_items table
   static String createTableQuery() {
@@ -34,6 +36,8 @@ class FeedItemsTable {
         $columnIsRead INTEGER DEFAULT 0,
         $columnIsStarred INTEGER DEFAULT 0,
         $columnFetchedAt INTEGER NOT NULL,
+        $columnFullContent TEXT,
+        $columnContentScrapedAt INTEGER,
         FOREIGN KEY ($columnFeedId) REFERENCES catalogs(id) ON DELETE CASCADE
       )
     ''';
@@ -56,5 +60,15 @@ class FeedItemsTable {
   /// Get all migration queries including indices
   static List<String> allMigrationQueries() {
     return [createTableQuery(), ...createIndices()];
+  }
+
+  /// Migration query to add full_content column (for database version upgrades)
+  static String addFullContentColumnQuery() {
+    return 'ALTER TABLE $tableName ADD COLUMN $columnFullContent TEXT';
+  }
+
+  /// Migration query to add content_scraped_at column (for database version upgrades)
+  static String addContentScrapedAtColumnQuery() {
+    return 'ALTER TABLE $tableName ADD COLUMN $columnContentScrapedAt INTEGER';
   }
 }

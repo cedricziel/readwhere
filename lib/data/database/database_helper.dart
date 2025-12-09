@@ -34,7 +34,9 @@ class DatabaseHelper {
   ///            for Nextcloud integration
   /// Version 6: Added plugin_cache table for unified plugin storage
   /// Version 7: Added feed_items table for RSS feed reader functionality
-  static const int _databaseVersion = 7;
+  /// Version 8: Added full_content and content_scraped_at columns to feed_items
+  ///            for article content scraping
+  static const int _databaseVersion = 8;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -158,6 +160,11 @@ class DatabaseHelper {
       for (final query in FeedItemsTable.allMigrationQueries()) {
         await db.execute(query);
       }
+    }
+    // Version 8: Add full_content and content_scraped_at columns to feed_items
+    if (oldVersion < 8) {
+      await db.execute(FeedItemsTable.addFullContentColumnQuery());
+      await db.execute(FeedItemsTable.addContentScrapedAtColumnQuery());
     }
   }
 

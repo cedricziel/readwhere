@@ -5,47 +5,50 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i7;
 import 'dart:io' as _i14;
-import 'dart:typed_data' as _i26;
-import 'dart:ui' as _i31;
+import 'dart:typed_data' as _i29;
+import 'dart:ui' as _i34;
 
-import 'package:flutter/material.dart' as _i33;
+import 'package:flutter/material.dart' as _i36;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i23;
+import 'package:mockito/src/dummies.dart' as _i25;
 import 'package:readwhere/core/services/update_service.dart' as _i17;
-import 'package:readwhere/data/database/database_helper.dart' as _i22;
-import 'package:readwhere/data/services/book_import_service.dart' as _i24;
-import 'package:readwhere/data/services/opds_cache_service.dart' as _i25;
+import 'package:readwhere/data/database/database_helper.dart' as _i24;
+import 'package:readwhere/data/services/article_scraper_service.dart' as _i28;
+import 'package:readwhere/data/services/book_import_service.dart' as _i26;
+import 'package:readwhere/data/services/opds_cache_service.dart' as _i27;
 import 'package:readwhere/domain/entities/book.dart' as _i2;
 import 'package:readwhere/domain/entities/bookmark.dart' as _i3;
 import 'package:readwhere/domain/entities/catalog.dart' as _i5;
-import 'package:readwhere/domain/entities/feed_item.dart' as _i38;
+import 'package:readwhere/domain/entities/feed_item.dart' as _i23;
 import 'package:readwhere/domain/entities/import_result.dart' as _i8;
 import 'package:readwhere/domain/entities/reading_progress.dart' as _i4;
 import 'package:readwhere/domain/entities/reading_settings.dart' as _i15;
 import 'package:readwhere/domain/repositories/book_repository.dart' as _i18;
 import 'package:readwhere/domain/repositories/bookmark_repository.dart' as _i19;
 import 'package:readwhere/domain/repositories/catalog_repository.dart' as _i21;
+import 'package:readwhere/domain/repositories/feed_item_repository.dart'
+    as _i22;
 import 'package:readwhere/domain/repositories/opds_cache_repository.dart'
     as _i10;
 import 'package:readwhere/domain/repositories/reading_progress_repository.dart'
     as _i20;
 import 'package:readwhere/presentation/providers/catalogs_provider.dart'
-    as _i35;
+    as _i38;
 import 'package:readwhere/presentation/providers/feed_reader_provider.dart'
-    as _i37;
-import 'package:readwhere/presentation/providers/library_provider.dart' as _i30;
+    as _i40;
+import 'package:readwhere/presentation/providers/library_provider.dart' as _i33;
 import 'package:readwhere/presentation/providers/settings_provider.dart'
-    as _i32;
-import 'package:readwhere/presentation/providers/update_provider.dart' as _i36;
-import 'package:readwhere_kavita/readwhere_kavita.dart' as _i27;
-import 'package:readwhere_kavita/src/models/kavita_progress.dart' as _i28;
+    as _i35;
+import 'package:readwhere/presentation/providers/update_provider.dart' as _i39;
+import 'package:readwhere_kavita/readwhere_kavita.dart' as _i30;
+import 'package:readwhere_kavita/src/models/kavita_progress.dart' as _i31;
 import 'package:readwhere_kavita/src/models/kavita_server_info.dart' as _i12;
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart' as _i16;
 import 'package:readwhere_opds/readwhere_opds.dart' as _i9;
 import 'package:readwhere_panel_detection/readwhere_panel_detection.dart'
-    as _i34;
+    as _i37;
 import 'package:readwhere_plugin/readwhere_plugin.dart' as _i11;
-import 'package:readwhere_rss/readwhere_rss.dart' as _i29;
+import 'package:readwhere_rss/readwhere_rss.dart' as _i32;
 import 'package:readwhere_rss/src/entities/rss_feed.dart' as _i13;
 import 'package:sqflite/sqflite.dart' as _i6;
 
@@ -433,10 +436,148 @@ class MockCatalogRepository extends _i1.Mock implements _i21.CatalogRepository {
           as _i7.Future<_i5.Catalog?>);
 }
 
+/// A class which mocks [FeedItemRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockFeedItemRepository extends _i1.Mock
+    implements _i22.FeedItemRepository {
+  MockFeedItemRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i7.Future<List<_i23.FeedItem>> getByFeedId(
+    String? feedId, {
+    bool? unreadOnly = false,
+    int? limit,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #getByFeedId,
+              [feedId],
+              {#unreadOnly: unreadOnly, #limit: limit},
+            ),
+            returnValue: _i7.Future<List<_i23.FeedItem>>.value(
+              <_i23.FeedItem>[],
+            ),
+          )
+          as _i7.Future<List<_i23.FeedItem>>);
+
+  @override
+  _i7.Future<_i23.FeedItem?> getById(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#getById, [id]),
+            returnValue: _i7.Future<_i23.FeedItem?>.value(),
+          )
+          as _i7.Future<_i23.FeedItem?>);
+
+  @override
+  _i7.Future<void> upsertItems(String? feedId, List<_i23.FeedItem>? items) =>
+      (super.noSuchMethod(
+            Invocation.method(#upsertItems, [feedId, items]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> markAsRead(String? itemId) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAsRead, [itemId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> markAsUnread(String? itemId) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAsUnread, [itemId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> markAllAsRead(String? feedId) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAllAsRead, [feedId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> toggleStarred(String? itemId) =>
+      (super.noSuchMethod(
+            Invocation.method(#toggleStarred, [itemId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<int> getUnreadCount(String? feedId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getUnreadCount, [feedId]),
+            returnValue: _i7.Future<int>.value(0),
+          )
+          as _i7.Future<int>);
+
+  @override
+  _i7.Future<Map<String, int>> getAllUnreadCounts() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAllUnreadCounts, []),
+            returnValue: _i7.Future<Map<String, int>>.value(<String, int>{}),
+          )
+          as _i7.Future<Map<String, int>>);
+
+  @override
+  _i7.Future<void> deleteOldItems(String? feedId, {int? keepCount = 100}) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #deleteOldItems,
+              [feedId],
+              {#keepCount: keepCount},
+            ),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> deleteByFeedId(String? feedId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteByFeedId, [feedId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<List<_i23.FeedItem>> getStarredItems() =>
+      (super.noSuchMethod(
+            Invocation.method(#getStarredItems, []),
+            returnValue: _i7.Future<List<_i23.FeedItem>>.value(
+              <_i23.FeedItem>[],
+            ),
+          )
+          as _i7.Future<List<_i23.FeedItem>>);
+
+  @override
+  _i7.Future<void> updateFullContent(String? itemId, String? fullContent) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateFullContent, [itemId, fullContent]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+}
+
 /// A class which mocks [DatabaseHelper].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockDatabaseHelper extends _i1.Mock implements _i22.DatabaseHelper {
+class MockDatabaseHelper extends _i1.Mock implements _i24.DatabaseHelper {
   MockDatabaseHelper() {
     _i1.throwOnMissingStub(this);
   }
@@ -495,7 +636,7 @@ class MockDatabaseHelper extends _i1.Mock implements _i22.DatabaseHelper {
       (super.noSuchMethod(
             Invocation.method(#getDatabasePath, []),
             returnValue: _i7.Future<String>.value(
-              _i23.dummyValue<String>(
+              _i25.dummyValue<String>(
                 this,
                 Invocation.method(#getDatabasePath, []),
               ),
@@ -524,7 +665,7 @@ class MockDatabase extends _i1.Mock implements _i6.Database {
   String get path =>
       (super.noSuchMethod(
             Invocation.getter(#path),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#path),
             ),
@@ -561,8 +702,8 @@ class MockDatabase extends _i1.Mock implements _i6.Database {
       (super.noSuchMethod(
             Invocation.method(#transaction, [action], {#exclusive: exclusive}),
             returnValue:
-                _i23.ifNotNull(
-                  _i23.dummyValueOrNull<T>(
+                _i25.ifNotNull(
+                  _i25.dummyValueOrNull<T>(
                     this,
                     Invocation.method(
                       #transaction,
@@ -590,8 +731,8 @@ class MockDatabase extends _i1.Mock implements _i6.Database {
       (super.noSuchMethod(
             Invocation.method(#readTransaction, [action]),
             returnValue:
-                _i23.ifNotNull(
-                  _i23.dummyValueOrNull<T>(
+                _i25.ifNotNull(
+                  _i25.dummyValueOrNull<T>(
                     this,
                     Invocation.method(#readTransaction, [action]),
                   ),
@@ -609,8 +750,8 @@ class MockDatabase extends _i1.Mock implements _i6.Database {
       (super.noSuchMethod(
             Invocation.method(#devInvokeMethod, [method, arguments]),
             returnValue:
-                _i23.ifNotNull(
-                  _i23.dummyValueOrNull<T>(
+                _i25.ifNotNull(
+                  _i25.dummyValueOrNull<T>(
                     this,
                     Invocation.method(#devInvokeMethod, [method, arguments]),
                   ),
@@ -632,8 +773,8 @@ class MockDatabase extends _i1.Mock implements _i6.Database {
       (super.noSuchMethod(
             Invocation.method(#devInvokeSqlMethod, [method, sql, arguments]),
             returnValue:
-                _i23.ifNotNull(
-                  _i23.dummyValueOrNull<T>(
+                _i25.ifNotNull(
+                  _i25.dummyValueOrNull<T>(
                     this,
                     Invocation.method(#devInvokeSqlMethod, [
                       method,
@@ -885,7 +1026,7 @@ class MockDatabase extends _i1.Mock implements _i6.Database {
 /// A class which mocks [BookImportService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockBookImportService extends _i1.Mock implements _i24.BookImportService {
+class MockBookImportService extends _i1.Mock implements _i26.BookImportService {
   MockBookImportService() {
     _i1.throwOnMissingStub(this);
   }
@@ -944,7 +1085,7 @@ class MockBookImportService extends _i1.Mock implements _i24.BookImportService {
 /// A class which mocks [OpdsCacheService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockOpdsCacheService extends _i1.Mock implements _i25.OpdsCacheService {
+class MockOpdsCacheService extends _i1.Mock implements _i27.OpdsCacheService {
   MockOpdsCacheService() {
     _i1.throwOnMissingStub(this);
   }
@@ -1060,6 +1201,24 @@ class MockOpdsCacheService extends _i1.Mock implements _i25.OpdsCacheService {
           as _i7.Future<void>);
 }
 
+/// A class which mocks [ArticleScraperService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockArticleScraperService extends _i1.Mock
+    implements _i28.ArticleScraperService {
+  MockArticleScraperService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i7.Future<_i28.ScrapedArticle?> scrapeArticle(String? url) =>
+      (super.noSuchMethod(
+            Invocation.method(#scrapeArticle, [url]),
+            returnValue: _i7.Future<_i28.ScrapedArticle?>.value(),
+          )
+          as _i7.Future<_i28.ScrapedArticle?>);
+}
+
 /// A class which mocks [ReaderPlugin].
 ///
 /// See the documentation for Mockito's code generation for more information.
@@ -1072,7 +1231,7 @@ class MockReaderPlugin extends _i1.Mock implements _i11.ReaderPlugin {
   String get id =>
       (super.noSuchMethod(
             Invocation.getter(#id),
-            returnValue: _i23.dummyValue<String>(this, Invocation.getter(#id)),
+            returnValue: _i25.dummyValue<String>(this, Invocation.getter(#id)),
           )
           as String);
 
@@ -1080,7 +1239,7 @@ class MockReaderPlugin extends _i1.Mock implements _i11.ReaderPlugin {
   String get name =>
       (super.noSuchMethod(
             Invocation.getter(#name),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#name),
             ),
@@ -1091,7 +1250,7 @@ class MockReaderPlugin extends _i1.Mock implements _i11.ReaderPlugin {
   String get description =>
       (super.noSuchMethod(
             Invocation.getter(#description),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#description),
             ),
@@ -1149,12 +1308,12 @@ class MockReaderPlugin extends _i1.Mock implements _i11.ReaderPlugin {
           as _i7.Future<_i11.ReaderController>);
 
   @override
-  _i7.Future<_i26.Uint8List?> extractCover(String? filePath) =>
+  _i7.Future<_i29.Uint8List?> extractCover(String? filePath) =>
       (super.noSuchMethod(
             Invocation.method(#extractCover, [filePath]),
-            returnValue: _i7.Future<_i26.Uint8List?>.value(),
+            returnValue: _i7.Future<_i29.Uint8List?>.value(),
           )
-          as _i7.Future<_i26.Uint8List?>);
+          as _i7.Future<_i29.Uint8List?>);
 }
 
 /// A class which mocks [ReaderController].
@@ -1169,7 +1328,7 @@ class MockReaderController extends _i1.Mock implements _i11.ReaderController {
   String get bookId =>
       (super.noSuchMethod(
             Invocation.getter(#bookId),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#bookId),
             ),
@@ -1291,7 +1450,7 @@ class MockOpdsClient extends _i1.Mock implements _i9.OpdsClient {
   String get userAgent =>
       (super.noSuchMethod(
             Invocation.getter(#userAgent),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#userAgent),
             ),
@@ -1382,7 +1541,7 @@ class MockOpdsClient extends _i1.Mock implements _i9.OpdsClient {
               {#filename: filename, #onProgress: onProgress},
             ),
             returnValue: _i7.Future<String>.value(
-              _i23.dummyValue<String>(
+              _i25.dummyValue<String>(
                 this,
                 Invocation.method(
                   #downloadBook,
@@ -1398,7 +1557,7 @@ class MockOpdsClient extends _i1.Mock implements _i9.OpdsClient {
   String resolveCoverUrl(String? baseUrl, String? coverPath) =>
       (super.noSuchMethod(
             Invocation.method(#resolveCoverUrl, [baseUrl, coverPath]),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.method(#resolveCoverUrl, [baseUrl, coverPath]),
             ),
@@ -1415,7 +1574,7 @@ class MockOpdsClient extends _i1.Mock implements _i9.OpdsClient {
 /// A class which mocks [KavitaApiClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockKavitaApiClient extends _i1.Mock implements _i27.KavitaApiClient {
+class MockKavitaApiClient extends _i1.Mock implements _i30.KavitaApiClient {
   MockKavitaApiClient() {
     _i1.throwOnMissingStub(this);
   }
@@ -1432,7 +1591,7 @@ class MockKavitaApiClient extends _i1.Mock implements _i27.KavitaApiClient {
   String get userAgent =>
       (super.noSuchMethod(
             Invocation.getter(#userAgent),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#userAgent),
             ),
@@ -1456,22 +1615,22 @@ class MockKavitaApiClient extends _i1.Mock implements _i27.KavitaApiClient {
           as _i7.Future<_i12.KavitaServerInfo>);
 
   @override
-  _i7.Future<_i28.KavitaProgress?> getProgress(
+  _i7.Future<_i31.KavitaProgress?> getProgress(
     String? serverUrl,
     String? apiKey,
     int? chapterId,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getProgress, [serverUrl, apiKey, chapterId]),
-            returnValue: _i7.Future<_i28.KavitaProgress?>.value(),
+            returnValue: _i7.Future<_i31.KavitaProgress?>.value(),
           )
-          as _i7.Future<_i28.KavitaProgress?>);
+          as _i7.Future<_i31.KavitaProgress?>);
 
   @override
   _i7.Future<void> updateProgress(
     String? serverUrl,
     String? apiKey,
-    _i28.KavitaProgress? progress,
+    _i31.KavitaProgress? progress,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#updateProgress, [serverUrl, apiKey, progress]),
@@ -1509,7 +1668,7 @@ class MockKavitaApiClient extends _i1.Mock implements _i27.KavitaApiClient {
 /// A class which mocks [RssClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockRssClient extends _i1.Mock implements _i29.RssClient {
+class MockRssClient extends _i1.Mock implements _i32.RssClient {
   MockRssClient() {
     _i1.throwOnMissingStub(this);
   }
@@ -1526,7 +1685,7 @@ class MockRssClient extends _i1.Mock implements _i29.RssClient {
   String get userAgent =>
       (super.noSuchMethod(
             Invocation.getter(#userAgent),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#userAgent),
             ),
@@ -1644,7 +1803,7 @@ class MockRssClient extends _i1.Mock implements _i29.RssClient {
 /// A class which mocks [LibraryProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockLibraryProvider extends _i1.Mock implements _i30.LibraryProvider {
+class MockLibraryProvider extends _i1.Mock implements _i33.LibraryProvider {
   MockLibraryProvider() {
     _i1.throwOnMissingStub(this);
   }
@@ -1660,26 +1819,26 @@ class MockLibraryProvider extends _i1.Mock implements _i30.LibraryProvider {
           as bool);
 
   @override
-  _i30.LibrarySortOrder get sortOrder =>
+  _i33.LibrarySortOrder get sortOrder =>
       (super.noSuchMethod(
             Invocation.getter(#sortOrder),
-            returnValue: _i30.LibrarySortOrder.recentlyAdded,
+            returnValue: _i33.LibrarySortOrder.recentlyAdded,
           )
-          as _i30.LibrarySortOrder);
+          as _i33.LibrarySortOrder);
 
   @override
-  _i30.LibraryViewMode get viewMode =>
+  _i33.LibraryViewMode get viewMode =>
       (super.noSuchMethod(
             Invocation.getter(#viewMode),
-            returnValue: _i30.LibraryViewMode.grid,
+            returnValue: _i33.LibraryViewMode.grid,
           )
-          as _i30.LibraryViewMode);
+          as _i33.LibraryViewMode);
 
   @override
   String get searchQuery =>
       (super.noSuchMethod(
             Invocation.getter(#searchQuery),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#searchQuery),
             ),
@@ -1754,13 +1913,13 @@ class MockLibraryProvider extends _i1.Mock implements _i30.LibraryProvider {
           as _i7.Future<void>);
 
   @override
-  void setSortOrder(_i30.LibrarySortOrder? order) => super.noSuchMethod(
+  void setSortOrder(_i33.LibrarySortOrder? order) => super.noSuchMethod(
     Invocation.method(#setSortOrder, [order]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void setViewMode(_i30.LibraryViewMode? mode) => super.noSuchMethod(
+  void setViewMode(_i33.LibraryViewMode? mode) => super.noSuchMethod(
     Invocation.method(#setViewMode, [mode]),
     returnValueForMissingStub: null,
   );
@@ -1798,13 +1957,13 @@ class MockLibraryProvider extends _i1.Mock implements _i30.LibraryProvider {
           as List<_i2.Book>);
 
   @override
-  void addListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#addListener, [listener]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void removeListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );
@@ -1825,18 +1984,18 @@ class MockLibraryProvider extends _i1.Mock implements _i30.LibraryProvider {
 /// A class which mocks [SettingsProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSettingsProvider extends _i1.Mock implements _i32.SettingsProvider {
+class MockSettingsProvider extends _i1.Mock implements _i35.SettingsProvider {
   MockSettingsProvider() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i33.ThemeMode get themeMode =>
+  _i36.ThemeMode get themeMode =>
       (super.noSuchMethod(
             Invocation.getter(#themeMode),
-            returnValue: _i33.ThemeMode.system,
+            returnValue: _i36.ThemeMode.system,
           )
-          as _i33.ThemeMode);
+          as _i36.ThemeMode);
 
   @override
   _i15.ReadingSettings get defaultReadingSettings =>
@@ -1853,7 +2012,7 @@ class MockSettingsProvider extends _i1.Mock implements _i32.SettingsProvider {
   String get booksDirectory =>
       (super.noSuchMethod(
             Invocation.getter(#booksDirectory),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#booksDirectory),
             ),
@@ -1882,12 +2041,12 @@ class MockSettingsProvider extends _i1.Mock implements _i32.SettingsProvider {
           as bool);
 
   @override
-  _i34.ReadingDirection get comicReadingDirection =>
+  _i37.ReadingDirection get comicReadingDirection =>
       (super.noSuchMethod(
             Invocation.getter(#comicReadingDirection),
-            returnValue: _i34.ReadingDirection.leftToRight,
+            returnValue: _i37.ReadingDirection.leftToRight,
           )
-          as _i34.ReadingDirection);
+          as _i37.ReadingDirection);
 
   @override
   bool get comicPanelModeEnabled =>
@@ -1917,7 +2076,7 @@ class MockSettingsProvider extends _i1.Mock implements _i32.SettingsProvider {
           as _i7.Future<void>);
 
   @override
-  _i7.Future<void> setThemeMode(_i33.ThemeMode? mode) =>
+  _i7.Future<void> setThemeMode(_i36.ThemeMode? mode) =>
       (super.noSuchMethod(
             Invocation.method(#setThemeMode, [mode]),
             returnValue: _i7.Future<void>.value(),
@@ -1989,7 +2148,7 @@ class MockSettingsProvider extends _i1.Mock implements _i32.SettingsProvider {
           as _i7.Future<void>);
 
   @override
-  _i7.Future<void> setTextAlign(_i31.TextAlign? alignment) =>
+  _i7.Future<void> setTextAlign(_i34.TextAlign? alignment) =>
       (super.noSuchMethod(
             Invocation.method(#setTextAlign, [alignment]),
             returnValue: _i7.Future<void>.value(),
@@ -2052,7 +2211,7 @@ class MockSettingsProvider extends _i1.Mock implements _i32.SettingsProvider {
           as _i7.Future<void>);
 
   @override
-  _i7.Future<void> setComicReadingDirection(_i34.ReadingDirection? direction) =>
+  _i7.Future<void> setComicReadingDirection(_i37.ReadingDirection? direction) =>
       (super.noSuchMethod(
             Invocation.method(#setComicReadingDirection, [direction]),
             returnValue: _i7.Future<void>.value(),
@@ -2097,13 +2256,13 @@ class MockSettingsProvider extends _i1.Mock implements _i32.SettingsProvider {
           as _i7.Future<void>);
 
   @override
-  void addListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#addListener, [listener]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void removeListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );
@@ -2124,7 +2283,7 @@ class MockSettingsProvider extends _i1.Mock implements _i32.SettingsProvider {
 /// A class which mocks [CatalogsProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockCatalogsProvider extends _i1.Mock implements _i35.CatalogsProvider {
+class MockCatalogsProvider extends _i1.Mock implements _i38.CatalogsProvider {
   MockCatalogsProvider() {
     _i1.throwOnMissingStub(this);
   }
@@ -2372,13 +2531,13 @@ class MockCatalogsProvider extends _i1.Mock implements _i35.CatalogsProvider {
   );
 
   @override
-  void addListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#addListener, [listener]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void removeListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );
@@ -2399,7 +2558,7 @@ class MockCatalogsProvider extends _i1.Mock implements _i35.CatalogsProvider {
 /// A class which mocks [UpdateProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockUpdateProvider extends _i1.Mock implements _i36.UpdateProvider {
+class MockUpdateProvider extends _i1.Mock implements _i39.UpdateProvider {
   MockUpdateProvider() {
     _i1.throwOnMissingStub(this);
   }
@@ -2429,7 +2588,7 @@ class MockUpdateProvider extends _i1.Mock implements _i36.UpdateProvider {
   String get releasesUrl =>
       (super.noSuchMethod(
             Invocation.getter(#releasesUrl),
-            returnValue: _i23.dummyValue<String>(
+            returnValue: _i25.dummyValue<String>(
               this,
               Invocation.getter(#releasesUrl),
             ),
@@ -2491,13 +2650,13 @@ class MockUpdateProvider extends _i1.Mock implements _i36.UpdateProvider {
           as _i7.Future<void>);
 
   @override
-  void addListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#addListener, [listener]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void removeListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );
@@ -2519,7 +2678,7 @@ class MockUpdateProvider extends _i1.Mock implements _i36.UpdateProvider {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockFeedReaderProvider extends _i1.Mock
-    implements _i37.FeedReaderProvider {
+    implements _i40.FeedReaderProvider {
   MockFeedReaderProvider() {
     _i1.throwOnMissingStub(this);
   }
@@ -2561,12 +2720,20 @@ class MockFeedReaderProvider extends _i1.Mock
           as bool);
 
   @override
-  List<_i38.FeedItem> getItems(String? feedId) =>
+  bool isScrapingItem(String? itemId) =>
+      (super.noSuchMethod(
+            Invocation.method(#isScrapingItem, [itemId]),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  List<_i23.FeedItem> getItems(String? feedId) =>
       (super.noSuchMethod(
             Invocation.method(#getItems, [feedId]),
-            returnValue: <_i38.FeedItem>[],
+            returnValue: <_i23.FeedItem>[],
           )
-          as List<_i38.FeedItem>);
+          as List<_i23.FeedItem>);
 
   @override
   int getUnreadCount(String? feedId) =>
@@ -2644,22 +2811,22 @@ class MockFeedReaderProvider extends _i1.Mock
           as _i7.Future<void>);
 
   @override
-  _i7.Future<_i38.FeedItem?> getItem(String? itemId) =>
+  _i7.Future<_i23.FeedItem?> getItem(String? itemId) =>
       (super.noSuchMethod(
             Invocation.method(#getItem, [itemId]),
-            returnValue: _i7.Future<_i38.FeedItem?>.value(),
+            returnValue: _i7.Future<_i23.FeedItem?>.value(),
           )
-          as _i7.Future<_i38.FeedItem?>);
+          as _i7.Future<_i23.FeedItem?>);
 
   @override
-  _i7.Future<List<_i38.FeedItem>> getStarredItems() =>
+  _i7.Future<List<_i23.FeedItem>> getStarredItems() =>
       (super.noSuchMethod(
             Invocation.method(#getStarredItems, []),
-            returnValue: _i7.Future<List<_i38.FeedItem>>.value(
-              <_i38.FeedItem>[],
+            returnValue: _i7.Future<List<_i23.FeedItem>>.value(
+              <_i23.FeedItem>[],
             ),
           )
-          as _i7.Future<List<_i38.FeedItem>>);
+          as _i7.Future<List<_i23.FeedItem>>);
 
   @override
   _i7.Future<void> deleteItemsForFeed(String? feedId) =>
@@ -2677,13 +2844,21 @@ class MockFeedReaderProvider extends _i1.Mock
   );
 
   @override
-  void addListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  _i7.Future<_i23.FeedItem?> fetchFullContent(String? feedId, String? itemId) =>
+      (super.noSuchMethod(
+            Invocation.method(#fetchFullContent, [feedId, itemId]),
+            returnValue: _i7.Future<_i23.FeedItem?>.value(),
+          )
+          as _i7.Future<_i23.FeedItem?>);
+
+  @override
+  void addListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#addListener, [listener]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void removeListener(_i31.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i34.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );

@@ -234,4 +234,19 @@ class FeedItemRepositoryImpl implements FeedItemRepository {
     );
     return maps.map((map) => FeedItemModel.fromMap(map).toEntity()).toList();
   }
+
+  @override
+  Future<void> updateFullContent(String itemId, String fullContent) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      FeedItemsTable.tableName,
+      {
+        FeedItemsTable.columnFullContent: fullContent,
+        FeedItemsTable.columnContentScrapedAt:
+            DateTime.now().millisecondsSinceEpoch,
+      },
+      where: '${FeedItemsTable.columnId} = ?',
+      whereArgs: [itemId],
+    );
+  }
 }

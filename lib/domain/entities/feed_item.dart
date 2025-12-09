@@ -18,6 +18,12 @@ class FeedItem {
   /// Original enclosures from the RSS item (for download functionality)
   final List<RssEnclosure> enclosures;
 
+  /// Full article content scraped from the linked webpage
+  final String? fullContent;
+
+  /// When the full content was scraped (null if not yet scraped)
+  final DateTime? contentScrapedAt;
+
   const FeedItem({
     required this.id,
     required this.feedId,
@@ -32,13 +38,23 @@ class FeedItem {
     this.isStarred = false,
     required this.fetchedAt,
     this.enclosures = const [],
+    this.fullContent,
+    this.contentScrapedAt,
   });
 
-  /// The content to display - prefers full content over description
-  String get displayContent => content ?? description ?? '';
+  /// The content to display - prefers scraped > content:encoded > description
+  String get displayContent => fullContent ?? content ?? description ?? '';
 
   /// Whether this item has any content to display
-  bool get hasContent => content != null || description != null;
+  bool get hasContent =>
+      fullContent != null || content != null || description != null;
+
+  /// Whether this item has scraped full content
+  bool get hasFullContent => fullContent != null;
+
+  /// Whether this item needs content scraping (has link but no full content)
+  bool get needsScraping =>
+      fullContent == null && content == null && link != null;
 
   /// Whether this item has downloadable enclosures
   bool get hasEnclosures => enclosures.isNotEmpty;
@@ -82,6 +98,8 @@ class FeedItem {
     bool? isStarred,
     DateTime? fetchedAt,
     List<RssEnclosure>? enclosures,
+    String? fullContent,
+    DateTime? contentScrapedAt,
   }) {
     return FeedItem(
       id: id ?? this.id,
@@ -97,6 +115,8 @@ class FeedItem {
       isStarred: isStarred ?? this.isStarred,
       fetchedAt: fetchedAt ?? this.fetchedAt,
       enclosures: enclosures ?? this.enclosures,
+      fullContent: fullContent ?? this.fullContent,
+      contentScrapedAt: contentScrapedAt ?? this.contentScrapedAt,
     );
   }
 

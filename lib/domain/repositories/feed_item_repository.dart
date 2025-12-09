@@ -54,4 +54,10 @@ abstract class FeedItemRepository {
 
   /// Get starred items across all feeds
   Future<List<FeedItem>> getStarredItems();
+
+  /// Update the full content of an item after scraping
+  ///
+  /// [itemId] - The ID of the item to update
+  /// [fullContent] - The scraped HTML content
+  Future<void> updateFullContent(String itemId, String fullContent);
 }

@@ -21,6 +21,7 @@ import '../../data/repositories/catalog_repository_impl.dart';
 import '../../data/repositories/opds_cache_repository_impl.dart';
 import '../../data/repositories/reading_progress_repository_impl.dart';
 import '../../data/services/book_import_service.dart';
+import '../../data/services/article_scraper_service.dart';
 import '../../data/services/opds_cache_service.dart';
 import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
@@ -165,6 +166,10 @@ Future<void> setupServiceLocator() async {
     () => OpdsCacheService(opdsClient: sl(), cacheRepository: sl()),
   );
 
+  sl.registerLazySingleton<ArticleScraperService>(
+    () => ArticleScraperService(http.Client()),
+  );
+
   // Nextcloud services (from readwhere_nextcloud package)
   sl.registerLazySingleton<NextcloudCredentialStorage>(
     () => SecureCredentialStorage(),
@@ -285,7 +290,11 @@ Future<void> setupServiceLocator() async {
   );
 
   sl.registerLazySingleton<FeedReaderProvider>(
-    () => FeedReaderProvider(feedItemRepository: sl(), rssClient: sl()),
+    () => FeedReaderProvider(
+      feedItemRepository: sl(),
+      rssClient: sl(),
+      articleScraperService: sl(),
+    ),
   );
 
   // Update Service

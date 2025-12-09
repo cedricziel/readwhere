@@ -19,6 +19,8 @@ class FeedItemModel extends FeedItem {
     super.isStarred,
     required super.fetchedAt,
     super.enclosures,
+    super.fullContent,
+    super.contentScrapedAt,
   });
 
   /// Create a FeedItemModel from a Map (SQLite row)
@@ -44,6 +46,12 @@ class FeedItemModel extends FeedItem {
       ),
       // Enclosures are not stored in the database - they come from the RSS feed
       enclosures: const [],
+      fullContent: map[FeedItemsTable.columnFullContent] as String?,
+      contentScrapedAt: map[FeedItemsTable.columnContentScrapedAt] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              map[FeedItemsTable.columnContentScrapedAt] as int,
+            )
+          : null,
     );
   }
 
@@ -66,6 +74,8 @@ class FeedItemModel extends FeedItem {
       isStarred: item.isStarred,
       fetchedAt: item.fetchedAt,
       enclosures: item.enclosures,
+      fullContent: item.fullContent,
+      contentScrapedAt: item.contentScrapedAt,
     );
   }
 
@@ -111,6 +121,9 @@ class FeedItemModel extends FeedItem {
       FeedItemsTable.columnIsRead: isRead ? 1 : 0,
       FeedItemsTable.columnIsStarred: isStarred ? 1 : 0,
       FeedItemsTable.columnFetchedAt: fetchedAt.millisecondsSinceEpoch,
+      FeedItemsTable.columnFullContent: fullContent,
+      FeedItemsTable.columnContentScrapedAt:
+          contentScrapedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -130,6 +143,8 @@ class FeedItemModel extends FeedItem {
       isStarred: isStarred,
       fetchedAt: fetchedAt,
       enclosures: enclosures,
+      fullContent: fullContent,
+      contentScrapedAt: contentScrapedAt,
     );
   }
 }

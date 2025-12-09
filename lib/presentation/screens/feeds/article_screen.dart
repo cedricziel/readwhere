@@ -27,6 +27,8 @@ class ArticleScreen extends StatefulWidget {
 class _ArticleScreenState extends State<ArticleScreen> {
   FeedItem? _item;
   bool _isLoading = true;
+  bool _isScraping = false;
+  bool _scrapingFailed = false;
 
   @override
   void initState() {
@@ -47,6 +49,37 @@ class _ArticleScreenState extends State<ArticleScreen> {
       setState(() {
         _item = item;
         _isLoading = false;
+      });
+
+      // If item needs scraping, fetch full content automatically
+      if (item != null && item.needsScraping) {
+        _fetchFullContent();
+      }
+    }
+  }
+
+  Future<void> _fetchFullContent() async {
+    if (_item == null || _isScraping) return;
+
+    setState(() {
+      _isScraping = true;
+      _scrapingFailed = false;
+    });
+
+    final provider = Provider.of<FeedReaderProvider>(context, listen: false);
+    final updatedItem = await provider.fetchFullContent(
+      widget.feedId,
+      widget.itemId,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isScraping = false;
+        if (updatedItem != null) {
+          _item = updatedItem;
+        } else {
+          _scrapingFailed = true;
+        }
       });
     }
   }
@@ -294,7 +327,22 @@ class _ArticleScreenState extends State<ArticleScreen> {
           const SizedBox(height: 16),
 
           // Article content
-          if (_item!.hasContent)
+          if (_isScraping)
+            Center(
+              child: Column(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading full article...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (_item!.hasContent)
             HtmlWidget(
               _item!.displayContent,
               textStyle: Theme.of(context).textTheme.bodyLarge,
@@ -305,6 +353,43 @@ class _ArticleScreenState extends State<ArticleScreen> {
                 }
                 return true;
               },
+            )
+          else if (_scrapingFailed)
+            Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Could not load article',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: _fetchFullContent,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try again'),
+                      ),
+                      const SizedBox(width: 12),
+                      if (_item?.link != null)
+                        FilledButton.icon(
+                          onPressed: _openInBrowser,
+                          icon: const Icon(Icons.open_in_browser),
+                          label: const Text('Open in browser'),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             )
           else
             Center(

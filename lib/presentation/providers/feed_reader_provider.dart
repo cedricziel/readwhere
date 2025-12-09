@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:readwhere_rss/readwhere_rss.dart';
 
 import '../../data/models/feed_item_model.dart';
+import '../../data/services/article_scraper_service.dart';
 import '../../domain/entities/feed_item.dart';
 import '../../domain/repositories/feed_item_repository.dart';
 
@@ -12,20 +13,25 @@ import '../../domain/repositories/feed_item_repository.dart';
 /// - Tracking read/unread state
 /// - Starring items
 /// - Unread counts for badges
+/// - Scraping full article content
 class FeedReaderProvider extends ChangeNotifier {
   final FeedItemRepository _feedItemRepository;
   final RssClient _rssClient;
+  final ArticleScraperService _articleScraperService;
 
   FeedReaderProvider({
     required FeedItemRepository feedItemRepository,
     required RssClient rssClient,
+    required ArticleScraperService articleScraperService,
   }) : _feedItemRepository = feedItemRepository,
-       _rssClient = rssClient;
+       _rssClient = rssClient,
+       _articleScraperService = articleScraperService;
 
   // State
   final Map<String, List<FeedItem>> _itemsByFeed = {};
   final Map<String, int> _unreadCounts = {};
   final Set<String> _loadingFeeds = {};
+  final Set<String> _scrapingItems = {};
   String? _error;
 
   // Getters
@@ -37,6 +43,9 @@ class FeedReaderProvider extends ChangeNotifier {
 
   /// Check if a specific feed is loading
   bool isFeedLoading(String feedId) => _loadingFeeds.contains(feedId);
+
+  /// Check if a specific item is being scraped
+  bool isScrapingItem(String itemId) => _scrapingItems.contains(itemId);
 
   /// Get items for a specific feed
   List<FeedItem> getItems(String feedId) {
@@ -273,5 +282,75 @@ class FeedReaderProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // ===== Content Scraping =====
+
+  /// Fetch full article content from the linked webpage
+  ///
+  /// Returns the updated FeedItem with fullContent, or null if scraping failed.
+  /// The scraping is performed asynchronously and the result is cached in the database.
+  Future<FeedItem?> fetchFullContent(String feedId, String itemId) async {
+    // Check if already scraping
+    if (_scrapingItems.contains(itemId)) {
+      return null;
+    }
+
+    // Get the item
+    FeedItem? item;
+    final items = _itemsByFeed[feedId];
+    if (items != null) {
+      item = items.where((i) => i.id == itemId).firstOrNull;
+    }
+    item ??= await _feedItemRepository.getById(itemId);
+
+    if (item == null || item.link == null) {
+      return null;
+    }
+
+    // If already has full content, return it
+    if (item.hasFullContent) {
+      return item;
+    }
+
+    _scrapingItems.add(itemId);
+    notifyListeners();
+
+    try {
+      // Scrape the article
+      final scraped = await _articleScraperService.scrapeArticle(item.link!);
+
+      if (scraped == null || scraped.content.isEmpty) {
+        debugPrint('FeedReaderProvider: Scraping returned no content');
+        return null;
+      }
+
+      // Save to database
+      await _feedItemRepository.updateFullContent(itemId, scraped.content);
+
+      // Update local state
+      final updatedItem = item.copyWith(
+        fullContent: scraped.content,
+        contentScrapedAt: DateTime.now(),
+      );
+
+      // Update in memory cache
+      if (_itemsByFeed.containsKey(feedId)) {
+        final items = _itemsByFeed[feedId]!;
+        final index = items.indexWhere((i) => i.id == itemId);
+        if (index != -1) {
+          _itemsByFeed[feedId] = List.from(items)..[index] = updatedItem;
+        }
+      }
+
+      notifyListeners();
+      return updatedItem;
+    } catch (e) {
+      debugPrint('FeedReaderProvider.fetchFullContent error: $e');
+      return null;
+    } finally {
+      _scrapingItems.remove(itemId);
+      notifyListeners();
+    }
   }
 }
