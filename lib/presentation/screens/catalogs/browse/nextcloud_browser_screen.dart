@@ -22,7 +22,10 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCatalog();
+    // Defer loading to avoid calling notifyListeners during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCatalog();
+    });
   }
 
   Future<void> _loadCatalog() async {
