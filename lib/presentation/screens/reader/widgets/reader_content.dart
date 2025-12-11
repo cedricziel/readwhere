@@ -41,6 +41,14 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
     milliseconds: 300,
   ); // Max tap duration
 
+  @override
+  void didUpdateWidget(covariant ReaderContentWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset pointer tracking state when widget updates to prevent stale state
+    _pointerDownPosition = null;
+    _pointerDownTime = null;
+  }
+
   void _handlePointerDown(PointerDownEvent event) {
     _pointerDownPosition = event.position;
     _pointerDownTime = DateTime.now();
@@ -60,6 +68,12 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
     }
 
     // Reset state
+    _pointerDownPosition = null;
+    _pointerDownTime = null;
+  }
+
+  void _handlePointerCancel(PointerCancelEvent event) {
+    // Reset state when pointer events are cancelled (e.g., gesture arena conflict)
     _pointerDownPosition = null;
     _pointerDownTime = null;
   }
@@ -135,6 +149,7 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
           behavior: HitTestBehavior.translucent,
           onPointerDown: _handlePointerDown,
           onPointerUp: _handlePointerUp,
+          onPointerCancel: _handlePointerCancel,
           child: SelectionArea(
             // Use a key that changes when chapter or content changes to avoid
             // Flutter framework bug with stale selection indices (issue #123456).
