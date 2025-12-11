@@ -1,0 +1,12 @@
+# Test configuration for readwhere_fanfictionde
+#
+# Integration tests are tagged with @Tags(['integration']) and excluded by default.
+# Run them with: dart test --tags=integration
+
+tags:
+  integration:
+    # Integration tests hit the live website and can be slow
+    timeout: 5m
+
+# By default, exclude integration tests from normal test runs
+# This prevents CI from failing due to network issues
