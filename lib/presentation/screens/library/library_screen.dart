@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../providers/library_provider.dart';
+import '../../widgets/common/app_logo.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../router/routes.dart';
@@ -88,6 +89,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
   /// Builds the app bar with title, search, view toggle, and sort menu
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      leading: _isSearching
+          ? null
+          : const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: AppLogo(size: 40),
+            ),
       title: _isSearching
           ? TextField(
               controller: _searchController,

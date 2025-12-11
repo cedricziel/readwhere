@@ -160,6 +160,7 @@ dev_dependencies:
   build_runner: ^2.10.4
   dart_pre_commit: ^6.1.0
   sqflite_common_ffi: ^2.4.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -168,3 +169,39 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/scripts/
+
+# App icon configuration
+flutter_launcher_icons:
+  image_path: "assets/icons/app_icon.png"
+
+  # Android
+  android: true
+  adaptive_icon_background: "#6366F1"
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
+
+  # iOS
+  ios: true
+  remove_alpha_ios: true
+
+  # macOS
+  macos:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+
+  # Web
+  web:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+    background_color: "#6366F1"
+    theme_color: "#6366F1"
+
+  # Windows
+  windows:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+    icon_size: 256
+
+  # Linux
+  linux:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
