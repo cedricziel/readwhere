@@ -73,6 +73,54 @@ void main() {
         expect(result[1].name, equals('One Piece'));
       });
 
+      test('parses real fanfiction.de HTML format with single path segment',
+          () {
+        // This is the actual HTML format from fanfiction.de category pages
+        // Fandoms have format: /FandomName/c/ID/1/updatedate
+        const html = '''
+          <html><body>
+            <div class="grid-rowcount3 padded-rows">
+              <div>
+                <a class="" href="/hack/c/102136000/1/updatedate">
+                  <span class="far fa-folder fa-fw fa-ffcustom"></span>.hack//
+                </a>
+                <span class="badge badge-comment badge-spacer">26</span>
+              </div>
+              <div>
+                <a class="" href="/Anima/c/102157000/1/updatedate">
+                  <span class="far fa-folder fa-fw fa-ffcustom"></span>+Anima
+                </a>
+                <span class="badge badge-comment badge-spacer">21</span>
+              </div>
+              <div>
+                <a class="" href="/07-Ghost/c/102203000/1/updatedate">
+                  <span class="far fa-folder fa-fw fa-ffcustom"></span>07 Ghost
+                </a>
+                <span class="badge badge-comment badge-spacer">31</span>
+              </div>
+            </div>
+          </body></html>
+        ''';
+
+        final result = parser.parseFandoms(html, '102000000');
+
+        expect(result, hasLength(3), reason: 'Should parse all 3 fandoms');
+
+        expect(result[0].id, equals('102136000'));
+        expect(result[0].name, equals('.hack//'));
+        expect(result[0].storyCount, equals(26));
+        // URL should be cleaned (no /1/updatedate suffix)
+        expect(result[0].url, endsWith('/hack/c/102136000'));
+
+        expect(result[1].id, equals('102157000'));
+        expect(result[1].name, equals('+Anima'));
+        expect(result[1].storyCount, equals(21));
+
+        expect(result[2].id, equals('102203000'));
+        expect(result[2].name, equals('07 Ghost'));
+        expect(result[2].storyCount, equals(31));
+      });
+
       test('extracts story count from badge', () {
         const html = '''
           <html><body>
@@ -87,6 +135,22 @@ void main() {
 
         expect(result, hasLength(1));
         expect(result.first.storyCount, equals(5000));
+      });
+
+      test('handles mixed URL formats', () {
+        // Some links have two path segments, some have one
+        const html = '''
+          <html><body>
+            <a href="/Anime-Manga/Naruto/c/102001000">Naruto</a>
+            <a href="/hack/c/102136000/1/updatedate">.hack//</a>
+          </body></html>
+        ''';
+
+        final result = parser.parseFandoms(html, '99999');
+
+        expect(result, hasLength(2));
+        expect(result[0].id, equals('102001000'));
+        expect(result[1].id, equals('102136000'));
       });
     });
 
