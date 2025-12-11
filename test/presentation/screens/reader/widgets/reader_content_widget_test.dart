@@ -344,6 +344,31 @@ void main() {
         // The HTML widget should render the paragraph text
         expect(find.text('Chapter content here'), findsOneWidget);
       });
+
+      testWidgets('taps work even with minimal HTML content', (tester) async {
+        // Simulate minimal content like a copyright page with mostly boilerplate
+        when(mockReaderProvider.currentChapterHtml).thenReturn(
+          '<!DOCTYPE html><html><head><title>Copyright</title></head>'
+          '<body><p>©</p></body></html>',
+        );
+
+        var toggleControlsCalled = false;
+
+        await tester.pumpWidget(
+          buildTestWidget(onToggleControls: () => toggleControlsCalled = true),
+        );
+        await tester.pumpAndSettle();
+
+        // Tap center of screen - should still work due to SizedBox.expand
+        await tapAtRelativeX(tester, 0.50);
+
+        expect(
+          toggleControlsCalled,
+          isTrue,
+          reason:
+              'Tap should work even with minimal content (SizedBox.expand fix)',
+        );
+      });
     });
   });
 }

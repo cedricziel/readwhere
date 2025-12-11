@@ -104,9 +104,29 @@ class _ReaderScreenState extends State<ReaderScreen> {
   /// Handle keyboard events for reader shortcuts
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
+      final readerProvider = context.read<ReaderProvider>();
+
       // ESC key - close the reader
       if (event.logicalKey == LogicalKeyboardKey.escape) {
         _closeReader();
+        return KeyEventResult.handled;
+      }
+
+      // Arrow Right - next chapter
+      if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        readerProvider.nextChapter();
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(0);
+        }
+        return KeyEventResult.handled;
+      }
+
+      // Arrow Left - previous chapter
+      if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        readerProvider.previousChapter();
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(0);
+        }
         return KeyEventResult.handled;
       }
     }

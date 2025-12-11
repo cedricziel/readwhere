@@ -60,7 +60,7 @@ dependencies:
   xml: ^6.6.1
 
   # Image Processing (for comic panel detection)
-  image: 4.5.4
+  image: 4.6.0
 
   # CBZ Support
   readwhere_cbz:

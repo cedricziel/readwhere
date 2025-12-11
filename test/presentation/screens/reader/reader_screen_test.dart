@@ -53,6 +53,8 @@ void main() {
     when(mockReaderProvider.openBook(any)).thenAnswer((_) async {});
     when(mockReaderProvider.saveProgress()).thenAnswer((_) async {});
     when(mockReaderProvider.closeBook()).thenAnswer((_) async {});
+    when(mockReaderProvider.nextChapter()).thenAnswer((_) async {});
+    when(mockReaderProvider.previousChapter()).thenAnswer((_) async {});
 
     // Setup default mock responses for AudioProvider
     when(mockAudioProvider.highlightedElementId).thenReturn(null);
@@ -171,6 +173,32 @@ void main() {
 
         // Verify that closeBook was NOT called
         verifyNever(mockReaderProvider.closeBook());
+      });
+
+      testWidgets('Arrow Right key navigates to next chapter', (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        // Simulate pressing Arrow Right
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pumpAndSettle();
+
+        // Verify nextChapter was called
+        verify(mockReaderProvider.nextChapter()).called(1);
+      });
+
+      testWidgets('Arrow Left key navigates to previous chapter', (
+        tester,
+      ) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        // Simulate pressing Arrow Left
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+        await tester.pumpAndSettle();
+
+        // Verify previousChapter was called
+        verify(mockReaderProvider.previousChapter()).called(1);
       });
     });
   });
