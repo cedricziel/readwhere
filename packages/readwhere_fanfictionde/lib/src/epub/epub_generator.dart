@@ -87,10 +87,11 @@ class EpubGenerator {
     <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>''';
+    final bytes = utf8.encode(container);
     return ArchiveFile(
       'META-INF/container.xml',
-      container.length,
-      utf8.encode(container),
+      bytes.length,
+      bytes,
     );
   }
 
@@ -161,10 +162,11 @@ class EpubGenerator {
     buffer.writeln('</package>');
 
     final content = buffer.toString();
+    final bytes = utf8.encode(content);
     return ArchiveFile(
       'OEBPS/content.opf',
-      content.length,
-      utf8.encode(content),
+      bytes.length,
+      bytes,
     );
   }
 
@@ -197,10 +199,11 @@ class EpubGenerator {
     buffer.writeln('</html>');
 
     final content = buffer.toString();
+    final bytes = utf8.encode(content);
     return ArchiveFile(
       'OEBPS/nav.xhtml',
-      content.length,
-      utf8.encode(content),
+      bytes.length,
+      bytes,
     );
   }
 
@@ -248,10 +251,11 @@ class EpubGenerator {
     buffer.writeln('</ncx>');
 
     final content = buffer.toString();
+    final bytes = utf8.encode(content);
     return ArchiveFile(
       'OEBPS/toc.ncx',
-      content.length,
-      utf8.encode(content),
+      bytes.length,
+      bytes,
     );
   }
 
@@ -344,10 +348,11 @@ nav#toc li {
   margin: 0.5em 0;
 }
 ''';
+    final bytes = utf8.encode(css);
     return ArchiveFile(
       'OEBPS/styles/main.css',
-      css.length,
-      utf8.encode(css),
+      bytes.length,
+      bytes,
     );
   }
 
@@ -388,10 +393,11 @@ nav#toc li {
     buffer.writeln('</html>');
 
     final content = buffer.toString();
+    final bytes = utf8.encode(content);
     return ArchiveFile(
       'OEBPS/text/title.xhtml',
-      content.length,
-      utf8.encode(content),
+      bytes.length,
+      bytes,
     );
   }
 
@@ -426,10 +432,11 @@ nav#toc li {
     buffer.writeln('</html>');
 
     final content = buffer.toString();
+    final bytes = utf8.encode(content);
     return ArchiveFile(
       'OEBPS/text/$chapterId.xhtml',
-      content.length,
-      utf8.encode(content),
+      bytes.length,
+      bytes,
     );
   }
 
