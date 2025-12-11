@@ -97,6 +97,23 @@ class ReaderProvider extends ChangeNotifier {
   /// Current chapter CSS styles
   String get currentChapterCss => _currentChapterCss;
 
+  /// Current chapter href (document path without fragment)
+  ///
+  /// Used for highlighting the current chapter in the table of contents.
+  String? get currentChapterHref {
+    if (_readerController == null) return null;
+    if (_readerController is ReadwhereEpubController) {
+      final epubController = _readerController as ReadwhereEpubController;
+      return epubController.getCurrentChapterHref();
+    }
+    // Fallback for other controllers - use TOC entry href if available
+    if (_currentChapterIndex < _tableOfContents.length) {
+      final href = _tableOfContents[_currentChapterIndex].href;
+      return href.contains('#') ? href.split('#').first : href;
+    }
+    return null;
+  }
+
   /// Current chapter images (href -> bytes)
   Map<String, Uint8List> get currentChapterImages => _currentChapterImages;
 
@@ -295,12 +312,12 @@ class ReaderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Navigate to a specific chapter
+  /// Navigate to a specific chapter by spine index
   ///
   /// Updates the current chapter index and notifies listeners.
   /// This should be called when the user manually navigates to a chapter.
   ///
-  /// [index] The index of the chapter in the table of contents
+  /// [index] The spine index of the chapter to navigate to
   Future<void> goToChapter(int index) async {
     final maxChapters =
         _readerController?.totalChapters ?? _tableOfContents.length;
@@ -328,6 +345,49 @@ class ReaderProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  /// Navigate to a TOC entry by its href
+  ///
+  /// Maps the TOC entry's href to the correct spine index before navigating.
+  /// This should be used when the user selects a chapter from the table of contents.
+  ///
+  /// [entry] The table of contents entry to navigate to
+  Future<void> goToTocEntry(TocEntry entry) async {
+    if (_readerController == null) return;
+
+    // For EPUB, use href-to-spine mapping for accurate navigation
+    if (_readerController is ReadwhereEpubController) {
+      final epubController = _readerController as ReadwhereEpubController;
+      final spineIndex = epubController.getSpineIndexForHref(entry.href);
+      if (spineIndex != null) {
+        await goToChapter(spineIndex);
+        return;
+      }
+    }
+
+    // Fallback for non-EPUB or if href lookup fails
+    // Try to find by matching href in TOC (for CBZ/CBR where TOC == spine)
+    final hrefWithoutFragment = entry.href.contains('#')
+        ? entry.href.split('#').first
+        : entry.href;
+
+    for (var i = 0; i < _tableOfContents.length; i++) {
+      final tocHref = _tableOfContents[i].href;
+      final tocHrefClean = tocHref.contains('#')
+          ? tocHref.split('#').first
+          : tocHref;
+      if (tocHrefClean == hrefWithoutFragment) {
+        await goToChapter(i);
+        return;
+      }
+    }
+
+    // Last resort: just use the entry's position in TOC
+    final tocIndex = _tableOfContents.indexOf(entry);
+    if (tocIndex >= 0) {
+      await goToChapter(tocIndex);
+    }
   }
 
   /// Navigate to a specific location in the book

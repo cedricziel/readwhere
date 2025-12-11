@@ -3043,6 +3043,15 @@ class MockReaderProvider extends _i1.Mock implements _i41.ReaderProvider {
           as _i7.Future<void>);
 
   @override
+  _i7.Future<void> goToTocEntry(_i11.TocEntry? entry) =>
+      (super.noSuchMethod(
+            Invocation.method(#goToTocEntry, [entry]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
   _i7.Future<void> goToLocation(String? cfi) =>
       (super.noSuchMethod(
             Invocation.method(#goToLocation, [cfi]),

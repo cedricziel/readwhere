@@ -194,9 +194,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => TableOfContentsSheet(
-        onChapterSelected: (index) {
+        onChapterSelected: (entry) {
           Navigator.pop(context);
-          context.read<ReaderProvider>().goToChapter(index);
+          context.read<ReaderProvider>().goToTocEntry(entry);
           // Reset scroll position when changing chapters
           if (_scrollController.hasClients) {
             _scrollController.jumpTo(0);

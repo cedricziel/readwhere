@@ -8,7 +8,7 @@ import '../../../providers/reader_provider.dart';
 /// Shows a list of all chapters with nested structure and highlighting
 /// for the current chapter. Tapping a chapter navigates to it.
 class TableOfContentsSheet extends StatelessWidget {
-  final ValueChanged<int> onChapterSelected;
+  final ValueChanged<TocEntry> onChapterSelected;
 
   const TableOfContentsSheet({super.key, required this.onChapterSelected});
 
@@ -17,7 +17,7 @@ class TableOfContentsSheet extends StatelessWidget {
     return Consumer<ReaderProvider>(
       builder: (context, readerProvider, child) {
         final toc = readerProvider.tableOfContents;
-        final currentChapter = readerProvider.currentChapterIndex;
+        final currentChapterHref = readerProvider.currentChapterHref;
 
         return Container(
           decoration: const BoxDecoration(
@@ -78,8 +78,7 @@ class TableOfContentsSheet extends StatelessWidget {
                           return _buildTocItem(
                             context,
                             toc[index],
-                            index,
-                            currentChapter,
+                            currentChapterHref,
                           );
                         },
                       ),
@@ -114,13 +113,27 @@ class TableOfContentsSheet extends StatelessWidget {
     );
   }
 
+  /// Check if the entry's href matches the current chapter href
+  bool _isCurrentChapter(TocEntry entry, String? currentChapterHref) {
+    if (currentChapterHref == null) return false;
+
+    // Get document href without fragment
+    final entryDocHref = entry.href.contains('#')
+        ? entry.href.split('#').first
+        : entry.href;
+
+    // Check for exact match or suffix match (handles path variations)
+    return currentChapterHref == entryDocHref ||
+        currentChapterHref.endsWith(entryDocHref) ||
+        entryDocHref.endsWith(currentChapterHref);
+  }
+
   Widget _buildTocItem(
     BuildContext context,
     TocEntry entry,
-    int index,
-    int currentChapter,
+    String? currentChapterHref,
   ) {
-    final isCurrentChapter = index == currentChapter;
+    final isCurrentChapter = _isCurrentChapter(entry, currentChapterHref);
     final indentLevel = entry.level;
 
     return Column(
@@ -131,7 +144,7 @@ class TableOfContentsSheet extends StatelessWidget {
               ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
               : Colors.transparent,
           child: InkWell(
-            onTap: () => onChapterSelected(index),
+            onTap: () => onChapterSelected(entry),
             child: Padding(
               padding: EdgeInsets.only(
                 left: 16.0 + (indentLevel * 16.0),
@@ -141,29 +154,17 @@ class TableOfContentsSheet extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Chapter number or bullet point
+                  // Bullet point for all items
                   if (indentLevel == 0)
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 12,
+                      height: 12,
                       margin: const EdgeInsets.only(right: 12),
                       decoration: BoxDecoration(
                         color: isCurrentChapter
                             ? Theme.of(context).primaryColor
-                            : Colors.grey[200],
+                            : Colors.grey[400],
                         shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${index + 1}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isCurrentChapter
-                                ? Colors.white
-                                : Colors.grey[700],
-                          ),
-                        ),
                       ),
                     )
                   else
@@ -215,14 +216,8 @@ class TableOfContentsSheet extends StatelessWidget {
         // Render nested children recursively
         if (entry.children.isNotEmpty)
           ...entry.children.map(
-            (childEntry) => _buildTocItem(
-              context,
-              childEntry,
-              // Note: This is simplified - in a real implementation,
-              // you'd need to track the actual index across nested items
-              index,
-              currentChapter,
-            ),
+            (childEntry) =>
+                _buildTocItem(context, childEntry, currentChapterHref),
           ),
       ],
     );

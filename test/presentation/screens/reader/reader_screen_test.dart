@@ -44,6 +44,7 @@ void main() {
       mockReaderProvider.currentChapterHtml,
     ).thenReturn('<p>Test content</p>');
     when(mockReaderProvider.currentChapterIndex).thenReturn(0);
+    when(mockReaderProvider.currentChapterHref).thenReturn('chapter1.xhtml');
     when(mockReaderProvider.currentChapterImages).thenReturn({});
     when(mockReaderProvider.currentBook).thenReturn(testBook);
     when(mockReaderProvider.tableOfContents).thenReturn([]);
@@ -55,6 +56,7 @@ void main() {
     when(mockReaderProvider.closeBook()).thenAnswer((_) async {});
     when(mockReaderProvider.nextChapter()).thenAnswer((_) async {});
     when(mockReaderProvider.previousChapter()).thenAnswer((_) async {});
+    when(mockReaderProvider.goToTocEntry(any)).thenAnswer((_) async {});
 
     // Setup default mock responses for AudioProvider
     when(mockAudioProvider.highlightedElementId).thenReturn(null);

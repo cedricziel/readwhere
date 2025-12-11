@@ -527,6 +527,29 @@ class ReadwhereEpubController implements ReaderController {
     return styles;
   }
 
+  /// Gets the spine index for a given href.
+  ///
+  /// This is used to map TOC entry hrefs to the correct spine position.
+  /// Returns null if no matching chapter is found.
+  int? getSpineIndexForHref(String href) {
+    _ensureInitialized();
+    final chapter = _reader.getChapterByHref(href);
+    return chapter?.spineIndex;
+  }
+
+  /// Gets the href of the current chapter.
+  ///
+  /// This is used for highlighting the current chapter in the TOC.
+  String? getCurrentChapterHref() {
+    _ensureInitialized();
+    if (_currentChapterIndex < 0 ||
+        _currentChapterIndex >= _reader.chapterCount) {
+      return null;
+    }
+    final chapter = _reader.getChapter(_currentChapterIndex);
+    return chapter.href;
+  }
+
   void _ensureInitialized() {
     if (!_isInitialized) {
       throw StateError('Controller not initialized.');
