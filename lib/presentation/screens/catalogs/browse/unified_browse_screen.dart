@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 import '../../../../domain/entities/catalog.dart';
 import '../../../providers/unified_catalog_browsing_provider.dart';
+import '../../../router/routes.dart';
 
 /// Unified browse screen for all catalog types.
 ///
@@ -79,14 +81,36 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
 
   void _onEntryTap(CatalogEntry entry) {
     if (entry.type == CatalogEntryType.book) {
-      _showDownloadOptions(entry);
+      // Row tap: download and open
+      _downloadAndOpen(entry);
     } else {
       // Navigate to the entry (collection/navigation)
       _provider.navigateToEntry(entry);
     }
   }
 
-  void _showDownloadOptions(CatalogEntry entry) {
+  /// Download only (button tap) - doesn't open after download
+  void _onDownloadOnly(CatalogEntry entry) {
+    _showDownloadOptions(entry, openAfterDownload: false);
+  }
+
+  /// Download and open (row tap)
+  void _downloadAndOpen(CatalogEntry entry) {
+    // If already downloaded, just open it
+    if (_provider.isDownloaded(entry.id)) {
+      final bookId = _provider.getBookIdForEntry(entry.id);
+      if (bookId != null) {
+        context.push(AppRoutes.readerPath(bookId));
+      }
+      return;
+    }
+    _showDownloadOptions(entry, openAfterDownload: true);
+  }
+
+  void _showDownloadOptions(
+    CatalogEntry entry, {
+    required bool openAfterDownload,
+  }) {
     if (entry.files.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No downloadable files available')),
@@ -96,7 +120,7 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
 
     if (entry.files.length == 1) {
       // Download directly
-      _downloadFile(entry, entry.files.first);
+      _downloadFile(entry, entry.files.first, openAfterDownload);
       return;
     }
 
@@ -107,19 +131,28 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
         entry: entry,
         onDownload: (file) {
           Navigator.pop(context);
-          _downloadFile(entry, file);
+          _downloadFile(entry, file, openAfterDownload);
         },
       ),
     );
   }
 
-  Future<void> _downloadFile(CatalogEntry entry, CatalogFile file) async {
+  Future<void> _downloadFile(
+    CatalogEntry entry,
+    CatalogFile file,
+    bool openAfterDownload,
+  ) async {
     final bookId = await _provider.downloadAndImportEntry(entry, file);
     if (mounted) {
       if (bookId != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Downloaded: ${entry.title}')));
+        if (openAfterDownload) {
+          // Navigate to reader
+          context.push(AppRoutes.readerPath(bookId));
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Downloaded: ${entry.title}')));
+        }
       } else if (_provider.error != null) {
         ScaffoldMessenger.of(
           context,
@@ -252,6 +285,8 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
             downloadProgress: _provider.getDownloadProgress(entry.id),
             isDownloaded: _provider.isDownloaded(entry.id),
             onTap: () => _onEntryTap(entry),
+            onDownload: () => _onDownloadOnly(entry),
+            onOpen: () => _downloadAndOpen(entry),
           );
         },
       ),
@@ -264,12 +299,23 @@ class _CatalogEntryTile extends StatelessWidget {
   const _CatalogEntryTile({
     required this.entry,
     required this.onTap,
+    this.onDownload,
+    this.onOpen,
     this.downloadProgress,
     this.isDownloaded = false,
   });
 
   final CatalogEntry entry;
+
+  /// Called when the row is tapped (navigates or downloads+opens)
   final VoidCallback onTap;
+
+  /// Called when the download button is tapped (download only)
+  final VoidCallback? onDownload;
+
+  /// Called when the open button is tapped (opens downloaded book)
+  final VoidCallback? onOpen;
+
   final double? downloadProgress;
   final bool isDownloaded;
 
@@ -283,7 +329,7 @@ class _CatalogEntryTile extends StatelessWidget {
       subtitle: entry.subtitle != null
           ? Text(entry.subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis)
           : null,
-      trailing: _buildTrailing(isDownloading),
+      trailing: _buildTrailing(context, isDownloading),
       onTap: isDownloading ? null : onTap,
     );
   }
@@ -325,24 +371,41 @@ class _CatalogEntryTile extends StatelessWidget {
     );
   }
 
-  Widget? _buildTrailing(bool isDownloading) {
+  Widget? _buildTrailing(BuildContext context, bool isDownloading) {
+    final theme = Theme.of(context);
+
     if (isDownloading) {
       return SizedBox(
-        width: 24,
-        height: 24,
-        child: CircularProgressIndicator(
-          value: downloadProgress,
-          strokeWidth: 2,
+        width: 40,
+        height: 40,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            CircularProgressIndicator(value: downloadProgress, strokeWidth: 2),
+            Text(
+              '${((downloadProgress ?? 0) * 100).toInt()}',
+              style: theme.textTheme.labelSmall,
+            ),
+          ],
         ),
       );
     }
 
     if (isDownloaded) {
-      return const Icon(Icons.check_circle, color: Colors.green);
+      return IconButton(
+        icon: const Icon(Icons.menu_book),
+        color: theme.colorScheme.primary,
+        tooltip: 'Open in reader',
+        onPressed: onOpen,
+      );
     }
 
     if (entry.type == CatalogEntryType.book && entry.files.isNotEmpty) {
-      return const Icon(Icons.download);
+      return IconButton(
+        icon: const Icon(Icons.download),
+        tooltip: 'Download',
+        onPressed: onDownload,
+      );
     }
 
     if (entry.type != CatalogEntryType.book) {
