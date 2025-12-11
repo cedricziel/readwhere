@@ -12,10 +12,73 @@ import '../../../themes/reading_themes.dart';
 ///
 /// This widget displays the current chapter's HTML content using
 /// flutter_html package with customizable reading theme settings.
-class ReaderContentWidget extends StatelessWidget {
+class ReaderContentWidget extends StatefulWidget {
   final ScrollController scrollController;
+  final VoidCallback? onToggleControls;
+  final VoidCallback? onNextChapter;
+  final VoidCallback? onPreviousChapter;
 
-  const ReaderContentWidget({super.key, required this.scrollController});
+  const ReaderContentWidget({
+    super.key,
+    required this.scrollController,
+    this.onToggleControls,
+    this.onNextChapter,
+    this.onPreviousChapter,
+  });
+
+  @override
+  State<ReaderContentWidget> createState() => _ReaderContentWidgetState();
+}
+
+class _ReaderContentWidgetState extends State<ReaderContentWidget> {
+  // Track pointer state for tap detection
+  Offset? _pointerDownPosition;
+  DateTime? _pointerDownTime;
+
+  // Threshold for tap detection
+  static const double _tapMaxDistance = 20.0; // Max movement in pixels
+  static const Duration _tapMaxDuration = Duration(
+    milliseconds: 300,
+  ); // Max tap duration
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _pointerDownPosition = event.position;
+    _pointerDownTime = DateTime.now();
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    if (_pointerDownPosition == null || _pointerDownTime == null) {
+      return;
+    }
+
+    final distance = (event.position - _pointerDownPosition!).distance;
+    final duration = DateTime.now().difference(_pointerDownTime!);
+
+    // Check if this was a tap (short duration, minimal movement)
+    if (distance <= _tapMaxDistance && duration <= _tapMaxDuration) {
+      _handleTap(event.position);
+    }
+
+    // Reset state
+    _pointerDownPosition = null;
+    _pointerDownTime = null;
+  }
+
+  void _handleTap(Offset position) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final tapX = position.dx;
+
+    if (tapX < screenWidth / 3) {
+      // Left third - previous chapter
+      widget.onPreviousChapter?.call();
+    } else if (tapX > screenWidth * 2 / 3) {
+      // Right third - next chapter
+      widget.onNextChapter?.call();
+    } else {
+      // Center third - toggle controls
+      widget.onToggleControls?.call();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,236 +129,243 @@ class ReaderContentWidget extends StatelessWidget {
           );
         }
 
-        return SelectionArea(
-          // Use a key that changes when chapter or content changes to avoid
-          // Flutter framework bug with stale selection indices (issue #123456).
-          // The hashCode ensures a new SelectionArea when content loads.
-          key: ValueKey(
-            'selection_${readerProvider.currentChapterIndex}_'
-            '${readerProvider.currentChapterHtml.hashCode}',
-          ),
-          child: SingleChildScrollView(
-            controller: scrollController,
-            padding: EdgeInsets.symmetric(
-              horizontal: readingTheme.marginHorizontal,
-              vertical: readingTheme.marginVertical,
+        // Use Listener to intercept raw pointer events for tap detection
+        // This works around SelectionArea absorbing tap gestures
+        return Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: _handlePointerDown,
+          onPointerUp: _handlePointerUp,
+          child: SelectionArea(
+            // Use a key that changes when chapter or content changes to avoid
+            // Flutter framework bug with stale selection indices (issue #123456).
+            // The hashCode ensures a new SelectionArea when content loads.
+            key: ValueKey(
+              'selection_${readerProvider.currentChapterIndex}_'
+              '${readerProvider.currentChapterHtml.hashCode}',
             ),
-            child: Html(
-              data: htmlContent,
-              style: {
-                'body': Style(
-                  margin: Margins.zero,
-                  padding: HtmlPaddings.zero,
-                  fontSize: FontSize(readingTheme.fontSize),
-                  fontFamily: readingTheme.fontFamily,
-                  lineHeight: LineHeight(readingTheme.lineHeight),
-                  color: readingTheme.textColor,
-                ),
-                'p': Style(
-                  margin: Margins.only(bottom: readingTheme.fontSize),
-                  textAlign: TextAlign.justify,
-                ),
-                'h1': Style(
-                  fontSize: FontSize(readingTheme.fontSize * 1.8),
-                  fontWeight: FontWeight.bold,
-                  margin: Margins.only(
-                    top: readingTheme.fontSize * 2,
-                    bottom: readingTheme.fontSize,
+            child: SingleChildScrollView(
+              controller: widget.scrollController,
+              padding: EdgeInsets.symmetric(
+                horizontal: readingTheme.marginHorizontal,
+                vertical: readingTheme.marginVertical,
+              ),
+              child: Html(
+                data: htmlContent,
+                style: {
+                  'body': Style(
+                    margin: Margins.zero,
+                    padding: HtmlPaddings.zero,
+                    fontSize: FontSize(readingTheme.fontSize),
+                    fontFamily: readingTheme.fontFamily,
+                    lineHeight: LineHeight(readingTheme.lineHeight),
+                    color: readingTheme.textColor,
                   ),
-                ),
-                'h2': Style(
-                  fontSize: FontSize(readingTheme.fontSize * 1.5),
-                  fontWeight: FontWeight.bold,
-                  margin: Margins.only(
-                    top: readingTheme.fontSize * 1.5,
-                    bottom: readingTheme.fontSize * 0.75,
+                  'p': Style(
+                    margin: Margins.only(bottom: readingTheme.fontSize),
+                    textAlign: TextAlign.justify,
                   ),
-                ),
-                'h3': Style(
-                  fontSize: FontSize(readingTheme.fontSize * 1.2),
-                  fontWeight: FontWeight.bold,
-                  margin: Margins.only(
-                    top: readingTheme.fontSize,
-                    bottom: readingTheme.fontSize * 0.5,
-                  ),
-                ),
-                'a': Style(
-                  color: readingTheme.linkColor,
-                  textDecoration: TextDecoration.underline,
-                ),
-                'em': Style(fontStyle: FontStyle.italic),
-                'strong': Style(fontWeight: FontWeight.bold),
-                'blockquote': Style(
-                  margin: Margins.symmetric(
-                    vertical: readingTheme.fontSize,
-                    horizontal: readingTheme.fontSize * 2,
-                  ),
-                  padding: HtmlPaddings.only(left: readingTheme.fontSize),
-                  border: Border(
-                    left: BorderSide(
-                      color: readingTheme.textColor.withValues(alpha: 0.3),
-                      width: 3,
+                  'h1': Style(
+                    fontSize: FontSize(readingTheme.fontSize * 1.8),
+                    fontWeight: FontWeight.bold,
+                    margin: Margins.only(
+                      top: readingTheme.fontSize * 2,
+                      bottom: readingTheme.fontSize,
                     ),
                   ),
-                  fontStyle: FontStyle.italic,
-                ),
-                'ul': Style(
-                  margin: Margins.only(
-                    top: readingTheme.fontSize * 0.5,
-                    bottom: readingTheme.fontSize * 0.5,
+                  'h2': Style(
+                    fontSize: FontSize(readingTheme.fontSize * 1.5),
+                    fontWeight: FontWeight.bold,
+                    margin: Margins.only(
+                      top: readingTheme.fontSize * 1.5,
+                      bottom: readingTheme.fontSize * 0.75,
+                    ),
                   ),
-                ),
-                'ol': Style(
-                  margin: Margins.only(
-                    top: readingTheme.fontSize * 0.5,
-                    bottom: readingTheme.fontSize * 0.5,
+                  'h3': Style(
+                    fontSize: FontSize(readingTheme.fontSize * 1.2),
+                    fontWeight: FontWeight.bold,
+                    margin: Margins.only(
+                      top: readingTheme.fontSize,
+                      bottom: readingTheme.fontSize * 0.5,
+                    ),
                   ),
-                ),
-                'li': Style(
-                  margin: Margins.only(bottom: readingTheme.fontSize * 0.25),
-                ),
-                'img': Style(
-                  margin: Margins.symmetric(vertical: readingTheme.fontSize),
-                ),
-                // Code styling
-                'code': Style(
-                  fontFamily: 'monospace',
-                  fontSize: FontSize(readingTheme.fontSize * 0.9),
-                  backgroundColor: readingTheme.textColor.withValues(
-                    alpha: 0.08,
+                  'a': Style(
+                    color: readingTheme.linkColor,
+                    textDecoration: TextDecoration.underline,
                   ),
-                  padding: HtmlPaddings.symmetric(horizontal: 4, vertical: 2),
-                ),
-                'pre': Style(
-                  fontFamily: 'monospace',
-                  fontSize: FontSize(readingTheme.fontSize * 0.85),
-                  backgroundColor: readingTheme.textColor.withValues(
-                    alpha: 0.06,
+                  'em': Style(fontStyle: FontStyle.italic),
+                  'strong': Style(fontWeight: FontWeight.bold),
+                  'blockquote': Style(
+                    margin: Margins.symmetric(
+                      vertical: readingTheme.fontSize,
+                      horizontal: readingTheme.fontSize * 2,
+                    ),
+                    padding: HtmlPaddings.only(left: readingTheme.fontSize),
+                    border: Border(
+                      left: BorderSide(
+                        color: readingTheme.textColor.withValues(alpha: 0.3),
+                        width: 3,
+                      ),
+                    ),
+                    fontStyle: FontStyle.italic,
                   ),
-                  padding: HtmlPaddings.all(readingTheme.fontSize * 0.75),
-                  margin: Margins.symmetric(vertical: readingTheme.fontSize),
-                  lineHeight: const LineHeight(1.4),
-                ),
-                'pre code': Style(
-                  backgroundColor: Colors.transparent,
-                  padding: HtmlPaddings.zero,
-                ),
-                'kbd': Style(
-                  fontFamily: 'monospace',
-                  fontSize: FontSize(readingTheme.fontSize * 0.85),
-                  backgroundColor: readingTheme.textColor.withValues(
-                    alpha: 0.1,
+                  'ul': Style(
+                    margin: Margins.only(
+                      top: readingTheme.fontSize * 0.5,
+                      bottom: readingTheme.fontSize * 0.5,
+                    ),
                   ),
-                  border: Border.all(
-                    color: readingTheme.textColor.withValues(alpha: 0.2),
-                    width: 1,
+                  'ol': Style(
+                    margin: Margins.only(
+                      top: readingTheme.fontSize * 0.5,
+                      bottom: readingTheme.fontSize * 0.5,
+                    ),
                   ),
-                  padding: HtmlPaddings.symmetric(horizontal: 6, vertical: 2),
-                ),
-                'samp': Style(
-                  fontFamily: 'monospace',
-                  fontSize: FontSize(readingTheme.fontSize * 0.9),
-                ),
-                'var': Style(
-                  fontFamily: 'monospace',
-                  fontStyle: FontStyle.italic,
-                ),
-                // Tables
-                'table': Style(
-                  margin: Margins.symmetric(vertical: readingTheme.fontSize),
-                ),
-                'th': Style(
-                  fontWeight: FontWeight.bold,
-                  padding: HtmlPaddings.all(8),
-                  backgroundColor: readingTheme.textColor.withValues(
-                    alpha: 0.05,
+                  'li': Style(
+                    margin: Margins.only(bottom: readingTheme.fontSize * 0.25),
                   ),
-                ),
-                'td': Style(padding: HtmlPaddings.all(8)),
-              },
-              onLinkTap: (url, attributes, element) {
-                if (url == null) return;
+                  'img': Style(
+                    margin: Margins.symmetric(vertical: readingTheme.fontSize),
+                  ),
+                  // Code styling
+                  'code': Style(
+                    fontFamily: 'monospace',
+                    fontSize: FontSize(readingTheme.fontSize * 0.9),
+                    backgroundColor: readingTheme.textColor.withValues(
+                      alpha: 0.08,
+                    ),
+                    padding: HtmlPaddings.symmetric(horizontal: 4, vertical: 2),
+                  ),
+                  'pre': Style(
+                    fontFamily: 'monospace',
+                    fontSize: FontSize(readingTheme.fontSize * 0.85),
+                    backgroundColor: readingTheme.textColor.withValues(
+                      alpha: 0.06,
+                    ),
+                    padding: HtmlPaddings.all(readingTheme.fontSize * 0.75),
+                    margin: Margins.symmetric(vertical: readingTheme.fontSize),
+                    lineHeight: const LineHeight(1.4),
+                  ),
+                  'pre code': Style(
+                    backgroundColor: Colors.transparent,
+                    padding: HtmlPaddings.zero,
+                  ),
+                  'kbd': Style(
+                    fontFamily: 'monospace',
+                    fontSize: FontSize(readingTheme.fontSize * 0.85),
+                    backgroundColor: readingTheme.textColor.withValues(
+                      alpha: 0.1,
+                    ),
+                    border: Border.all(
+                      color: readingTheme.textColor.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                    padding: HtmlPaddings.symmetric(horizontal: 6, vertical: 2),
+                  ),
+                  'samp': Style(
+                    fontFamily: 'monospace',
+                    fontSize: FontSize(readingTheme.fontSize * 0.9),
+                  ),
+                  'var': Style(
+                    fontFamily: 'monospace',
+                    fontStyle: FontStyle.italic,
+                  ),
+                  // Tables
+                  'table': Style(
+                    margin: Margins.symmetric(vertical: readingTheme.fontSize),
+                  ),
+                  'th': Style(
+                    fontWeight: FontWeight.bold,
+                    padding: HtmlPaddings.all(8),
+                    backgroundColor: readingTheme.textColor.withValues(
+                      alpha: 0.05,
+                    ),
+                  ),
+                  'td': Style(padding: HtmlPaddings.all(8)),
+                },
+                onLinkTap: (url, attributes, element) {
+                  if (url == null) return;
 
-                // Handle anchor links within current chapter
-                if (url.startsWith('#')) {
-                  // TODO: Implement anchor navigation within chapter
-                  debugPrint('Navigate to anchor: $url');
-                  return;
-                }
+                  // Handle anchor links within current chapter
+                  if (url.startsWith('#')) {
+                    // TODO: Implement anchor navigation within chapter
+                    debugPrint('Navigate to anchor: $url');
+                    return;
+                  }
 
-                // Check if it's an external link (http/https/mailto/tel)
-                if (url.startsWith('http://') ||
-                    url.startsWith('https://') ||
-                    url.startsWith('mailto:') ||
-                    url.startsWith('tel:')) {
-                  // TODO: Open external link in browser
-                  debugPrint('External link: $url');
-                  return;
-                }
+                  // Check if it's an external link (http/https/mailto/tel)
+                  if (url.startsWith('http://') ||
+                      url.startsWith('https://') ||
+                      url.startsWith('mailto:') ||
+                      url.startsWith('tel:')) {
+                    // TODO: Open external link in browser
+                    debugPrint('External link: $url');
+                    return;
+                  }
 
-                // Treat as internal EPUB link (chapter navigation)
-                // Links like 'chapter.xhtml', 'text/chapter.xhtml', 'chapter.xhtml#section'
-                debugPrint('Internal link: $url');
-                readerProvider.navigateToHref(url);
-              },
-              // Handle images from EPUB resources
-              extensions: [
-                TagExtension(
-                  tagsToExtend: {'img'},
-                  builder: (extensionContext) {
-                    final src = extensionContext.attributes['src'];
-                    if (src != null) {
-                      // Handle base64 data URIs (used by CBR/CBZ)
-                      if (src.startsWith('data:image/')) {
-                        return Container(
-                          margin: EdgeInsets.symmetric(
-                            vertical: readingTheme.fontSize,
-                          ),
-                          child: Image.memory(
-                            _decodeDataUri(src),
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildImagePlaceholder(
-                                '${src.substring(0, 30)}...',
-                                readingTheme,
-                                error: 'Failed to decode image',
-                              );
-                            },
-                          ),
-                        );
+                  // Treat as internal EPUB link (chapter navigation)
+                  // Links like 'chapter.xhtml', 'text/chapter.xhtml', 'chapter.xhtml#section'
+                  debugPrint('Internal link: $url');
+                  readerProvider.navigateToHref(url);
+                },
+                // Handle images from EPUB resources
+                extensions: [
+                  TagExtension(
+                    tagsToExtend: {'img'},
+                    builder: (extensionContext) {
+                      final src = extensionContext.attributes['src'];
+                      if (src != null) {
+                        // Handle base64 data URIs (used by CBR/CBZ)
+                        if (src.startsWith('data:image/')) {
+                          return Container(
+                            margin: EdgeInsets.symmetric(
+                              vertical: readingTheme.fontSize,
+                            ),
+                            child: Image.memory(
+                              _decodeDataUri(src),
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildImagePlaceholder(
+                                  '${src.substring(0, 30)}...',
+                                  readingTheme,
+                                  error: 'Failed to decode image',
+                                );
+                              },
+                            ),
+                          );
+                        }
+
+                        // Try to find the image in the chapter images
+                        final images = readerProvider.currentChapterImages;
+                        final imageBytes = _findImageBytes(src, images);
+
+                        if (imageBytes != null) {
+                          // Render actual image from EPUB
+                          return Container(
+                            margin: EdgeInsets.symmetric(
+                              vertical: readingTheme.fontSize,
+                            ),
+                            child: Image.memory(
+                              imageBytes,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildImagePlaceholder(
+                                  src,
+                                  readingTheme,
+                                  error: 'Failed to load image',
+                                );
+                              },
+                            ),
+                          );
+                        }
+
+                        // Show placeholder if image not found
+                        return _buildImagePlaceholder(src, readingTheme);
                       }
-
-                      // Try to find the image in the chapter images
-                      final images = readerProvider.currentChapterImages;
-                      final imageBytes = _findImageBytes(src, images);
-
-                      if (imageBytes != null) {
-                        // Render actual image from EPUB
-                        return Container(
-                          margin: EdgeInsets.symmetric(
-                            vertical: readingTheme.fontSize,
-                          ),
-                          child: Image.memory(
-                            imageBytes,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildImagePlaceholder(
-                                src,
-                                readingTheme,
-                                error: 'Failed to load image',
-                              );
-                            },
-                          ),
-                        );
-                      }
-
-                      // Show placeholder if image not found
-                      return _buildImagePlaceholder(src, readingTheme);
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         );

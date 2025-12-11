@@ -200,7 +200,23 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
 
     // Default to reflowable reader for text-based content
-    return ReaderContentWidget(scrollController: _scrollController);
+    // Pass callbacks for tap zone navigation (left/center/right)
+    return ReaderContentWidget(
+      scrollController: _scrollController,
+      onToggleControls: _toggleControls,
+      onNextChapter: () {
+        readerProvider.nextChapter();
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(0);
+        }
+      },
+      onPreviousChapter: () {
+        readerProvider.previousChapter();
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(0);
+        }
+      },
+    );
   }
 
   @override
@@ -273,13 +289,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
             body: SafeArea(
               child: Stack(
                 children: [
-                  // Main content area with gesture detection
+                  // Main content area with gesture detection for swipes
+                  // Tap handling is done inside ReaderContentWidget to work
+                  // around SelectionArea blocking tap events
                   GestureDetector(
-                    onTap: _toggleControls,
                     onHorizontalDragEnd: (details) {
                       // Swipe right to left (next chapter)
                       if (details.primaryVelocity != null &&
-                          details.primaryVelocity! < -500) {
+                          details.primaryVelocity! < -200) {
                         readerProvider.nextChapter();
                         if (_scrollController.hasClients) {
                           _scrollController.jumpTo(0);
@@ -287,7 +304,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       }
                       // Swipe left to right (previous chapter)
                       else if (details.primaryVelocity != null &&
-                          details.primaryVelocity! > 500) {
+                          details.primaryVelocity! > 200) {
                         readerProvider.previousChapter();
                         if (_scrollController.hasClients) {
                           _scrollController.jumpTo(0);

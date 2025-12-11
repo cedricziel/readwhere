@@ -32,14 +32,18 @@ import 'package:readwhere/domain/repositories/opds_cache_repository.dart'
     as _i10;
 import 'package:readwhere/domain/repositories/reading_progress_repository.dart'
     as _i20;
+import 'package:readwhere/presentation/providers/audio_provider.dart' as _i42;
 import 'package:readwhere/presentation/providers/catalogs_provider.dart'
     as _i38;
 import 'package:readwhere/presentation/providers/feed_reader_provider.dart'
     as _i40;
 import 'package:readwhere/presentation/providers/library_provider.dart' as _i33;
+import 'package:readwhere/presentation/providers/reader_provider.dart' as _i41;
 import 'package:readwhere/presentation/providers/settings_provider.dart'
     as _i35;
 import 'package:readwhere/presentation/providers/update_provider.dart' as _i39;
+import 'package:readwhere_epub/readwhere_epub.dart' as _i44;
+import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart' as _i43;
 import 'package:readwhere_kavita/readwhere_kavita.dart' as _i30;
 import 'package:readwhere_kavita/src/models/kavita_progress.dart' as _i31;
 import 'package:readwhere_kavita/src/models/kavita_server_info.dart' as _i12;
@@ -2900,6 +2904,484 @@ class MockFeedReaderProvider extends _i1.Mock
   @override
   void dispose() => super.noSuchMethod(
     Invocation.method(#dispose, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+    Invocation.method(#notifyListeners, []),
+    returnValueForMissingStub: null,
+  );
+}
+
+/// A class which mocks [ReaderProvider].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockReaderProvider extends _i1.Mock implements _i41.ReaderProvider {
+  MockReaderProvider() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  List<_i3.Bookmark> get bookmarks =>
+      (super.noSuchMethod(
+            Invocation.getter(#bookmarks),
+            returnValue: <_i3.Bookmark>[],
+          )
+          as List<_i3.Bookmark>);
+
+  @override
+  _i15.ReadingSettings get settings =>
+      (super.noSuchMethod(
+            Invocation.getter(#settings),
+            returnValue: _FakeReadingSettings_18(
+              this,
+              Invocation.getter(#settings),
+            ),
+          )
+          as _i15.ReadingSettings);
+
+  @override
+  bool get isLoading =>
+      (super.noSuchMethod(Invocation.getter(#isLoading), returnValue: false)
+          as bool);
+
+  @override
+  bool get isDrmBlocked =>
+      (super.noSuchMethod(Invocation.getter(#isDrmBlocked), returnValue: false)
+          as bool);
+
+  @override
+  int get currentChapterIndex =>
+      (super.noSuchMethod(
+            Invocation.getter(#currentChapterIndex),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  List<_i11.TocEntry> get tableOfContents =>
+      (super.noSuchMethod(
+            Invocation.getter(#tableOfContents),
+            returnValue: <_i11.TocEntry>[],
+          )
+          as List<_i11.TocEntry>);
+
+  @override
+  bool get hasOpenBook =>
+      (super.noSuchMethod(Invocation.getter(#hasOpenBook), returnValue: false)
+          as bool);
+
+  @override
+  double get progressPercentage =>
+      (super.noSuchMethod(
+            Invocation.getter(#progressPercentage),
+            returnValue: 0.0,
+          )
+          as double);
+
+  @override
+  String get currentChapterHtml =>
+      (super.noSuchMethod(
+            Invocation.getter(#currentChapterHtml),
+            returnValue: _i25.dummyValue<String>(
+              this,
+              Invocation.getter(#currentChapterHtml),
+            ),
+          )
+          as String);
+
+  @override
+  String get currentChapterCss =>
+      (super.noSuchMethod(
+            Invocation.getter(#currentChapterCss),
+            returnValue: _i25.dummyValue<String>(
+              this,
+              Invocation.getter(#currentChapterCss),
+            ),
+          )
+          as String);
+
+  @override
+  Map<String, _i29.Uint8List> get currentChapterImages =>
+      (super.noSuchMethod(
+            Invocation.getter(#currentChapterImages),
+            returnValue: <String, _i29.Uint8List>{},
+          )
+          as Map<String, _i29.Uint8List>);
+
+  @override
+  bool get hasListeners =>
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
+
+  @override
+  _i7.Future<void> openBook(_i2.Book? book) =>
+      (super.noSuchMethod(
+            Invocation.method(#openBook, [book]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> closeBook() =>
+      (super.noSuchMethod(
+            Invocation.method(#closeBook, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> goToChapter(int? index) =>
+      (super.noSuchMethod(
+            Invocation.method(#goToChapter, [index]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> goToLocation(String? cfi) =>
+      (super.noSuchMethod(
+            Invocation.method(#goToLocation, [cfi]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<bool> navigateToHref(String? href) =>
+      (super.noSuchMethod(
+            Invocation.method(#navigateToHref, [href]),
+            returnValue: _i7.Future<bool>.value(false),
+          )
+          as _i7.Future<bool>);
+
+  @override
+  _i7.Future<void> saveProgress() =>
+      (super.noSuchMethod(
+            Invocation.method(#saveProgress, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<_i3.Bookmark?> addBookmark(String? title) =>
+      (super.noSuchMethod(
+            Invocation.method(#addBookmark, [title]),
+            returnValue: _i7.Future<_i3.Bookmark?>.value(),
+          )
+          as _i7.Future<_i3.Bookmark?>);
+
+  @override
+  _i7.Future<bool> removeBookmark(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#removeBookmark, [id]),
+            returnValue: _i7.Future<bool>.value(false),
+          )
+          as _i7.Future<bool>);
+
+  @override
+  _i7.Future<void> goToBookmark(_i3.Bookmark? bookmark) =>
+      (super.noSuchMethod(
+            Invocation.method(#goToBookmark, [bookmark]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  void updateSettings(_i15.ReadingSettings? newSettings) => super.noSuchMethod(
+    Invocation.method(#updateSettings, [newSettings]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void updateProgressWhileReading(String? cfi, double? progressValue) =>
+      super.noSuchMethod(
+        Invocation.method(#updateProgressWhileReading, [cfi, progressValue]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i7.Future<void> nextChapter() =>
+      (super.noSuchMethod(
+            Invocation.method(#nextChapter, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> previousChapter() =>
+      (super.noSuchMethod(
+            Invocation.method(#previousChapter, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  void clearError() => super.noSuchMethod(
+    Invocation.method(#clearError, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void addListener(_i34.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#addListener, [listener]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void removeListener(_i34.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#removeListener, [listener]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void dispose() => super.noSuchMethod(
+    Invocation.method(#dispose, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+    Invocation.method(#notifyListeners, []),
+    returnValueForMissingStub: null,
+  );
+}
+
+/// A class which mocks [AudioProvider].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockAudioProvider extends _i1.Mock implements _i42.AudioProvider {
+  MockAudioProvider() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  bool get isInitialized =>
+      (super.noSuchMethod(Invocation.getter(#isInitialized), returnValue: false)
+          as bool);
+
+  @override
+  bool get isPlaying =>
+      (super.noSuchMethod(Invocation.getter(#isPlaying), returnValue: false)
+          as bool);
+
+  @override
+  bool get hasMediaOverlay =>
+      (super.noSuchMethod(
+            Invocation.getter(#hasMediaOverlay),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  Duration get position =>
+      (super.noSuchMethod(
+            Invocation.getter(#position),
+            returnValue: _FakeDuration_13(this, Invocation.getter(#position)),
+          )
+          as Duration);
+
+  @override
+  Duration get duration =>
+      (super.noSuchMethod(
+            Invocation.getter(#duration),
+            returnValue: _FakeDuration_13(this, Invocation.getter(#duration)),
+          )
+          as Duration);
+
+  @override
+  double get playbackSpeed =>
+      (super.noSuchMethod(Invocation.getter(#playbackSpeed), returnValue: 0.0)
+          as double);
+
+  @override
+  int get currentChapterIndex =>
+      (super.noSuchMethod(
+            Invocation.getter(#currentChapterIndex),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  double get progress =>
+      (super.noSuchMethod(Invocation.getter(#progress), returnValue: 0.0)
+          as double);
+
+  @override
+  bool get hasListeners =>
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
+
+  @override
+  _i7.Future<bool> initializeForChapter(
+    _i43.ReadwhereEpubController? controller,
+    int? chapterIndex,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#initializeForChapter, [
+              controller,
+              chapterIndex,
+            ]),
+            returnValue: _i7.Future<bool>.value(false),
+          )
+          as _i7.Future<bool>);
+
+  @override
+  _i7.Future<void> loadAudioFromBytes(
+    _i29.Uint8List? audioBytes,
+    String? mimeType,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#loadAudioFromBytes, [audioBytes, mimeType]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> play() =>
+      (super.noSuchMethod(
+            Invocation.method(#play, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> pause() =>
+      (super.noSuchMethod(
+            Invocation.method(#pause, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> togglePlayPause() =>
+      (super.noSuchMethod(
+            Invocation.method(#togglePlayPause, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> seek(Duration? position) =>
+      (super.noSuchMethod(
+            Invocation.method(#seek, [position]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> seekToProgress(double? progress) =>
+      (super.noSuchMethod(
+            Invocation.method(#seekToProgress, [progress]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> skipForward({
+    Duration? amount = const Duration(seconds: 10),
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#skipForward, [], {#amount: amount}),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> skipBackward({
+    Duration? amount = const Duration(seconds: 10),
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#skipBackward, [], {#amount: amount}),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> setSpeed(double? speed) =>
+      (super.noSuchMethod(
+            Invocation.method(#setSpeed, [speed]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> stop() =>
+      (super.noSuchMethod(
+            Invocation.method(#stop, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> goToSyncPoint(_i44.SmilParallel? syncPoint) =>
+      (super.noSuchMethod(
+            Invocation.method(#goToSyncPoint, [syncPoint]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> goToTextElement(String? elementId) =>
+      (super.noSuchMethod(
+            Invocation.method(#goToTextElement, [elementId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> dispose() =>
+      (super.noSuchMethod(
+            Invocation.method(#dispose, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  void clearError() => super.noSuchMethod(
+    Invocation.method(#clearError, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i7.Future<void> reset() =>
+      (super.noSuchMethod(
+            Invocation.method(#reset, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  void addListener(_i34.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#addListener, [listener]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void removeListener(_i34.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );
 
