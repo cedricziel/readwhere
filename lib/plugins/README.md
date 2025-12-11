@@ -16,10 +16,10 @@ This directory contains the plugin architecture for the readwhere e-reader appli
    - Provides navigation, content retrieval, and search functionality
    - Emits location change events for progress tracking
 
-3. **PluginRegistry** (`plugin_registry.dart`)
-   - Singleton registry for managing installed plugins
+3. **UnifiedPluginRegistry** (from `readwhere_plugin` package)
+   - Registry for managing all plugins (reader, catalog, etc.)
    - Handles plugin discovery and file-to-plugin matching
-   - Provides plugin registration/unregistration
+   - Integrated with service locator for dependency injection
 
 ### Models
 
@@ -48,24 +48,33 @@ The EPUB plugin provides support for EPUB 2.0 and EPUB 3.0 format books.
 
 ### Basic Setup
 
-```dart
-import 'package:readwhere/plugins/plugins.dart';
+Plugins are registered in the service locator (`service_locator.dart`):
 
-void initializePlugins() {
-  final registry = PluginRegistry();
-  registry.register(EpubPlugin());
-  // Register other plugins as needed
-}
+```dart
+// In setupServiceLocator()
+sl.registerLazySingletonAsync<UnifiedPluginRegistry>(() async {
+  final registry = UnifiedPluginRegistry();
+
+  await registry.register(
+    ReadwhereEpubPlugin(),
+    storageFactory: storageFactory,
+    contextFactory: contextFactory,
+  );
+  // Register other plugins...
+
+  return registry;
+});
 ```
 
 ### Opening a Book
 
 ```dart
 Future<void> openBook(String filePath) async {
-  final registry = PluginRegistry();
+  // Get registry from service locator
+  final registry = sl<UnifiedPluginRegistry>();
 
-  // Find appropriate plugin
-  final plugin = await registry.getPluginForFile(filePath);
+  // Find appropriate plugin using ReaderCapability
+  final plugin = await registry.forFile<ReaderCapability>(filePath);
   if (plugin == null) {
     throw Exception('Unsupported file format');
   }
@@ -168,16 +177,17 @@ try {
 ```
 lib/plugins/
 ├── README.md                    # This file
-├── plugins.dart                 # Barrel export file
-├── reader_plugin.dart           # Plugin interface
-├── reader_controller.dart       # Controller interface
-├── plugin_registry.dart         # Plugin registry
-├── reading_location.dart        # Location model
-├── search_result.dart           # Search result model
-├── example_usage.dart           # Usage examples
-└── epub/
-    ├── epub_plugin.dart         # EPUB plugin
-    └── epub_reader_controller.dart  # EPUB controller
+├── plugins.dart                 # Barrel export file (re-exports from readwhere_plugin)
+
+packages/
+├── readwhere_plugin/            # Core plugin interfaces
+│   └── lib/src/
+│       ├── core/                # UnifiedPluginRegistry, PluginBase
+│       ├── capabilities/        # ReaderCapability, CatalogCapability, etc.
+│       └── reader/              # ReaderPlugin, ReaderController, etc.
+├── readwhere_epub_plugin/       # EPUB format plugin
+├── readwhere_cbz_plugin/        # CBZ comic plugin
+└── readwhere_cbr_plugin/        # CBR comic plugin
 ```
 
 ## Dependencies

@@ -21,8 +21,6 @@ library;
 // Re-export plugin interfaces from package
 export 'package:readwhere_plugin/readwhere_plugin.dart'
     show
-        // ignore: deprecated_member_use
-        PluginRegistry, // Deprecated: use UnifiedPluginRegistry instead
         UnifiedPluginRegistry,
         ReaderCapability,
         ReaderContent,

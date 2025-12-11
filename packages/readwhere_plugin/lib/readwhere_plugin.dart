@@ -48,7 +48,6 @@
 ///
 /// - [AccountProvider] - Use [AccountCapability] mixin instead
 /// - [ReaderPlugin] - Use [ReaderCapability] mixin instead
-/// - [PluginRegistry] - Use [UnifiedPluginRegistry] instead
 ///
 /// ## Data Types
 ///
@@ -105,7 +104,6 @@ export 'src/entities/validation_result.dart';
 // ===== Reader =====
 
 export 'src/reader/book_metadata.dart';
-export 'src/reader/plugin_registry.dart';
 export 'src/reader/reader_content.dart';
 export 'src/reader/reader_controller.dart';
 export 'src/reader/reader_plugin.dart';

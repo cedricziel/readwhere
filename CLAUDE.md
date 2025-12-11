@@ -71,11 +71,12 @@ lib/
 
 ### Plugin System
 
-Reader plugins provide format support via `lib/plugins/`:
+Reader plugins provide format support via `packages/readwhere_*_plugin/`:
 - `ReaderPlugin` - Abstract interface defining `canHandle()`, `parseMetadata()`, `openBook()`, `extractCover()`
-- `PluginRegistry` - Singleton for plugin registration/lookup by extension or MIME type
+- `ReaderCapability` - Mixin for unified plugin system
+- `UnifiedPluginRegistry` - Registry for all plugins (reader, catalog, etc.) integrated with service locator
 - `ReaderController` - Controls reading session state
-- Format plugins: EPUB (`epub/`), CBZ (`cbz/`), CBR (`cbr/`)
+- Format plugins: EPUB, CBZ, CBR (each in their own package)
 
 ### State Management
 
