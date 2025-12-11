@@ -182,10 +182,13 @@ class BookCard extends StatelessWidget {
       context,
       listen: false,
     );
+    // Capture the parent context's messenger before showing the bottom sheet
+    // The bottom sheet's context becomes invalid after it's popped
+    final parentMessenger = ScaffoldMessenger.of(context);
 
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -193,7 +196,7 @@ class BookCard extends StatelessWidget {
               leading: const Icon(Icons.book_outlined),
               title: const Text('Open'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 onTap();
               },
             ),
@@ -205,7 +208,7 @@ class BookCard extends StatelessWidget {
                 book.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
               ),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 libraryProvider.toggleFavorite(book.id);
               },
             ),
@@ -213,7 +216,7 @@ class BookCard extends StatelessWidget {
               leading: const Icon(Icons.info_outline),
               title: const Text('Book Details'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 _showBookDetails(context);
               },
             ),
@@ -221,15 +224,17 @@ class BookCard extends StatelessWidget {
             ListTile(
               leading: Icon(
                 Icons.delete_outline,
-                color: Theme.of(context).colorScheme.error,
+                color: Theme.of(sheetContext).colorScheme.error,
               ),
               title: Text(
                 'Delete',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                style: TextStyle(
+                  color: Theme.of(sheetContext).colorScheme.error,
+                ),
               ),
               onTap: () {
-                Navigator.pop(context);
-                _confirmDelete(context, libraryProvider);
+                Navigator.pop(sheetContext);
+                _confirmDeleteWithMessenger(libraryProvider, parentMessenger);
               },
             ),
           ],
@@ -314,14 +319,15 @@ class BookCard extends StatelessWidget {
   }
 
   /// Shows a confirmation dialog before deleting the book
-  void _confirmDelete(BuildContext context, LibraryProvider libraryProvider) {
-    // Capture the ScaffoldMessenger from the parent context before showing dialog
-    // Using the dialog's context would cause the SnackBar to not dismiss properly
-    final messenger = ScaffoldMessenger.of(context);
+  /// Uses the provided messenger to show the SnackBar on the correct scaffold
+  void _confirmDeleteWithMessenger(
+    LibraryProvider libraryProvider,
+    ScaffoldMessengerState messenger,
+  ) {
     final bookTitle = book.title;
 
     showDialog(
-      context: context,
+      context: messenger.context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Book'),
         content: Text(
@@ -342,6 +348,7 @@ class BookCard extends StatelessWidget {
               messenger.showSnackBar(
                 SnackBar(
                   content: Text('Deleted "$bookTitle"'),
+                  duration: const Duration(seconds: 4),
                   action: SnackBarAction(
                     label: 'Undo',
                     onPressed: () {
