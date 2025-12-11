@@ -382,13 +382,7 @@ class BookListTile extends StatelessWidget {
               messenger.showSnackBar(
                 SnackBar(
                   content: Text('Deleted "$bookTitle"'),
-                  duration: const Duration(seconds: 4),
-                  action: SnackBarAction(
-                    label: 'Undo',
-                    onPressed: () {
-                      // TODO: Implement undo functionality
-                    },
-                  ),
+                  duration: const Duration(seconds: 2),
                 ),
               );
             },
