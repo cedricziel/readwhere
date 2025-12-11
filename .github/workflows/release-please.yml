@@ -50,7 +50,8 @@ jobs:
             echo "::error::ANDROID_KEYSTORE_BASE64 secret is not set. Release builds require proper signing."
             exit 1
           fi
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/release.keystore
+          # Decode to android/app/ since Gradle resolves paths relative to project dir
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
 
       - name: Install dependencies
         run: flutter pub get
