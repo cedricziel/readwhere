@@ -173,9 +173,15 @@ class _FakeNextcloudServerInfo_19 extends _i1.SmartFake
     : super(parent, parentInvocation);
 }
 
-class _FakeUpdateCheckResult_20 extends _i1.SmartFake
+class _FakeValidationResult_20 extends _i1.SmartFake
+    implements _i11.ValidationResult {
+  _FakeValidationResult_20(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeUpdateCheckResult_21 extends _i1.SmartFake
     implements _i17.UpdateCheckResult {
-  _FakeUpdateCheckResult_20(Object parent, Invocation parentInvocation)
+  _FakeUpdateCheckResult_21(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -2502,6 +2508,34 @@ class MockCatalogsProvider extends _i1.Mock implements _i38.CatalogsProvider {
           as _i7.Future<_i13.RssFeed>);
 
   @override
+  _i7.Future<_i11.ValidationResult> validateCatalogUnified(
+    _i5.Catalog? catalog,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#validateCatalogUnified, [catalog]),
+            returnValue: _i7.Future<_i11.ValidationResult>.value(
+              _FakeValidationResult_20(
+                this,
+                Invocation.method(#validateCatalogUnified, [catalog]),
+              ),
+            ),
+          )
+          as _i7.Future<_i11.ValidationResult>);
+
+  @override
+  _i11.CatalogBrowsingCapability? getPluginForCatalog(_i5.Catalog? catalog) =>
+      (super.noSuchMethod(Invocation.method(#getPluginForCatalog, [catalog]))
+          as _i11.CatalogBrowsingCapability?);
+
+  @override
+  bool hasPluginForCatalog(_i5.Catalog? catalog) =>
+      (super.noSuchMethod(
+            Invocation.method(#hasPluginForCatalog, [catalog]),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   _i7.Future<void> startNextcloudOAuth(String? serverUrl) =>
       (super.noSuchMethod(
             Invocation.method(#startNextcloudOAuth, [serverUrl]),
@@ -2614,7 +2648,7 @@ class MockUpdateProvider extends _i1.Mock implements _i39.UpdateProvider {
       (super.noSuchMethod(
             Invocation.method(#checkForUpdates, [], {#force: force}),
             returnValue: _i7.Future<_i17.UpdateCheckResult>.value(
-              _FakeUpdateCheckResult_20(
+              _FakeUpdateCheckResult_21(
                 this,
                 Invocation.method(#checkForUpdates, [], {#force: force}),
               ),

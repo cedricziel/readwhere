@@ -80,7 +80,7 @@ Future<void> setupServiceLocator() async {
   // FlutterSecureStorage (for plugin credentials)
   sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(
-      aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      aOptions: AndroidOptions(),
       iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
     ),
   );

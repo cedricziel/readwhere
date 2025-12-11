@@ -41,7 +41,7 @@ dependencies:
   provider: ^6.1.5+1
 
   # Navigation
-  go_router: ^17.0.0
+  go_router: ^17.0.1
 
   # Database & Storage
   sqflite: ^2.4.2
@@ -138,7 +138,7 @@ dependencies:
   package_info_plus: ^9.0.0
 
   # Secure Storage & Auth
-  flutter_secure_storage: ^9.2.4
+  flutter_secure_storage: ^10.0.0
   url_launcher: ^6.3.2
 
   # Audio Playback (for EPUB media overlays)
@@ -148,6 +148,9 @@ dependencies:
   # macOS UI
   macos_ui: ^2.2.2
   equatable: ^2.0.7
+
+  # Web interop (transitive dep upgrade)
+  js: ^0.7.2
 
 dev_dependencies:
   flutter_test:
