@@ -315,29 +315,33 @@ class BookCard extends StatelessWidget {
 
   /// Shows a confirmation dialog before deleting the book
   void _confirmDelete(BuildContext context, LibraryProvider libraryProvider) {
+    // Capture the ScaffoldMessenger from the parent context before showing dialog
+    // Using the dialog's context would cause the SnackBar to not dismiss properly
+    final messenger = ScaffoldMessenger.of(context);
+    final bookTitle = book.title;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Book'),
         content: Text(
-          'Are you sure you want to delete "${book.title}"? This action cannot be undone.',
+          'Are you sure you want to delete "$bookTitle"? This action cannot be undone.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
             ),
             onPressed: () {
-              final messenger = ScaffoldMessenger.of(context);
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               libraryProvider.deleteBook(book.id);
               messenger.showSnackBar(
                 SnackBar(
-                  content: Text('Deleted "${book.title}"'),
+                  content: Text('Deleted "$bookTitle"'),
                   action: SnackBarAction(
                     label: 'Undo',
                     onPressed: () {
