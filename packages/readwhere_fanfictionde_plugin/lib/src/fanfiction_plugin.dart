@@ -112,29 +112,49 @@ class FanfictionPlugin extends PluginBase with CatalogBrowsingCapability {
         return _browseRoot();
       }
 
+      // Normalize path - handle full URLs by extracting the path portion
+      var normalizedPath = path;
+      if (path.startsWith('https://') || path.startsWith('http://')) {
+        final uri = Uri.parse(path);
+        normalizedPath = uri.path;
+        _log.info('Normalized full URL to path: $normalizedPath');
+      }
+
       // Parse the path to determine what to browse
       // Expected formats:
       // - /category/{categoryId} - show fandoms in a category
       // - /fandom/{fandomId} - show stories in a fandom
       // - /stories/{path} - show stories at a specific URL path
+      // - /{Category}/c/{id} - direct category URL path from fanfiction.de
 
-      if (path.startsWith('/category/')) {
-        final categoryId = path.substring('/category/'.length);
+      if (normalizedPath.startsWith('/category/')) {
+        final categoryId = normalizedPath.substring('/category/'.length);
         return _browseCategory(categoryId, page: page);
       }
 
-      if (path.startsWith('/fandom/')) {
-        final fandomId = path.substring('/fandom/'.length);
+      if (normalizedPath.startsWith('/fandom/')) {
+        final fandomId = normalizedPath.substring('/fandom/'.length);
         return _browseFandom(fandomId, page: page);
       }
 
-      if (path.startsWith('/stories/')) {
-        final urlPath = path.substring('/stories/'.length);
+      if (normalizedPath.startsWith('/stories/')) {
+        final urlPath = normalizedPath.substring('/stories/'.length);
         return _browseStories(urlPath, page: page);
       }
 
-      // Unknown path format - try as a direct URL path
-      return _browseStories(path, page: page);
+      // Handle direct fanfiction.de URL paths like /Anime-Manga/c/102000000
+      // These contain /c/{id} which indicates a category/fandom page
+      // Pass the full path to preserve the category name prefix
+      final categoryMatch = RegExp(r'/c/(\d+)').firstMatch(normalizedPath);
+      if (categoryMatch != null) {
+        final categoryId = categoryMatch.group(1)!;
+        _log.info('Detected category ID from URL path: $categoryId');
+        // Use the full normalized path instead of just the ID
+        return _browseCategoryByPath(normalizedPath, categoryId, page: page);
+      }
+
+      // Unknown path format - try as a direct URL path for stories
+      return _browseStories(normalizedPath, page: page);
     } on FanfictionException catch (e) {
       _log.warning('Browse failed: ${e.message}');
       rethrow;
@@ -168,6 +188,34 @@ class FanfictionPlugin extends PluginBase with CatalogBrowsingCapability {
     return storyListToBrowseResult(
       stories,
       baseUrl: '${FanfictionClient.baseUrl}/c/$categoryId',
+    );
+  }
+
+  /// Browse a category using the full URL path.
+  ///
+  /// This is used when we have a full path like /Anime-Manga/c/102000000
+  /// instead of just the category ID.
+  Future<BrowseResult> _browseCategoryByPath(
+    String categoryPath,
+    String categoryId, {
+    int? page,
+  }) async {
+    _log.info('Browsing category by path: $categoryPath');
+
+    // Fetch the category page to get fandoms using the full path
+    final fandoms = await _client.fetchFandoms(categoryPath, categoryId);
+
+    if (fandoms.isNotEmpty) {
+      // This category has fandoms - show them
+      return fandomsToBrowseResult(fandoms);
+    }
+
+    // No fandoms - this might be a direct story listing
+    final stories = await _client.fetchStories(categoryPath, page: page ?? 1);
+
+    return storyListToBrowseResult(
+      stories,
+      baseUrl: '${FanfictionClient.baseUrl}$categoryPath',
     );
   }
 
