@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -115,7 +116,7 @@ class ArchiveReader {
   /// Throws [EpubResourceNotFoundException] if the file doesn't exist.
   String readFileString(String path) {
     final bytes = readFileBytes(path);
-    return String.fromCharCodes(bytes);
+    return utf8.decode(bytes);
   }
 
   /// Gets a file from the archive.
