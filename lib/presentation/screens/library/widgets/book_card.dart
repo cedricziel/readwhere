@@ -185,6 +185,8 @@ class BookCard extends StatelessWidget {
     // Capture the parent context's messenger before showing the bottom sheet
     // The bottom sheet's context becomes invalid after it's popped
     final parentMessenger = ScaffoldMessenger.of(context);
+    // Also capture the parent context for showing dialogs
+    final parentContext = context;
 
     showModalBottomSheet(
       context: context,
@@ -217,7 +219,7 @@ class BookCard extends StatelessWidget {
               title: const Text('Book Details'),
               onTap: () {
                 Navigator.pop(sheetContext);
-                _showBookDetails(context);
+                _showBookDetails(parentContext);
               },
             ),
             const Divider(),
@@ -234,7 +236,11 @@ class BookCard extends StatelessWidget {
               ),
               onTap: () {
                 Navigator.pop(sheetContext);
-                _confirmDeleteWithMessenger(libraryProvider, parentMessenger);
+                _confirmDeleteWithMessenger(
+                  parentContext,
+                  libraryProvider,
+                  parentMessenger,
+                );
               },
             ),
           ],
@@ -321,13 +327,14 @@ class BookCard extends StatelessWidget {
   /// Shows a confirmation dialog before deleting the book
   /// Uses the provided messenger to show the SnackBar on the correct scaffold
   void _confirmDeleteWithMessenger(
+    BuildContext context,
     LibraryProvider libraryProvider,
     ScaffoldMessengerState messenger,
   ) {
     final bookTitle = book.title;
 
     showDialog(
-      context: messenger.context,
+      context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Book'),
         content: Text(
