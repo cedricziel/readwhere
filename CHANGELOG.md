@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.0](https://github.com/cedricziel/readwhere/compare/v0.1.2...v0.2.0) (2025-12-11)
+
+
+### Features
+
+* **android:** add release signing configuration ([f69c943](https://github.com/cedricziel/readwhere/commit/f69c9430b843a5847f10bcb437b9a8bc35edf06c))
+* **branding:** add app logo and launcher icons ([1bf0abd](https://github.com/cedricziel/readwhere/commit/1bf0abd89da7b48a226b8820ff1be679ece378df))
+* **reader:** add ESC key shortcut to exit reader ([412b9d8](https://github.com/cedricziel/readwhere/commit/412b9d8f4b100ded572fa1918c439216fbddd4ab))
+
+
+### Bug Fixes
+
+* **android:** add missing imports for Kotlin DSL build script ([5b54fb4](https://github.com/cedricziel/readwhere/commit/5b54fb4f951768a70703c73abf0d572305a9b583))
+* **icons:** regenerate app icons with proper colors ([c202e60](https://github.com/cedricziel/readwhere/commit/c202e60b8893c52368d11e8daede169246108ff1))
+* **reader:** add pointer event cleanup handlers ([3193437](https://github.com/cedricziel/readwhere/commit/3193437940098b645fa454b15bfa8fc5cb93e8ec))
+* **reader:** add tap zones for EPUB chapter navigation ([658ffad](https://github.com/cedricziel/readwhere/commit/658ffada3aff401c3a912bb12e910d39b9318421))
+* **reader:** correct TOC navigation to use href-to-spine mapping ([9ac7baf](https://github.com/cedricziel/readwhere/commit/9ac7baf76657983efd54f41e99e74334420bad0b))
+* **reader:** ensure tap detection works with minimal content ([7247257](https://github.com/cedricziel/readwhere/commit/72472570cfe2e09a4c9087febc14a33ef28012c9))
+* **reader:** resolve SelectionArea assertion failure on navigation ([21cb85a](https://github.com/cedricziel/readwhere/commit/21cb85a6373258b97bfd1707757ad855e5e14fbe))
+* **reader:** use UnifiedPluginRegistry instead of empty PluginRegistry ([6373a7c](https://github.com/cedricziel/readwhere/commit/6373a7c6c373d0dac68c24d9d245de100f687e10))
+
 ## [0.1.2](https://github.com/cedricziel/readwhere/compare/v0.1.1...v0.1.2) (2025-12-09)
 
 
