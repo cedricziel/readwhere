@@ -269,6 +269,7 @@ Future<void> setupServiceLocator() async {
     () => ReaderProvider(
       readingProgressRepository: sl(),
       bookmarkRepository: sl(),
+      pluginRegistry: sl<UnifiedPluginRegistry>(),
       kavitaProvider: sl(),
     ),
   );

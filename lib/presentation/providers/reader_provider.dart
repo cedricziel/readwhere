@@ -26,15 +26,17 @@ class ReaderProvider extends ChangeNotifier {
   final ReadingProgressRepository _readingProgressRepository;
   final BookmarkRepository _bookmarkRepository;
   final KavitaProvider? _kavitaProvider;
+  final UnifiedPluginRegistry _pluginRegistry;
   final Uuid _uuid = const Uuid();
-  final PluginRegistry _pluginRegistry = PluginRegistry();
 
   ReaderProvider({
     required ReadingProgressRepository readingProgressRepository,
     required BookmarkRepository bookmarkRepository,
+    required UnifiedPluginRegistry pluginRegistry,
     KavitaProvider? kavitaProvider,
   }) : _readingProgressRepository = readingProgressRepository,
        _bookmarkRepository = bookmarkRepository,
+       _pluginRegistry = pluginRegistry,
        _kavitaProvider = kavitaProvider;
 
   // State
@@ -145,8 +147,10 @@ class ReaderProvider extends ChangeNotifier {
       // Load bookmarks
       _bookmarks = await _bookmarkRepository.getBookmarksForBook(book.id);
 
-      // Open the book with the appropriate plugin (checks magic bytes via canHandle)
-      final plugin = await _pluginRegistry.getPluginForFile(book.filePath);
+      // Open the book with the appropriate plugin (checks magic bytes via canHandleFile)
+      final plugin = await _pluginRegistry.forFile<ReaderCapability>(
+        book.filePath,
+      );
       if (plugin != null) {
         _readerController = await plugin.openBook(book.filePath);
 
