@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/di/service_locator.dart';
+import '../providers/catalogs_provider.dart';
 import '../screens/library/library_screen.dart';
 import '../screens/catalogs/catalogs_screen.dart';
 import '../screens/catalogs/browse/catalog_browse_screen.dart';
 import '../screens/catalogs/browse/nextcloud_browser_screen.dart';
 import '../screens/catalogs/browse/rss_browse_screen.dart';
+import '../screens/catalogs/browse/unified_browse_screen.dart';
 import '../screens/feeds/feeds_screen.dart';
 import '../screens/feeds/article_screen.dart';
 import '../screens/settings/settings_screen.dart';
@@ -201,6 +204,44 @@ GoRouter createAppRouter() {
           }
 
           return RssBrowseScreen(catalogId: catalogId);
+        },
+      ),
+
+      // Fanfiction browse route (full screen, outside shell)
+      // Uses UnifiedBrowseScreen which works with the plugin system
+      GoRoute(
+        path: AppRoutes.fanfictionBrowse,
+        builder: (context, state) {
+          final catalogId = state.pathParameters['catalogId'];
+          if (catalogId == null || catalogId.isEmpty) {
+            // Redirect to catalogs if no catalogId provided
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.go(AppRoutes.catalogs);
+            });
+            return const SizedBox.shrink();
+          }
+
+          // Load catalog and return UnifiedBrowseScreen
+          return FutureBuilder(
+            future: sl<CatalogsProvider>().getCatalogById(catalogId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final catalog = snapshot.data;
+              if (catalog == null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  context.go(AppRoutes.catalogs);
+                });
+                return const SizedBox.shrink();
+              }
+
+              return UnifiedBrowseScreen(catalog: catalog);
+            },
+          );
         },
       ),
 

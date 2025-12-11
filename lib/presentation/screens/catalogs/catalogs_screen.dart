@@ -56,6 +56,8 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
       context.push(AppRoutes.nextcloudBrowsePath(catalog.id));
     } else if (catalog.isRss) {
       context.push(AppRoutes.rssBrowsePath(catalog.id));
+    } else if (catalog.isFanfiction) {
+      context.push(AppRoutes.fanfictionBrowsePath(catalog.id));
     } else {
       context.push(AppRoutes.catalogBrowsePath(catalog.id));
     }

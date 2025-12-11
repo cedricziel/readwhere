@@ -51,6 +51,8 @@ class CatalogModel extends Catalog {
         return CatalogType.nextcloud;
       case 'rss':
         return CatalogType.rss;
+      case 'fanfiction':
+        return CatalogType.fanfiction;
       case 'opds':
       default:
         return CatalogType.opds;

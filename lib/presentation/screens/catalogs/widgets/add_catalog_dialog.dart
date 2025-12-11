@@ -140,6 +140,26 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
             _nameController.text = feed.title;
           }
         });
+      } else if (_catalogType == CatalogType.fanfiction) {
+        // Validate fanfiction.de using unified plugin system
+        final tempCatalog = Catalog(
+          id: 'temp',
+          name: 'temp',
+          url: 'https://www.fanfiktion.de',
+          addedAt: DateTime.now(),
+          type: CatalogType.fanfiction,
+        );
+        final result = await provider.validateCatalogUnified(tempCatalog);
+        if (!result.isValid) {
+          throw Exception(result.error ?? 'Validation failed');
+        }
+        setState(() {
+          _isValidated = true;
+          // Auto-fill name
+          if (_nameController.text.isEmpty) {
+            _nameController.text = 'Fanfiction.de';
+          }
+        });
       } else {
         // Validate OPDS connection
         final feed = await provider.validateOpdsCatalog(
@@ -290,6 +310,10 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
           url: _urlController.text.trim(),
           iconUrl: _validatedRssFeed?.imageUrl,
         );
+      } else if (_catalogType == CatalogType.fanfiction) {
+        catalog = await provider.addFanfictionCatalog(
+          name: _nameController.text.trim(),
+        );
       } else {
         catalog = await provider.addOpdsCatalog(
           name: _nameController.text.trim(),
@@ -367,6 +391,11 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                       label: Text('OPDS'),
                       icon: Icon(Icons.public),
                     ),
+                    ButtonSegment(
+                      value: CatalogType.fanfiction,
+                      label: Text('Fanfiction'),
+                      icon: Icon(Icons.auto_stories),
+                    ),
                   ],
                   selected: {_catalogType},
                   onSelectionChanged: (selected) {
@@ -384,50 +413,52 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                 const SizedBox(height: 16),
               ],
 
-              // Server URL
-              TextFormField(
-                controller: _urlController,
-                focusNode: _urlFocusNode,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: _catalogType == CatalogType.rss
-                      ? 'Feed URL'
-                      : 'Server URL',
-                  hintText: _catalogType == CatalogType.rss
-                      ? 'https://example.com/feed.xml'
-                      : _catalogType == CatalogType.kavita
-                      ? 'https://your-kavita-server.com'
-                      : _catalogType == CatalogType.nextcloud
-                      ? 'https://your-nextcloud.com'
-                      : 'https://catalog.example.com/opds',
-                  prefixIcon: const Icon(Icons.link),
+              // Server URL (not shown for fanfiction.de which has a fixed URL)
+              if (_catalogType != CatalogType.fanfiction) ...[
+                TextFormField(
+                  controller: _urlController,
+                  focusNode: _urlFocusNode,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: _catalogType == CatalogType.rss
+                        ? 'Feed URL'
+                        : 'Server URL',
+                    hintText: _catalogType == CatalogType.rss
+                        ? 'https://example.com/feed.xml'
+                        : _catalogType == CatalogType.kavita
+                        ? 'https://your-kavita-server.com'
+                        : _catalogType == CatalogType.nextcloud
+                        ? 'https://your-nextcloud.com'
+                        : 'https://catalog.example.com/opds',
+                    prefixIcon: const Icon(Icons.link),
+                  ),
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return _catalogType == CatalogType.rss
+                          ? 'Feed URL is required'
+                          : 'Server URL is required';
+                    }
+                    if (!value.startsWith('http://') &&
+                        !value.startsWith('https://')) {
+                      return 'URL must start with http:// or https://';
+                    }
+                    return null;
+                  },
+                  onChanged: (_) {
+                    if (_isValidated) {
+                      setState(() {
+                        _isValidated = false;
+                        _validatedFeed = null;
+                        _nextcloudServerInfo = null;
+                        _validatedRssFeed = null;
+                      });
+                    }
+                  },
                 ),
-                keyboardType: TextInputType.url,
-                textInputAction: TextInputAction.next,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return _catalogType == CatalogType.rss
-                        ? 'Feed URL is required'
-                        : 'Server URL is required';
-                  }
-                  if (!value.startsWith('http://') &&
-                      !value.startsWith('https://')) {
-                    return 'URL must start with http:// or https://';
-                  }
-                  return null;
-                },
-                onChanged: (_) {
-                  if (_isValidated) {
-                    setState(() {
-                      _isValidated = false;
-                      _validatedFeed = null;
-                      _nextcloudServerInfo = null;
-                      _validatedRssFeed = null;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
 
               // Nextcloud credentials
               if (_catalogType == CatalogType.nextcloud) ...[
@@ -767,6 +798,36 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                         '${_validatedRssFeed!.items.length} items',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              // Fanfiction validation success
+              if (_isValidated && _catalogType == CatalogType.fanfiction) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Connected to Fanfiction.de',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],

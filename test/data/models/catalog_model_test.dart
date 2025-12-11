@@ -187,6 +187,23 @@ void main() {
           expect(model.isNextcloud, isFalse);
         });
 
+        test('parses fanfiction type', () {
+          final map = {
+            CatalogsTable.columnId: 'catalog-123',
+            CatalogsTable.columnName: 'Fanfiction.de',
+            CatalogsTable.columnUrl: 'https://www.fanfiktion.de',
+            CatalogsTable.columnAddedAt: testAddedAt.millisecondsSinceEpoch,
+            CatalogsTable.columnType: 'fanfiction',
+          };
+
+          final model = CatalogModel.fromMap(map);
+          expect(model.type, equals(CatalogType.fanfiction));
+          expect(model.isFanfiction, isTrue);
+          expect(model.isRss, isFalse);
+          expect(model.isKavita, isFalse);
+          expect(model.isNextcloud, isFalse);
+        });
+
         test('defaults to opds for null type', () {
           final map = {
             CatalogsTable.columnId: 'catalog-123',
@@ -579,6 +596,26 @@ void main() {
           type: CatalogType.opds,
         );
         expect(opdsModel.isNextcloud, isFalse);
+      });
+
+      test('isFanfiction returns true only for Fanfiction type', () {
+        final fanfictionModel = CatalogModel(
+          id: 'fanfiction-123',
+          name: 'Fanfiction.de',
+          url: 'https://www.fanfiktion.de',
+          addedAt: testAddedAt,
+          type: CatalogType.fanfiction,
+        );
+        expect(fanfictionModel.isFanfiction, isTrue);
+
+        final opdsModel = CatalogModel(
+          id: 'opds-123',
+          name: 'Test OPDS',
+          url: 'https://example.com/opds',
+          addedAt: testAddedAt,
+          type: CatalogType.opds,
+        );
+        expect(opdsModel.isFanfiction, isFalse);
       });
     });
   });

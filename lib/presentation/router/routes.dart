@@ -43,6 +43,9 @@ class AppRoutes {
   // RSS browse route (full screen, outside shell)
   static const String rssBrowse = '/catalogs/:catalogId/rss';
 
+  // Fanfiction browse route (full screen, outside shell)
+  static const String fanfictionBrowse = '/catalogs/:catalogId/fanfiction';
+
   // Article route (full screen, for reading feed items)
   static const String article = '/feeds/:feedId/article/:itemId';
 
@@ -65,6 +68,13 @@ class AppRoutes {
   /// [catalogId] is the unique identifier of the RSS catalog.
   static String rssBrowsePath(String catalogId) {
     return '/catalogs/$catalogId/rss';
+  }
+
+  /// Generates the Fanfiction browse path with the given catalog ID.
+  ///
+  /// [catalogId] is the unique identifier of the Fanfiction catalog.
+  static String fanfictionBrowsePath(String catalogId) {
+    return '/catalogs/$catalogId/fanfiction';
   }
 
   /// Generates the article path with the given feed and item IDs.

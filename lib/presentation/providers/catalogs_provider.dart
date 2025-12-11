@@ -127,6 +127,15 @@ class CatalogsProvider extends ChangeNotifier {
     );
   }
 
+  /// Add a new Fanfiction.de catalog
+  Future<Catalog?> addFanfictionCatalog({required String name}) async {
+    return _addCatalog(
+      name: name,
+      url: 'https://www.fanfiktion.de',
+      type: CatalogType.fanfiction,
+    );
+  }
+
   /// Add a new Nextcloud catalog
   Future<Catalog?> addNextcloudCatalog({
     required String name,
