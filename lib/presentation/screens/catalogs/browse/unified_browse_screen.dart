@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 import '../../../../domain/entities/catalog.dart';
+import '../../../providers/library_provider.dart';
 import '../../../providers/unified_catalog_browsing_provider.dart';
 import '../../../router/routes.dart';
 
@@ -146,8 +148,12 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
     if (mounted) {
       if (bookId != null) {
         if (openAfterDownload) {
-          // Navigate to reader
-          context.push(AppRoutes.readerPath(bookId));
+          // Refresh library so the reader can find the newly imported book
+          await context.read<LibraryProvider>().loadBooks();
+          if (mounted) {
+            // Navigate to reader
+            context.push(AppRoutes.readerPath(bookId));
+          }
         } else {
           ScaffoldMessenger.of(
             context,
