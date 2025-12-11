@@ -13,6 +13,9 @@ enum CatalogType {
 
   /// RSS/Atom feed
   rss,
+
+  /// Fanfiction.de catalog
+  fanfiction,
 }
 
 /// Represents an OPDS catalog source
@@ -70,6 +73,9 @@ class Catalog extends Equatable {
 
   /// Whether this is an RSS feed
   bool get isRss => type == CatalogType.rss;
+
+  /// Whether this is a Fanfiction.de catalog
+  bool get isFanfiction => type == CatalogType.fanfiction;
 
   /// Get the WebDAV URL for Nextcloud file access
   String get webdavUrl {

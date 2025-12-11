@@ -26,6 +26,8 @@ workspace:
   - packages/readwhere_rss_plugin
   - packages/readwhere_opds_plugin
   - packages/readwhere_kavita_plugin
+  - packages/readwhere_fanfictionde
+  - packages/readwhere_fanfictionde_plugin
 
 dependencies:
   flutter:
@@ -113,6 +115,12 @@ dependencies:
   # Kavita Plugin
   readwhere_kavita_plugin:
     path: packages/readwhere_kavita_plugin
+
+  # Fanfiction.de Support
+  readwhere_fanfictionde:
+    path: packages/readwhere_fanfictionde
+  readwhere_fanfictionde_plugin:
+    path: packages/readwhere_fanfictionde_plugin
 
   # Networking
   http: ^1.6.0

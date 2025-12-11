@@ -464,6 +464,14 @@ class CatalogsProvider extends ChangeNotifier {
             error: 'Use validateNextcloud() for Nextcloud catalogs',
             errorCode: 'use_legacy_method',
           );
+
+        case CatalogType.fanfiction:
+          // Fanfiction.de validation is handled by the plugin above
+          // If we reach here, the plugin wasn't available
+          return ValidationResult.failure(
+            error: 'Fanfiction.de plugin not available',
+            errorCode: 'plugin_not_available',
+          );
       }
     } catch (e) {
       _error = 'Validation failed: $e';

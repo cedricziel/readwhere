@@ -1,0 +1,19 @@
+name: readwhere_fanfictionde
+description: Pure Dart library for interacting with fanfiction.de - fetching stories, parsing HTML, and generating EPUBs.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  archive: ^4.0.2
+  equatable: ^2.0.7
+  html: ^0.15.5
+  http: ^1.2.2
+  meta: ^1.15.0
+  xml: ^6.5.0
+
+dev_dependencies:
+  test: ^1.25.8
