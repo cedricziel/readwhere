@@ -63,17 +63,19 @@ class CategoryParser {
     final document = html_parser.parse(html);
     final fandoms = <Fandom>[];
 
-    // Fandom links have format: /FandomName/c/ID or /Category/FandomName/c/ID
-    // with optional trailing segments like /1/updatedate
+    // Fandom links have format: /FandomName/c/ID/1/updatedate
+    // They MUST have the /1/updatedate suffix to distinguish from breadcrumb links
+    // Breadcrumb links like /Fanfiction/c/100000000 don't have this suffix
     final fandomLinks = document.querySelectorAll('a[href*="/c/"]');
 
     for (final link in fandomLinks) {
       final href = link.attributes['href'];
       if (href == null) continue;
 
-      // Match pattern like:
-      // /hack/c/102136000/1/updatedate (single segment before /c/)
-      // /Anime-Manga/Naruto/c/102001000 (two segments before /c/)
+      // Only match links with /updatedate suffix (actual fandom links)
+      // This excludes breadcrumb navigation links like /Fanfiction/c/100000000
+      if (!href.contains('/updatedate')) continue;
+
       // Extract the fandom ID which comes after /c/
       final match = RegExp(r'/c/(\d+)').firstMatch(href);
       if (match == null) continue;
@@ -97,18 +99,12 @@ class CategoryParser {
       // Avoid duplicates
       if (fandoms.any((f) => f.id == fandomId)) continue;
 
-      // Clean the href by removing trailing segments like /1/updatedate
-      var cleanHref = href;
-      final cleanMatch =
-          RegExp(r'^(/[^/]+/c/\d+|/[^/]+/[^/]+/c/\d+)').firstMatch(href);
-      if (cleanMatch != null) {
-        cleanHref = cleanMatch.group(1)!;
-      }
-
+      // Keep the full href including /1/updatedate suffix
+      // The site requires this suffix and returns 301 redirects without it
       fandoms.add(Fandom(
         id: fandomId,
         name: name,
-        url: '$_baseUrl$cleanHref',
+        url: '$_baseUrl$href',
         categoryId: categoryId,
         storyCount: storyCount,
       ));

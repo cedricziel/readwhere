@@ -53,17 +53,19 @@ void main() {
 
     group('parseFandoms', () {
       test('parses fandom links from category page', () {
+        // Fandom links must have /updatedate suffix to be recognized
+        // Links without this suffix (like breadcrumbs) are excluded
         const html = '''
           <html><body>
-            <a href="/Anime-Manga/Naruto/c/102001000">Naruto</a>
-            <a href="/Anime-Manga/OnePiece/c/102002000">One Piece</a>
+            <a href="/Anime-Manga/Naruto/c/102001000/1/updatedate">Naruto</a>
+            <a href="/Anime-Manga/OnePiece/c/102002000/1/updatedate">One Piece</a>
             <a href="/Anime-Manga/c/102000000">Anime &amp; Manga</a>
           </body></html>
         ''';
 
         final result = parser.parseFandoms(html, '102000000');
 
-        // Should exclude the parent category itself
+        // Should exclude the parent category itself (no /updatedate suffix)
         expect(result, hasLength(2));
         expect(result[0].id, equals('102001000'));
         expect(result[0].name, equals('Naruto'));
@@ -109,8 +111,9 @@ void main() {
         expect(result[0].id, equals('102136000'));
         expect(result[0].name, equals('.hack//'));
         expect(result[0].storyCount, equals(26));
-        // URL should be cleaned (no /1/updatedate suffix)
-        expect(result[0].url, endsWith('/hack/c/102136000'));
+        // URL should keep the full path including /1/updatedate suffix
+        // (the site requires this and returns 301 redirects without it)
+        expect(result[0].url, endsWith('/hack/c/102136000/1/updatedate'));
 
         expect(result[1].id, equals('102157000'));
         expect(result[1].name, equals('+Anima'));
@@ -125,7 +128,7 @@ void main() {
         const html = '''
           <html><body>
             <span>
-              <a href="/Category/Fandom/c/12345">Test Fandom</a>
+              <a href="/Category/Fandom/c/12345/1/updatedate">Test Fandom</a>
               <span class="badge">5000</span>
             </span>
           </body></html>
@@ -139,9 +142,10 @@ void main() {
 
       test('handles mixed URL formats', () {
         // Some links have two path segments, some have one
+        // But ALL fandom links must have /updatedate suffix
         const html = '''
           <html><body>
-            <a href="/Anime-Manga/Naruto/c/102001000">Naruto</a>
+            <a href="/Anime-Manga/Naruto/c/102001000/1/updatedate">Naruto</a>
             <a href="/hack/c/102136000/1/updatedate">.hack//</a>
           </body></html>
         ''';
