@@ -50,21 +50,30 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
   }
 
   void _handlePointerDown(PointerDownEvent event) {
+    debugPrint('[ReaderContent] PointerDown at ${event.position}');
     _pointerDownPosition = event.position;
     _pointerDownTime = DateTime.now();
   }
 
   void _handlePointerUp(PointerUpEvent event) {
+    debugPrint('[ReaderContent] PointerUp at ${event.position}');
     if (_pointerDownPosition == null || _pointerDownTime == null) {
+      debugPrint('[ReaderContent] PointerUp ignored - no down position');
       return;
     }
 
     final distance = (event.position - _pointerDownPosition!).distance;
     final duration = DateTime.now().difference(_pointerDownTime!);
+    debugPrint('[ReaderContent] distance=$distance, duration=$duration');
 
     // Check if this was a tap (short duration, minimal movement)
     if (distance <= _tapMaxDistance && duration <= _tapMaxDuration) {
+      debugPrint('[ReaderContent] Detected as TAP');
       _handleTap(event.position);
+    } else {
+      debugPrint(
+        '[ReaderContent] NOT a tap (distance > $_tapMaxDistance or duration > $_tapMaxDuration)',
+      );
     }
 
     // Reset state
@@ -81,15 +90,21 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
   void _handleTap(Offset position) {
     final screenWidth = MediaQuery.of(context).size.width;
     final tapX = position.dx;
+    debugPrint(
+      '[ReaderContent] _handleTap: tapX=$tapX, screenWidth=$screenWidth',
+    );
 
     if (tapX < screenWidth / 3) {
       // Left third - previous chapter
+      debugPrint('[ReaderContent] -> LEFT zone: calling onPreviousChapter');
       widget.onPreviousChapter?.call();
     } else if (tapX > screenWidth * 2 / 3) {
       // Right third - next chapter
+      debugPrint('[ReaderContent] -> RIGHT zone: calling onNextChapter');
       widget.onNextChapter?.call();
     } else {
       // Center third - toggle controls
+      debugPrint('[ReaderContent] -> CENTER zone: calling onToggleControls');
       widget.onToggleControls?.call();
     }
   }
@@ -100,8 +115,18 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
 
     return Consumer2<ReaderProvider, AudioProvider>(
       builder: (context, readerProvider, audioProvider, child) {
+        debugPrint(
+          '[ReaderContent] BUILD: hasOpenBook=${readerProvider.hasOpenBook}, '
+          'isLoading=${readerProvider.isLoading}, '
+          'chapterIndex=${readerProvider.currentChapterIndex}, '
+          'htmlLength=${readerProvider.currentChapterHtml.length}',
+        );
+
         // Placeholder content when no book is open or loading
         if (!readerProvider.hasOpenBook || readerProvider.isLoading) {
+          debugPrint(
+            '[ReaderContent] Showing PLACEHOLDER (no book or loading)',
+          );
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -143,6 +168,7 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
           );
         }
 
+        debugPrint('[ReaderContent] Showing CONTENT with Listener');
         // Use Listener to intercept raw pointer events for tap detection
         // This works around SelectionArea absorbing tap gestures
         return Listener(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/audio_provider.dart';
 import '../../providers/library_provider.dart';
@@ -35,6 +36,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   bool _showControls = false;
   bool _showAudioControls = false;
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
   double _scrollPosition = 0.0;
 
   @override
@@ -95,7 +97,33 @@ class _ReaderScreenState extends State<ReaderScreen> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  /// Handle keyboard events for reader shortcuts
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent) {
+      // ESC key - close the reader
+      if (event.logicalKey == LogicalKeyboardKey.escape) {
+        _closeReader();
+        return KeyEventResult.handled;
+      }
+    }
+    return KeyEventResult.ignored;
+  }
+
+  /// Close the reader and navigate back
+  Future<void> _closeReader() async {
+    final navigator = Navigator.of(context);
+    final readerProvider = context.read<ReaderProvider>();
+    final audioProvider = context.read<AudioProvider>();
+    await audioProvider.reset();
+    await readerProvider.saveProgress();
+    await readerProvider.closeBook();
+    if (mounted) {
+      navigator.pop();
+    }
   }
 
   void _onScroll() {
@@ -282,128 +310,125 @@ class _ReaderScreenState extends State<ReaderScreen> {
         );
 
         // Main reader UI
-        return ReadingThemeProvider(
-          themeData: readingTheme,
-          child: Scaffold(
-            backgroundColor: readingTheme.backgroundColor,
-            body: SafeArea(
-              child: Stack(
-                children: [
-                  // Main content area with gesture detection for swipes
-                  // Tap handling is done inside ReaderContentWidget to work
-                  // around SelectionArea blocking tap events
-                  GestureDetector(
-                    onHorizontalDragEnd: (details) {
-                      // Swipe right to left (next chapter)
-                      if (details.primaryVelocity != null &&
-                          details.primaryVelocity! < -200) {
-                        readerProvider.nextChapter();
-                        if (_scrollController.hasClients) {
-                          _scrollController.jumpTo(0);
-                        }
-                      }
-                      // Swipe left to right (previous chapter)
-                      else if (details.primaryVelocity != null &&
-                          details.primaryVelocity! > 200) {
-                        readerProvider.previousChapter();
-                        if (_scrollController.hasClients) {
-                          _scrollController.jumpTo(0);
-                        }
-                      }
-                    },
-                    child: _buildContentWidget(readerProvider),
-                  ),
-
-                  // Overlay controls (top and bottom bars)
-                  Consumer<SettingsProvider>(
-                    builder: (context, settingsProvider, _) {
-                      final controller = readerProvider.readerController;
-                      final isComic =
-                          controller is CbrReaderController ||
-                          controller is CbzReaderController;
-
-                      return ReaderControls(
-                        visible: _showControls,
-                        bookTitle:
-                            readerProvider.currentBook?.title ?? 'Unknown',
-                        currentChapter: readerProvider.currentChapterIndex,
-                        totalChapters: readerProvider.tableOfContents.length,
-                        progress: readerProvider.progressPercentage,
-                        isComic: isComic,
-                        panelModeEnabled:
-                            settingsProvider.comicPanelModeEnabled,
-                        readingDirection:
-                            settingsProvider.comicReadingDirection,
-                        onTogglePanelMode: isComic
-                            ? () => settingsProvider.toggleComicPanelMode()
-                            : null,
-                        onToggleReadingDirection: isComic
-                            ? () =>
-                                  settingsProvider.toggleComicReadingDirection()
-                            : null,
-                        onClose: () async {
-                          final navigator = Navigator.of(context);
-                          final audioProvider = context.read<AudioProvider>();
-                          await audioProvider.reset();
-                          await readerProvider.saveProgress();
-                          await readerProvider.closeBook();
-                          if (mounted) {
-                            navigator.pop();
-                          }
-                        },
-                        onBookmark: _handleBookmark,
-                        onSettings: _showReadingSettings,
-                        onTableOfContents: _showTableOfContents,
-                        onAudio: _toggleAudioControls,
-                        onProgressChanged: (value) {
-                          // Update progress slider
-                          final totalChapters =
-                              readerProvider.tableOfContents.length;
-                          if (totalChapters > 0) {
-                            final targetChapter = (value / 100 * totalChapters)
-                                .floor();
-                            if (targetChapter !=
-                                readerProvider.currentChapterIndex) {
-                              readerProvider.goToChapter(
-                                targetChapter.clamp(0, totalChapters - 1),
-                              );
-                              if (_scrollController.hasClients) {
-                                _scrollController.jumpTo(0);
-                              }
-                            }
-                          }
-                        },
-                        onPreviousChapter: () {
-                          readerProvider.previousChapter();
-                          if (_scrollController.hasClients) {
-                            _scrollController.jumpTo(0);
-                          }
-                        },
-                        onNextChapter: () {
+        // Wrap with Focus to handle keyboard shortcuts (ESC to exit)
+        return Focus(
+          focusNode: _focusNode,
+          autofocus: true,
+          onKeyEvent: _handleKeyEvent,
+          child: ReadingThemeProvider(
+            themeData: readingTheme,
+            child: Scaffold(
+              backgroundColor: readingTheme.backgroundColor,
+              body: SafeArea(
+                child: Stack(
+                  children: [
+                    // Main content area with gesture detection for swipes
+                    // Tap handling is done inside ReaderContentWidget to work
+                    // around SelectionArea blocking tap events
+                    GestureDetector(
+                      onHorizontalDragEnd: (details) {
+                        // Swipe right to left (next chapter)
+                        if (details.primaryVelocity != null &&
+                            details.primaryVelocity! < -200) {
                           readerProvider.nextChapter();
                           if (_scrollController.hasClients) {
                             _scrollController.jumpTo(0);
                           }
-                        },
-                      );
-                    },
-                  ),
+                        }
+                        // Swipe left to right (previous chapter)
+                        else if (details.primaryVelocity != null &&
+                            details.primaryVelocity! > 200) {
+                          readerProvider.previousChapter();
+                          if (_scrollController.hasClients) {
+                            _scrollController.jumpTo(0);
+                          }
+                        }
+                      },
+                      child: _buildContentWidget(readerProvider),
+                    ),
 
-                  // Audio controls (floating bottom bar)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: AudioControls(
-                      visible: _showAudioControls,
-                      onDismiss: () {
-                        setState(() {
-                          _showAudioControls = false;
-                        });
+                    // Overlay controls (top and bottom bars)
+                    Consumer<SettingsProvider>(
+                      builder: (context, settingsProvider, _) {
+                        final controller = readerProvider.readerController;
+                        final isComic =
+                            controller is CbrReaderController ||
+                            controller is CbzReaderController;
+
+                        return ReaderControls(
+                          visible: _showControls,
+                          bookTitle:
+                              readerProvider.currentBook?.title ?? 'Unknown',
+                          currentChapter: readerProvider.currentChapterIndex,
+                          totalChapters: readerProvider.tableOfContents.length,
+                          progress: readerProvider.progressPercentage,
+                          isComic: isComic,
+                          panelModeEnabled:
+                              settingsProvider.comicPanelModeEnabled,
+                          readingDirection:
+                              settingsProvider.comicReadingDirection,
+                          onTogglePanelMode: isComic
+                              ? () => settingsProvider.toggleComicPanelMode()
+                              : null,
+                          onToggleReadingDirection: isComic
+                              ? () => settingsProvider
+                                    .toggleComicReadingDirection()
+                              : null,
+                          onClose: _closeReader,
+                          onBookmark: _handleBookmark,
+                          onSettings: _showReadingSettings,
+                          onTableOfContents: _showTableOfContents,
+                          onAudio: _toggleAudioControls,
+                          onProgressChanged: (value) {
+                            // Update progress slider
+                            final totalChapters =
+                                readerProvider.tableOfContents.length;
+                            if (totalChapters > 0) {
+                              final targetChapter =
+                                  (value / 100 * totalChapters).floor();
+                              if (targetChapter !=
+                                  readerProvider.currentChapterIndex) {
+                                readerProvider.goToChapter(
+                                  targetChapter.clamp(0, totalChapters - 1),
+                                );
+                                if (_scrollController.hasClients) {
+                                  _scrollController.jumpTo(0);
+                                }
+                              }
+                            }
+                          },
+                          onPreviousChapter: () {
+                            readerProvider.previousChapter();
+                            if (_scrollController.hasClients) {
+                              _scrollController.jumpTo(0);
+                            }
+                          },
+                          onNextChapter: () {
+                            readerProvider.nextChapter();
+                            if (_scrollController.hasClients) {
+                              _scrollController.jumpTo(0);
+                            }
+                          },
+                        );
                       },
                     ),
-                  ),
-                ],
+
+                    // Audio controls (floating bottom bar)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: AudioControls(
+                        visible: _showAudioControls,
+                        onDismiss: () {
+                          setState(() {
+                            _showAudioControls = false;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
