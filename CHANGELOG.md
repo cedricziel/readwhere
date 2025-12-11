@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.3.0](https://github.com/cedricziel/readwhere/compare/v0.2.0...v0.3.0) (2025-12-11)
+
+
+### Features
+
+* **catalog:** separate download-only vs download-and-open actions ([0226543](https://github.com/cedricziel/readwhere/commit/0226543f03aa69041da457ad610363a667240c26))
+* **fanfiction:** show richer story metadata in catalog list ([c850911](https://github.com/cedricziel/readwhere/commit/c850911747191869fe401874adc98d2003dd45f6))
+* **plugins:** add fanfiction.de catalog plugin ([d057b44](https://github.com/cedricziel/readwhere/commit/d057b448d643e9992c9139e0900a7206fbf417b6))
+* **reader:** add center tap to toggle controls in CBR/CBZ reader ([5fa9e46](https://github.com/cedricziel/readwhere/commit/5fa9e463df70a0d0d8c00e5d009459ba54c4297f))
+* **ui:** integrate fanfiction.de catalog into UI ([f0c1313](https://github.com/cedricziel/readwhere/commit/f0c131396274f27c8064078b6d4b6506e00823f3))
+
+
+### Bug Fixes
+
+* **catalog:** refresh library before navigating to reader after download ([e7382bb](https://github.com/cedricziel/readwhere/commit/e7382bba4c15d717a5289b614d63d940a1e10bfb))
+* **ci:** correct keystore path in release workflow ([37f91fc](https://github.com/cedricziel/readwhere/commit/37f91fc41274b1007f2a8457727b89f9ca43b026))
+* **epub:** use UTF-8 decoding for EPUB text content ([b60e349](https://github.com/cedricziel/readwhere/commit/b60e34996dd0054a79c8c8e7238ea636833b0ad0))
+* **fanfictionde:** update parseFandoms regex to match actual HTML ([a739109](https://github.com/cedricziel/readwhere/commit/a739109f8da6de99d6c582eec0cb4f16e18b476d))
+* **fanfiction:** filter fandom links by /updatedate suffix ([c3485c1](https://github.com/cedricziel/readwhere/commit/c3485c143a16eb8a63b88353666617dd75a89237))
+* **fanfiction:** fix UTF-8 encoding in EPUB files ([761d49a](https://github.com/cedricziel/readwhere/commit/761d49a9b0585e2c21dc4deb31e83004dd7c0042))
+* **fanfiction:** improve story parsing, page titles, and UTF-8 encoding ([28b2244](https://github.com/cedricziel/readwhere/commit/28b224406b4f9ffa03ca163337f5a4aa2f8aad98))
+* **fanfiction:** normalize full URLs to paths in browse method ([98d61d4](https://github.com/cedricziel/readwhere/commit/98d61d4ec48735b37984a53181537e02c06202d5))
+* **library:** fix SnackBar not dismissing after book deletion ([05dab7a](https://github.com/cedricziel/readwhere/commit/05dab7af742cb61b60334104cf3b40268367a89f))
+* **library:** fix SnackBar not dismissing after book deletion ([7549d3b](https://github.com/cedricziel/readwhere/commit/7549d3b8891034da608afdd730c88a9b7b465108))
+* **library:** shorten delete SnackBar duration to 2 seconds ([21b3bd5](https://github.com/cedricziel/readwhere/commit/21b3bd5b438cc00ad69c4957ffbc79d903d4ff17))
+* **library:** use parent context for delete confirmation dialog ([95938c4](https://github.com/cedricziel/readwhere/commit/95938c44b2468694926787a9a47257234df45e5a))
+* **reader:** use correct page index for CBR/CBZ image display ([1ff0e3d](https://github.com/cedricziel/readwhere/commit/1ff0e3d503f257a8eff413c07b8cfe3294bbaa05))
+
 ## [0.2.0](https://github.com/cedricziel/readwhere/compare/v0.1.2...v0.2.0) (2025-12-11)
 
 
