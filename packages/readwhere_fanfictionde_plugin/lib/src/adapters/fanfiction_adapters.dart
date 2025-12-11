@@ -23,10 +23,49 @@ class StoryEntryAdapter implements CatalogEntry {
   CatalogEntryType get type => CatalogEntryType.book;
 
   @override
-  String? get subtitle => story.author.displayName ?? story.author.username;
+  String? get subtitle {
+    // Format: "Author · Rating · Chapters · Words · Status"
+    final parts = <String>[];
+    parts.add(story.author.displayName ?? story.author.username);
+    parts.add(story.rating.label);
+    parts.add('${story.chapterCount} ch');
+    parts.add(_formatWordCount(story.wordCount));
+    parts.add(story.isComplete ? '✓' : '…');
+    return parts.join(' · ');
+  }
 
   @override
-  String? get summary => story.summary.isNotEmpty ? story.summary : null;
+  String? get summary {
+    // Include genres, characters, and actual summary
+    final buffer = StringBuffer();
+
+    if (story.genres.isNotEmpty) {
+      buffer.write(story.genres.join(', '));
+    }
+
+    if (story.characters.isNotEmpty) {
+      if (buffer.isNotEmpty) buffer.write(' • ');
+      buffer.write(story.characters.join(', '));
+    }
+
+    if (story.summary.isNotEmpty) {
+      if (buffer.isNotEmpty) buffer.write('\n');
+      buffer.write(story.summary);
+    }
+
+    return buffer.isNotEmpty ? buffer.toString() : null;
+  }
+
+  /// Formats word count to human-readable string (e.g., "12.5K")
+  static String _formatWordCount(int words) {
+    if (words >= 1000000) {
+      return '${(words / 1000000).toStringAsFixed(1)}M';
+    }
+    if (words >= 1000) {
+      return '${(words / 1000).toStringAsFixed(1)}K';
+    }
+    return '$words';
+  }
 
   @override
   String? get thumbnailUrl => null; // Fanfiction.de doesn't have cover images
