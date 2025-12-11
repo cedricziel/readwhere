@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 import '../entities/category.dart';
@@ -182,11 +184,14 @@ class FanfictionClient {
           'Accept':
               'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
+          'Accept-Charset': 'utf-8',
         },
       ).timeout(timeout);
 
       if (response.statusCode == 200) {
-        return response.body;
+        // Always decode as UTF-8 to handle German characters correctly
+        // The response.body may misinterpret the encoding
+        return utf8.decode(response.bodyBytes);
       } else if (response.statusCode == 404) {
         throw FanfictionNotFoundException(
           'Page not found: $url',

@@ -27,7 +27,18 @@ class StoryParser {
       }
     }
 
-    // If no latest items found, try generic story list format
+    // Try storylist-item format (used on category/fandom pages)
+    if (stories.isEmpty) {
+      final storylistItems = document.querySelectorAll('.storylist-item');
+      for (final item in storylistItems) {
+        final story = _parseStorylistItem(item);
+        if (story != null && !stories.any((s) => s.id == story.id)) {
+          stories.add(story);
+        }
+      }
+    }
+
+    // If still no items found, try generic story link format as fallback
     if (stories.isEmpty) {
       final storyLinks = document.querySelectorAll('a[href^="/s/"]');
       for (final link in storyLinks) {
@@ -41,11 +52,15 @@ class StoryParser {
     // Parse pagination
     final pagination = _parsePagination(document);
 
+    // Parse page title from <title> tag
+    final pageTitle = _parsePageTitle(document);
+
     return StoryListResult(
       stories: stories,
       currentPage: pagination.currentPage,
       totalPages: pagination.totalPages,
       hasNextPage: pagination.hasNext,
+      pageTitle: pageTitle,
     );
   }
 
@@ -122,7 +137,138 @@ class StoryParser {
     );
   }
 
-  /// Parse story info from a story link element.
+  /// Parse a story item from the storylist format (category/fandom pages).
+  ///
+  /// HTML structure:
+  /// ```html
+  /// <div class="storylist-item grid-row">
+  ///   <div class="storylist-leftcol grid-40">
+  ///     <div class="center bold huge-font">
+  ///       <a href="/s/{id}/1/{slug}">Story Title</a>
+  ///     </div>
+  ///     <div class="center small-font padded-vertical-small">
+  ///       von <a href="/u/{username}">Author Name</a>
+  ///     </div>
+  ///     <div class="small-font center">
+  ///       Geschichte > Genre1, Genre2 / P16 / Slash
+  ///     </div>
+  ///     ...
+  ///   </div>
+  /// </div>
+  /// ```
+  Story? _parseStorylistItem(Element item) {
+    // Get story link
+    final storyLink = item.querySelector('a[href^="/s/"]');
+    if (storyLink == null) return null;
+
+    final href = storyLink.attributes['href'];
+    if (href == null) return null;
+
+    // Extract story ID from URL: /s/{id}/{chapter}/{slug}
+    final match = RegExp(r'/s/([a-f0-9]+)/').firstMatch(href);
+    if (match == null) return null;
+
+    final storyId = match.group(1)!;
+    final title = storyLink.text.trim();
+
+    if (title.isEmpty) return null;
+
+    // Get author - look for link with /u/ in href
+    final authorLink = item.querySelector('a[href^="/u/"]');
+    String authorUsername = 'Unknown';
+    String authorName = 'Unknown';
+    if (authorLink != null) {
+      authorUsername =
+          authorLink.attributes['href']?.replaceFirst('/u/', '') ?? 'Unknown';
+      // Extract text, removing any icon spans
+      final clone = authorLink.clone(true);
+      clone.querySelectorAll('span[class*="fa-"]').forEach((e) => e.remove());
+      authorName = clone.text.trim();
+      if (authorName.isEmpty) authorName = authorUsername;
+    }
+
+    // Get summary from the text after the metadata
+    String summary = '';
+    // Look for the summary text which is usually in the storylist-rightcol
+    // or in a div after the metadata
+    final rightCol = item.querySelector('.storylist-rightcol');
+    if (rightCol != null) {
+      // Get direct text content, excluding child elements
+      summary = rightCol.text.trim();
+    }
+
+    // Parse genre/rating info from small-font div
+    final infoElements = item.querySelectorAll('.small-font.center');
+    String infoText = '';
+    for (final el in infoElements) {
+      final text = el.text;
+      if (text.contains('Geschichte') || text.contains('P1')) {
+        infoText = text;
+        break;
+      }
+    }
+
+    // Parse rating (P6, P12, P16, P18)
+    final ratingMatch = RegExp(r'P\d+(-AVL)?').firstMatch(infoText);
+    final rating = ratingMatch != null
+        ? StoryRating.fromString(ratingMatch.group(0)!)
+        : StoryRating.unknown;
+
+    // Parse genres
+    final genres = <String>[];
+    final genreMatch =
+        RegExp(r'Geschichte.*?>\s*([^/]+)\s*/').firstMatch(infoText);
+    if (genreMatch != null) {
+      genres.addAll(genreMatch.group(1)!.split(',').map((g) => g.trim()));
+    }
+
+    // Get chapter count from icon with title="Kapitel"
+    var chapterCount = 1;
+    final chapterIcon = item.querySelector('.titled-icon[title="Kapitel"]');
+    if (chapterIcon != null) {
+      final sibling = chapterIcon.nextElementSibling;
+      if (sibling != null) {
+        chapterCount = int.tryParse(sibling.text.trim()) ?? 1;
+      }
+    }
+
+    // Get word count from icon with title containing "Wörter"
+    var wordCount = 0;
+    final wordIcon = item.querySelector('.titled-icon[title*="Wörter"]');
+    if (wordIcon != null) {
+      final sibling = wordIcon.nextElementSibling;
+      if (sibling != null) {
+        final text = sibling.text.replaceAll(RegExp(r'[^\d]'), '');
+        wordCount = int.tryParse(text) ?? 0;
+      }
+    }
+
+    // Check if complete (look for flag-checkered icon without "In Arbeit" text)
+    final completeIcon =
+        item.querySelector('.titled-icon[title="fertiggestellt"]');
+    // The story is complete if we find a non-empty checkered flag indicator
+    final isComplete = completeIcon?.nextElementSibling?.text.trim() == '✓' ||
+        completeIcon?.parent?.text.contains('✓') == true ||
+        !infoText.contains('In Arbeit');
+
+    return Story(
+      id: storyId,
+      title: title,
+      author: Author(
+        username: authorUsername,
+        displayName: authorName,
+      ),
+      summary: summary,
+      rating: rating,
+      genres: genres,
+      chapterCount: chapterCount,
+      wordCount: wordCount,
+      isComplete: isComplete,
+      url: '$_baseUrl$href',
+    );
+  }
+
+  /// Parse story info from a story link element (fallback for unknown formats).
   Story? _parseStoryLink(Element link) {
     final href = link.attributes['href'];
     if (href == null) return null;
@@ -149,6 +295,28 @@ class StoryParser {
       isComplete: false,
       url: '$_baseUrl$href',
     );
+  }
+
+  /// Parse page title from <title> tag.
+  ///
+  /// Format: "07 Ghost - Anime & Manga - Fanfiction | Seite 1 | FanFiktion.de"
+  /// Returns: "07 Ghost"
+  String? _parsePageTitle(Document document) {
+    final titleElement = document.querySelector('title');
+    if (titleElement == null) return null;
+
+    final fullTitle = titleElement.text.trim();
+    if (fullTitle.isEmpty) return null;
+
+    // Split by " - " and take the first part
+    final parts = fullTitle.split(' - ');
+    if (parts.isEmpty) return null;
+
+    final firstPart = parts.first.trim();
+    // If the title is just "FanFiktion.de" or similar, return null
+    if (firstPart.toLowerCase().contains('fanfiktion')) return null;
+
+    return firstPart;
   }
 
   /// Parse full story details from a story page.

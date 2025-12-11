@@ -133,6 +133,7 @@ class StoryListResult extends Equatable {
     this.currentPage = 1,
     this.totalPages,
     this.hasNextPage = false,
+    this.pageTitle,
   });
 
   /// The stories in this result page.
@@ -150,6 +151,9 @@ class StoryListResult extends Equatable {
   /// Whether there are more pages after this one.
   final bool hasNextPage;
 
+  /// Page title extracted from the HTML (e.g., fandom name).
+  final String? pageTitle;
+
   /// Returns true if there are no stories.
   bool get isEmpty => stories.isEmpty;
 
@@ -158,5 +162,5 @@ class StoryListResult extends Equatable {
 
   @override
   List<Object?> get props =>
-      [stories, totalCount, currentPage, totalPages, hasNextPage];
+      [stories, totalCount, currentPage, totalPages, hasNextPage, pageTitle];
 }

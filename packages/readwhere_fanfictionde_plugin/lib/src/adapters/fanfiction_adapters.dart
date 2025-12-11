@@ -190,9 +190,12 @@ BrowseResult storyListToBrowseResult(
     }
   }
 
+  // Use provided title, or fall back to page title from HTML
+  final displayTitle = title ?? result.pageTitle;
+
   return BrowseResult(
     entries: entries,
-    title: title,
+    title: displayTitle,
     page: result.currentPage,
     totalPages: result.totalPages,
     hasNextPage: result.hasNextPage,
