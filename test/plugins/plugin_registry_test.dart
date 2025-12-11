@@ -1,3 +1,7 @@
+// ignore_for_file: deprecated_member_use
+// This test file tests the legacy PluginRegistry which is deprecated.
+// The tests are kept to ensure backwards compatibility.
+
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';

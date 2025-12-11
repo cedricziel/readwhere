@@ -16,6 +16,11 @@ import 'package:readwhere_plugin/readwhere_plugin.dart';
 /// - Extracting and caching cover images
 /// - Creating Book entities with proper metadata
 class BookImportService {
+  final UnifiedPluginRegistry _pluginRegistry;
+
+  BookImportService({required UnifiedPluginRegistry pluginRegistry})
+    : _pluginRegistry = pluginRegistry;
+
   /// Import an EPUB file with validation and return an ImportResult.
   ///
   /// [filePath] Path to the EPUB file
@@ -310,8 +315,9 @@ class BookImportService {
     Uint8List? coverImage;
 
     // Try to find a plugin that can handle this file
-    final pluginRegistry = PluginRegistry();
-    final plugin = await pluginRegistry.getPluginForFile(book.filePath);
+    final plugin = await _pluginRegistry.forFile<ReaderCapability>(
+      book.filePath,
+    );
 
     if (plugin != null) {
       // Use plugin's extractCover method

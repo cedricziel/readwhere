@@ -172,7 +172,9 @@ Future<void> setupServiceLocator() async {
   );
 
   // Services
-  sl.registerLazySingleton<BookImportService>(() => BookImportService());
+  sl.registerLazySingleton<BookImportService>(
+    () => BookImportService(pluginRegistry: sl<UnifiedPluginRegistry>()),
+  );
 
   sl.registerLazySingleton<OpdsClient>(() => OpdsClient(http.Client()));
 

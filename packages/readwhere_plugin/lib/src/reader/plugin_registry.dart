@@ -4,6 +4,11 @@ import 'reader_plugin.dart';
 ///
 /// This class maintains a collection of plugins and provides methods
 /// to register new plugins and find appropriate plugins for files.
+///
+/// @deprecated Use [UnifiedPluginRegistry] instead. This legacy registry
+/// is not integrated with the service locator and plugins registered here
+/// are not available to other parts of the application.
+@Deprecated('Use UnifiedPluginRegistry instead')
 class PluginRegistry {
   static final PluginRegistry _instance = PluginRegistry._internal();
 
