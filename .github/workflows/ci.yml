@@ -58,7 +58,7 @@ jobs:
       - name: Run tests
         run: flutter test
 
-  # Build Android APK
+  # Build Android APK (debug-signed for CI testing)
   build-apk:
     name: Build APK
     runs-on: ubuntu-latest
@@ -83,11 +83,13 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build APK
+      # Note: This builds with debug signing for CI testing purposes.
+      # Release builds with proper signing happen in release-please.yml
+      - name: Build APK (debug-signed)
         run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v5
         with:
-          name: app-release
+          name: app-release-debug-signed
           path: build/app/outputs/flutter-apk/app-release.apk
