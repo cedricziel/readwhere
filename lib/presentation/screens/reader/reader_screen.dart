@@ -244,7 +244,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     // Check if this is fixed-layout content (comics, fixed-layout EPUBs)
     // Uses InteractiveViewer for zoom/pan functionality
     if (controller != null && controller.isFixedLayout) {
-      return const FixedLayoutReader();
+      return FixedLayoutReader(onToggleControls: _toggleControls);
     }
 
     // Default to reflowable reader for text-based content

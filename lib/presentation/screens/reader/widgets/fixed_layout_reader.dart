@@ -24,7 +24,10 @@ import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
 /// - Fixed-layout EPUBs (HTML rendering with viewport constraints)
 /// - CBR/CBZ comics (direct image rendering)
 class FixedLayoutReader extends StatefulWidget {
-  const FixedLayoutReader({super.key});
+  /// Callback when the center of the screen is tapped (to toggle controls)
+  final VoidCallback? onToggleControls;
+
+  const FixedLayoutReader({super.key, this.onToggleControls});
 
   @override
   State<FixedLayoutReader> createState() => _FixedLayoutReaderState();
@@ -413,8 +416,10 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
               } else {
                 _nextPage(readerProvider, totalPages);
               }
+            } else {
+              // Center third - toggle controls
+              widget.onToggleControls?.call();
             }
-            // Center third - no action (could toggle controls in future)
           },
           onHorizontalDragEnd: (details) {
             // Swipe navigation - works in both panel mode and full-page mode
