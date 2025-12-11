@@ -593,6 +593,12 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
     ReaderProvider readerProvider,
   ) {
     return SelectionArea(
+      // Use a key that changes when chapter or content changes to avoid
+      // Flutter framework bug with stale selection indices (issue #123456).
+      // The hashCode ensures a new SelectionArea when content loads.
+      key: ValueKey(
+        'selection_${readerProvider.currentChapterIndex}_${htmlContent.hashCode}',
+      ),
       child: Html(
         data: htmlContent,
         style: {
