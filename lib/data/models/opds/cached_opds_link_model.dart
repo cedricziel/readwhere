@@ -7,6 +7,7 @@ class CachedOpdsLinkModel {
   final int? id;
   final String? feedId;
   final String? entryId;
+  final String? entryFeedId;
   final String href;
   final String rel;
   final String type;
@@ -20,6 +21,7 @@ class CachedOpdsLinkModel {
     this.id,
     this.feedId,
     this.entryId,
+    this.entryFeedId,
     required this.href,
     required this.rel,
     required this.type,
@@ -36,6 +38,7 @@ class CachedOpdsLinkModel {
       id: map[CachedOpdsLinksTable.columnId] as int?,
       feedId: map[CachedOpdsLinksTable.columnFeedId] as String?,
       entryId: map[CachedOpdsLinksTable.columnEntryId] as String?,
+      entryFeedId: map[CachedOpdsLinksTable.columnEntryFeedId] as String?,
       href: map[CachedOpdsLinksTable.columnHref] as String,
       rel: map[CachedOpdsLinksTable.columnRel] as String,
       type: map[CachedOpdsLinksTable.columnType] as String,
@@ -53,6 +56,7 @@ class CachedOpdsLinkModel {
       if (id != null) CachedOpdsLinksTable.columnId: id,
       CachedOpdsLinksTable.columnFeedId: feedId,
       CachedOpdsLinksTable.columnEntryId: entryId,
+      CachedOpdsLinksTable.columnEntryFeedId: entryFeedId,
       CachedOpdsLinksTable.columnHref: href,
       CachedOpdsLinksTable.columnRel: rel,
       CachedOpdsLinksTable.columnType: type,
@@ -69,11 +73,13 @@ class CachedOpdsLinkModel {
     OpdsLink link, {
     String? feedId,
     String? entryId,
+    String? entryFeedId,
     required int order,
   }) {
     return CachedOpdsLinkModel(
       feedId: feedId,
       entryId: entryId,
+      entryFeedId: entryFeedId,
       href: link.href,
       rel: link.rel,
       type: link.type,

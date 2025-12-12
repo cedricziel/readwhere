@@ -38,7 +38,10 @@ class DatabaseHelper {
   ///            for article content scraping
   /// Version 9: Added extended metadata columns to books table
   ///            (publisher, description, language, published_date, subjects)
-  static const int _databaseVersion = 9;
+  /// Version 10: Fixed cached_opds_entries primary key to use composite key
+  ///             (feed_id, id) instead of just id
+  /// Version 11: Re-run V10 migration with correct drop order for FK constraints
+  static const int _databaseVersion = 11;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -172,6 +175,28 @@ class DatabaseHelper {
     if (oldVersion < 9) {
       for (final query in BooksTable.migrationV9()) {
         await db.execute(query);
+      }
+    }
+    // Version 10/11: Fix cached_opds_entries primary key to use composite key
+    // Also recreate cached_opds_links to use composite FK for entries
+    // V11 re-runs this with correct drop order for FK constraints
+    if (oldVersion < 11) {
+      // Drop both tables first (links references entries, so drop links first)
+      await db.execute(
+        'DROP TABLE IF EXISTS ${CachedOpdsLinksTable.tableName}',
+      );
+      await db.execute(
+        'DROP TABLE IF EXISTS ${CachedOpdsEntriesTable.tableName}',
+      );
+      // Recreate entries with new composite primary key
+      await db.execute(CachedOpdsEntriesTable.createTableQuery());
+      for (final index in CachedOpdsEntriesTable.createIndices()) {
+        await db.execute(index);
+      }
+      // Recreate links with new composite FK
+      await db.execute(CachedOpdsLinksTable.createTableQuery());
+      for (final index in CachedOpdsLinksTable.createIndices()) {
+        await db.execute(index);
       }
     }
   }

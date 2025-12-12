@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -95,8 +96,12 @@ class OpdsClient {
         _log('OpdsClient: Warning - Unexpected content type: $contentType');
       }
 
-      // Parse the XML response
-      final feed = OpdsFeedModel.fromXmlString(response.body, baseUrl: url);
+      // Parse the XML response - always decode as UTF-8 since OPDS feeds
+      // should be UTF-8 encoded. Using bodyBytes instead of body ensures
+      // proper handling of special characters (e.g., German umlauts) even
+      // if the server doesn't specify the correct charset.
+      final body = utf8.decode(response.bodyBytes);
+      final feed = OpdsFeedModel.fromXmlString(body, baseUrl: url);
       _log(
         'OpdsClient: Parsed feed "${feed.title}" with ${feed.entries.length} entries',
       );
@@ -280,7 +285,7 @@ class OpdsClient {
 
       // Parse OpenSearch XML to find URL template
       // Look for: <Url type="application/atom+xml" template="..."/>
-      final body = response.body;
+      final body = utf8.decode(response.bodyBytes);
       final templateMatch = RegExp(r'template="([^"]+)"').firstMatch(body);
       if (templateMatch == null) {
         throw OpdsException(

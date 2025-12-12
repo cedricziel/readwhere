@@ -35,10 +35,12 @@ class CachedOpdsEntriesTable {
   };
 
   /// Returns the SQL query to create the cached_opds_entries table
+  /// Uses composite primary key of (feed_id, id) since the same entry
+  /// can appear in multiple feeds (e.g., "All Books" and a category feed).
   static String createTableQuery() {
     return '''
       CREATE TABLE $tableName (
-        $columnId TEXT PRIMARY KEY,
+        $columnId TEXT NOT NULL,
         $columnFeedId TEXT NOT NULL,
         $columnTitle TEXT NOT NULL,
         $columnAuthor TEXT,
@@ -51,6 +53,7 @@ class CachedOpdsEntriesTable {
         $columnPublishedAt INTEGER,
         $columnCategories TEXT,
         $columnEntryOrder INTEGER NOT NULL,
+        PRIMARY KEY ($columnFeedId, $columnId),
         FOREIGN KEY ($columnFeedId) REFERENCES cached_opds_feeds(id) ON DELETE CASCADE
       )
     ''';
@@ -61,6 +64,23 @@ class CachedOpdsEntriesTable {
     return [
       'CREATE INDEX idx_cached_entries_feed_id ON $tableName($columnFeedId)',
       'CREATE INDEX idx_cached_entries_order ON $tableName($columnFeedId, $columnEntryOrder)',
+    ];
+  }
+
+  /// Migration from V9 to V10: Change primary key from (id) to (feed_id, id)
+  /// SQLite doesn't support ALTER TABLE to change primary key, so we need to:
+  /// 1. Rename the old table
+  /// 2. Create the new table with composite key
+  /// 3. Copy data (but since we're changing the constraint, just drop old data)
+  /// 4. Drop the old table
+  static List<String> migrationV10() {
+    return [
+      // Drop the old table and its indices - cached data can be refreshed
+      'DROP TABLE IF EXISTS $tableName',
+      // Recreate with the new schema (composite primary key)
+      createTableQuery(),
+      // Recreate indices
+      ...createIndices(),
     ];
   }
 }

@@ -55,11 +55,12 @@ class OpdsCacheRepositoryImpl implements OpdsCacheRepository {
       entryMaps.map((entryMap) async {
         final entryModel = CachedOpdsEntryModel.fromMap(entryMap);
 
-        // Get entry links
+        // Get entry links (using composite key: entry_feed_id + entry_id)
         final entryLinkMaps = await db.query(
           CachedOpdsLinksTable.tableName,
-          where: '${CachedOpdsLinksTable.columnEntryId} = ?',
-          whereArgs: [entryModel.id],
+          where:
+              '${CachedOpdsLinksTable.columnEntryFeedId} = ? AND ${CachedOpdsLinksTable.columnEntryId} = ?',
+          whereArgs: [entryModel.feedId, entryModel.id],
           orderBy: CachedOpdsLinksTable.columnLinkOrder,
         );
         final entryLinks = entryLinkMaps
@@ -114,11 +115,12 @@ class OpdsCacheRepositoryImpl implements OpdsCacheRepository {
         );
         await txn.insert(CachedOpdsEntriesTable.tableName, entryModel.toMap());
 
-        // Insert entry links
+        // Insert entry links (with composite key: entry_feed_id + entry_id)
         for (var j = 0; j < entry.links.length; j++) {
           final linkModel = CachedOpdsLinkModel.fromLink(
             entry.links[j],
             entryId: entry.id,
+            entryFeedId: feedModel.id,
             order: j,
           );
           await txn.insert(CachedOpdsLinksTable.tableName, linkModel.toMap());
