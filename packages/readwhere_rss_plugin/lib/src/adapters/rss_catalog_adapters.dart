@@ -7,12 +7,15 @@ import 'package:readwhere_rss/readwhere_rss.dart';
 /// the plugin-based provider system.
 
 /// Converts an [RssItem] to a [CatalogEntry].
-class RssItemAdapter implements CatalogEntry {
+class RssItemAdapter extends CatalogEntry {
   /// Creates an adapter for the given RSS item.
   const RssItemAdapter(this.item);
 
   /// The underlying RSS item.
   final RssItem item;
+
+  @override
+  String? get author => item.author;
 
   @override
   String get id => item.id;

@@ -6,12 +6,18 @@ import 'package:readwhere_plugin/readwhere_plugin.dart';
 const _baseUrl = 'https://www.fanfiktion.de';
 
 /// Converts a [Story] to a [CatalogEntry].
-class StoryEntryAdapter implements CatalogEntry {
+class StoryEntryAdapter extends CatalogEntry {
   /// Creates an adapter for the given story.
   const StoryEntryAdapter(this.story);
 
   /// The underlying story.
   final Story story;
+
+  @override
+  String? get author => story.author.displayName ?? story.author.username;
+
+  @override
+  List<String> get categories => story.genres;
 
   @override
   String get id => story.id;
@@ -119,7 +125,7 @@ class StoryEntryAdapter implements CatalogEntry {
 }
 
 /// Converts a [Category] to a [CatalogEntry].
-class CategoryEntryAdapter implements CatalogEntry {
+class CategoryEntryAdapter extends CatalogEntry {
   /// Creates an adapter for the given category.
   const CategoryEntryAdapter(this.category);
 
@@ -163,7 +169,7 @@ class CategoryEntryAdapter implements CatalogEntry {
 }
 
 /// Converts a [Fandom] to a [CatalogEntry].
-class FandomEntryAdapter implements CatalogEntry {
+class FandomEntryAdapter extends CatalogEntry {
   /// Creates an adapter for the given fandom.
   const FandomEntryAdapter(this.fandom);
 

@@ -65,6 +65,32 @@ class OpdsEntryAdapter implements CatalogEntry {
     return result;
   }
 
+  // Extended metadata getters
+
+  @override
+  String? get author => entry.author;
+
+  @override
+  String? get publisher => entry.publisher;
+
+  @override
+  String? get seriesName => entry.seriesName;
+
+  @override
+  int? get seriesPosition => entry.seriesPosition;
+
+  @override
+  String? get language => entry.language;
+
+  @override
+  List<String> get categories => entry.categories;
+
+  @override
+  DateTime? get published => entry.published;
+
+  @override
+  String? get coverUrl => entry.coverUrl;
+
   CatalogFile _linkToFile(OpdsLink link) {
     return CatalogFile(
       href: link.href,
