@@ -252,11 +252,26 @@ class _LibraryScreenState extends State<LibraryScreen> {
   /// Builds the books view based on the current view mode
   Widget _buildBooksView(LibraryProvider libraryProvider) {
     return RefreshIndicator(
-      onRefresh: () => libraryProvider.loadLibrary(),
+      onRefresh: () => _onPullToRefresh(libraryProvider),
       child: libraryProvider.viewMode == LibraryViewMode.grid
           ? _buildGridView(libraryProvider)
           : _buildListView(libraryProvider),
     );
+  }
+
+  /// Handles pull-to-refresh by refreshing metadata for all books
+  Future<void> _onPullToRefresh(LibraryProvider libraryProvider) async {
+    final refreshedCount = await libraryProvider.refreshAllMetadata();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Refreshed metadata for $refreshedCount of ${libraryProvider.bookCount} books',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   /// Builds the grid view of books
