@@ -22,6 +22,7 @@ void main() {
     when(
       mockReaderProvider.currentChapterHtml,
     ).thenReturn('<p>Test content</p>');
+    when(mockReaderProvider.currentChapterCss).thenReturn('');
     when(mockReaderProvider.currentChapterIndex).thenReturn(0);
     when(mockReaderProvider.currentChapterImages).thenReturn({});
     when(mockReaderProvider.currentBook).thenReturn(null);

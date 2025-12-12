@@ -1090,6 +1090,31 @@ class MockBookImportService extends _i1.Mock implements _i26.BookImportService {
             returnValue: _i7.Future<String?>.value(),
           )
           as _i7.Future<String?>);
+
+  @override
+  _i7.Future<_i2.Book?> refreshMetadata(_i2.Book? book) =>
+      (super.noSuchMethod(
+            Invocation.method(#refreshMetadata, [book]),
+            returnValue: _i7.Future<_i2.Book?>.value(),
+          )
+          as _i7.Future<_i2.Book?>);
+
+  @override
+  _i7.Future<Map<String, _i2.Book>> refreshMetadataForBooks(
+    List<_i2.Book>? books, {
+    void Function(int, int)? onProgress,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #refreshMetadataForBooks,
+              [books],
+              {#onProgress: onProgress},
+            ),
+            returnValue: _i7.Future<Map<String, _i2.Book>>.value(
+              <String, _i2.Book>{},
+            ),
+          )
+          as _i7.Future<Map<String, _i2.Book>>);
 }
 
 /// A class which mocks [OpdsCacheService].
@@ -1889,13 +1914,24 @@ class MockLibraryProvider extends _i1.Mock implements _i33.LibraryProvider {
           as _i7.Future<void>);
 
   @override
-  _i7.Future<void> refreshBookMetadata(String? id) =>
+  _i7.Future<bool> refreshBookMetadata(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#refreshBookMetadata, [id]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i7.Future<bool>.value(false),
           )
-          as _i7.Future<void>);
+          as _i7.Future<bool>);
+
+  @override
+  _i7.Future<int> refreshAllMetadata({
+    void Function(int, int, String)? onProgress,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#refreshAllMetadata, [], {
+              #onProgress: onProgress,
+            }),
+            returnValue: _i7.Future<int>.value(0),
+          )
+          as _i7.Future<int>);
 
   @override
   _i7.Future<_i2.Book?> importBook(String? filePath) =>
@@ -2394,6 +2430,14 @@ class MockCatalogsProvider extends _i1.Mock implements _i38.CatalogsProvider {
               #url: url,
               #iconUrl: iconUrl,
             }),
+            returnValue: _i7.Future<_i5.Catalog?>.value(),
+          )
+          as _i7.Future<_i5.Catalog?>);
+
+  @override
+  _i7.Future<_i5.Catalog?> addFanfictionCatalog({required String? name}) =>
+      (super.noSuchMethod(
+            Invocation.method(#addFanfictionCatalog, [], {#name: name}),
             returnValue: _i7.Future<_i5.Catalog?>.value(),
           )
           as _i7.Future<_i5.Catalog?>);
