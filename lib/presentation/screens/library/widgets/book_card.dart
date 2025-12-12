@@ -222,6 +222,35 @@ class BookCard extends StatelessWidget {
                 _showBookDetails(parentContext);
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.refresh),
+              title: const Text('Refresh Metadata'),
+              subtitle: const Text('Re-extract title, author, and other info'),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                parentMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Refreshing metadata for "${book.title}"...'),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+                final success = await libraryProvider.refreshBookMetadata(
+                  book.id,
+                );
+                if (parentContext.mounted) {
+                  parentMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? 'Metadata refreshed successfully'
+                            : 'Failed to refresh metadata',
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            ),
             const Divider(),
             ListTile(
               leading: Icon(

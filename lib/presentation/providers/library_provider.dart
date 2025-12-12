@@ -170,18 +170,20 @@ class LibraryProvider extends ChangeNotifier {
 
   /// Manually refresh metadata for a specific book
   ///
-  /// Re-extracts cover and metadata from the book file.
+  /// Re-extracts all metadata (title, author, publisher, description, etc.)
+  /// and cover from the book file.
+  ///
   /// [id] The unique identifier of the book to refresh
-  Future<void> refreshBookMetadata(String id) async {
+  /// Returns true if metadata was successfully refreshed
+  Future<bool> refreshBookMetadata(String id) async {
     final book = _books.firstWhere(
       (b) => b.id == id,
       orElse: () => throw Exception('Book not found'),
     );
 
     try {
-      final coverPath = await _importService.extractCover(book);
-      if (coverPath != null) {
-        final updatedBook = book.copyWith(coverPath: coverPath);
+      final updatedBook = await _importService.refreshMetadata(book);
+      if (updatedBook != null) {
         await _bookRepository.update(updatedBook);
 
         // Update in local list
@@ -190,12 +192,72 @@ class LibraryProvider extends ChangeNotifier {
           _books[index] = updatedBook;
         }
 
+        // Update in filtered list if present
+        final filteredIndex = _filteredBooks.indexWhere((b) => b.id == id);
+        if (filteredIndex != -1) {
+          _filteredBooks[filteredIndex] = updatedBook;
+        }
+
         notifyListeners();
+        debugPrint('Refreshed metadata for: ${updatedBook.title}');
+        return true;
       }
+      return false;
     } catch (e) {
       _error = 'Failed to refresh metadata: ${e.toString()}';
       notifyListeners();
+      return false;
     }
+  }
+
+  /// Refresh metadata for all books in the library
+  ///
+  /// Re-extracts metadata from all book files. This is useful after
+  /// adding new metadata fields or to fix books with incomplete metadata.
+  ///
+  /// [onProgress] Optional callback for progress updates (current, total, bookTitle)
+  /// Returns the number of books successfully refreshed
+  Future<int> refreshAllMetadata({
+    void Function(int current, int total, String bookTitle)? onProgress,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    var refreshedCount = 0;
+    final total = _books.length;
+
+    try {
+      for (var i = 0; i < _books.length; i++) {
+        final book = _books[i];
+        onProgress?.call(i + 1, total, book.title);
+
+        final updatedBook = await _importService.refreshMetadata(book);
+        if (updatedBook != null) {
+          await _bookRepository.update(updatedBook);
+          _books[i] = updatedBook;
+
+          // Update in filtered list if present
+          final filteredIndex = _filteredBooks.indexWhere(
+            (b) => b.id == book.id,
+          );
+          if (filteredIndex != -1) {
+            _filteredBooks[filteredIndex] = updatedBook;
+          }
+
+          refreshedCount++;
+        }
+      }
+
+      debugPrint('Refreshed metadata for $refreshedCount/$total books');
+    } catch (e) {
+      _error = 'Failed to refresh metadata: ${e.toString()}';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+
+    return refreshedCount;
   }
 
   /// Import a new book from a file path

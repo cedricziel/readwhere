@@ -440,6 +440,172 @@ void main() {
       });
     });
 
+    group('refreshBookMetadata', () {
+      test('refreshes metadata for a single book', () async {
+        final updatedBook = testBook1.copyWith(
+          title: 'Updated Title',
+          author: 'Updated Author',
+          publisher: 'New Publisher',
+        );
+        when(mockBookRepository.getAll()).thenAnswer((_) async => [testBook1]);
+        when(
+          mockImportService.refreshMetadata(testBook1),
+        ).thenAnswer((_) async => updatedBook);
+        when(
+          mockBookRepository.update(updatedBook),
+        ).thenAnswer((_) async => updatedBook);
+
+        await provider.loadBooks();
+        final result = await provider.refreshBookMetadata('book-1');
+
+        expect(result, isTrue);
+        expect(provider.books.first.title, equals('Updated Title'));
+        expect(provider.books.first.author, equals('Updated Author'));
+        verify(mockImportService.refreshMetadata(testBook1)).called(1);
+        verify(mockBookRepository.update(updatedBook)).called(1);
+      });
+
+      test('returns false when book not found', () async {
+        when(mockBookRepository.getAll()).thenAnswer((_) async => [testBook1]);
+
+        await provider.loadBooks();
+
+        expect(
+          () => provider.refreshBookMetadata('non-existent'),
+          throwsException,
+        );
+      });
+
+      test('returns false when refresh fails', () async {
+        when(mockBookRepository.getAll()).thenAnswer((_) async => [testBook1]);
+        when(
+          mockImportService.refreshMetadata(testBook1),
+        ).thenAnswer((_) async => null);
+
+        await provider.loadBooks();
+        final result = await provider.refreshBookMetadata('book-1');
+
+        expect(result, isFalse);
+      });
+
+      test('handles refresh error', () async {
+        when(mockBookRepository.getAll()).thenAnswer((_) async => [testBook1]);
+        when(
+          mockImportService.refreshMetadata(testBook1),
+        ).thenThrow(Exception('Parse error'));
+
+        await provider.loadBooks();
+        final result = await provider.refreshBookMetadata('book-1');
+
+        expect(result, isFalse);
+        expect(provider.error, contains('Failed to refresh metadata'));
+      });
+    });
+
+    group('refreshAllMetadata', () {
+      test('refreshes metadata for all books', () async {
+        final updatedBook1 = testBook1.copyWith(title: 'Updated One');
+        final updatedBook2 = testBook2.copyWith(title: 'Updated Two');
+        when(
+          mockBookRepository.getAll(),
+        ).thenAnswer((_) async => [testBook1, testBook2]);
+        when(
+          mockImportService.refreshMetadata(testBook1),
+        ).thenAnswer((_) async => updatedBook1);
+        when(
+          mockImportService.refreshMetadata(testBook2),
+        ).thenAnswer((_) async => updatedBook2);
+        when(
+          mockBookRepository.update(updatedBook1),
+        ).thenAnswer((_) async => updatedBook1);
+        when(
+          mockBookRepository.update(updatedBook2),
+        ).thenAnswer((_) async => updatedBook2);
+
+        await provider.loadBooks();
+        final count = await provider.refreshAllMetadata();
+
+        expect(count, equals(2));
+        // Books are sorted by recentlyAdded (default), so book2 comes first
+        // (it was added 1 day later than book1)
+        expect(provider.books[0].title, equals('Updated Two'));
+        expect(provider.books[1].title, equals('Updated One'));
+      });
+
+      test('sets loading state during refresh', () async {
+        final updatedBook = testBook1.copyWith(title: 'Refreshed');
+        when(mockBookRepository.getAll()).thenAnswer((_) async => [testBook1]);
+        when(mockImportService.refreshMetadata(any)).thenAnswer((_) async {
+          await Future.delayed(const Duration(milliseconds: 10));
+          return updatedBook;
+        });
+        when(
+          mockBookRepository.update(updatedBook),
+        ).thenAnswer((_) async => updatedBook);
+
+        await provider.loadBooks();
+        final future = provider.refreshAllMetadata();
+        expect(provider.isLoading, isTrue);
+        await future;
+        expect(provider.isLoading, isFalse);
+      });
+
+      test('calls progress callback', () async {
+        final updatedBook = testBook1.copyWith(title: 'Updated');
+        when(mockBookRepository.getAll()).thenAnswer((_) async => [testBook1]);
+        when(
+          mockImportService.refreshMetadata(testBook1),
+        ).thenAnswer((_) async => updatedBook);
+        when(
+          mockBookRepository.update(updatedBook),
+        ).thenAnswer((_) async => updatedBook);
+
+        await provider.loadBooks();
+
+        final progressCalls = <(int, int, String)>[];
+        await provider.refreshAllMetadata(
+          onProgress: (current, total, title) {
+            progressCalls.add((current, total, title));
+          },
+        );
+
+        expect(progressCalls, hasLength(1));
+        expect(progressCalls.first.$1, equals(1)); // current
+        expect(progressCalls.first.$2, equals(1)); // total
+        expect(progressCalls.first.$3, equals('Book One')); // title
+      });
+
+      test('counts only successful refreshes', () async {
+        final updatedBook1 = testBook1.copyWith(title: 'Updated One');
+        when(
+          mockBookRepository.getAll(),
+        ).thenAnswer((_) async => [testBook1, testBook2]);
+        when(
+          mockImportService.refreshMetadata(testBook1),
+        ).thenAnswer((_) async => updatedBook1);
+        when(
+          mockImportService.refreshMetadata(testBook2),
+        ).thenAnswer((_) async => null); // Fails
+        when(
+          mockBookRepository.update(updatedBook1),
+        ).thenAnswer((_) async => updatedBook1);
+
+        await provider.loadBooks();
+        final count = await provider.refreshAllMetadata();
+
+        expect(count, equals(1));
+      });
+
+      test('handles empty library', () async {
+        when(mockBookRepository.getAll()).thenAnswer((_) async => []);
+
+        await provider.loadBooks();
+        final count = await provider.refreshAllMetadata();
+
+        expect(count, equals(0));
+      });
+    });
+
     group('enums', () {
       test('LibrarySortOrder has correct values', () {
         expect(LibrarySortOrder.values, hasLength(4));

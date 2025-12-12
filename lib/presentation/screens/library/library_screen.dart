@@ -223,6 +223,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
             );
           },
         ),
+        // More options menu
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          tooltip: 'More options',
+          onSelected: (value) {
+            if (value == 'refresh_all_metadata') {
+              _refreshAllMetadata();
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'refresh_all_metadata',
+              child: Row(
+                children: [
+                  Icon(Icons.refresh, size: 20),
+                  SizedBox(width: 12),
+                  Text('Refresh All Metadata'),
+                ],
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -397,6 +419,134 @@ class _LibraryScreenState extends State<LibraryScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+  }
+
+  /// Refreshes metadata for all books in the library
+  Future<void> _refreshAllMetadata() async {
+    final libraryProvider = Provider.of<LibraryProvider>(
+      context,
+      listen: false,
+    );
+
+    if (libraryProvider.bookCount == 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No books to refresh')));
+      return;
+    }
+
+    // Show progress dialog
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => _RefreshMetadataProgressDialog(
+        libraryProvider: libraryProvider,
+        onComplete: (refreshedCount, totalCount) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Refreshed metadata for $refreshedCount of $totalCount books',
+                ),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
+/// Dialog showing progress of metadata refresh operation
+class _RefreshMetadataProgressDialog extends StatefulWidget {
+  final LibraryProvider libraryProvider;
+  final void Function(int refreshedCount, int totalCount) onComplete;
+
+  const _RefreshMetadataProgressDialog({
+    required this.libraryProvider,
+    required this.onComplete,
+  });
+
+  @override
+  State<_RefreshMetadataProgressDialog> createState() =>
+      _RefreshMetadataProgressDialogState();
+}
+
+class _RefreshMetadataProgressDialogState
+    extends State<_RefreshMetadataProgressDialog> {
+  int _current = 0;
+  int _total = 0;
+  String _currentBook = '';
+  bool _isComplete = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _total = widget.libraryProvider.bookCount;
+    _startRefresh();
+  }
+
+  Future<void> _startRefresh() async {
+    final refreshedCount = await widget.libraryProvider.refreshAllMetadata(
+      onProgress: (current, total, bookTitle) {
+        if (mounted) {
+          setState(() {
+            _current = current;
+            _total = total;
+            _currentBook = bookTitle;
+          });
+        }
+      },
+    );
+
+    if (mounted) {
+      setState(() {
+        _isComplete = true;
+      });
+      // Small delay to show completion before closing
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        Navigator.of(context).pop();
+        widget.onComplete(refreshedCount, _total);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = _total > 0 ? _current / _total : 0.0;
+
+    return AlertDialog(
+      title: Text(_isComplete ? 'Refresh Complete' : 'Refreshing Metadata'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LinearProgressIndicator(value: progress),
+          const SizedBox(height: 16),
+          Text(
+            '$_current of $_total books',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          if (_currentBook.isNotEmpty && !_isComplete) ...[
+            const SizedBox(height: 8),
+            Text(
+              _currentBook,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
       ),
     );
   }

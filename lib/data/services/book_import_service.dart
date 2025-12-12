@@ -376,4 +376,99 @@ class BookImportService {
     debugPrint('extractCover - No cover image found');
     return null;
   }
+
+  /// Refresh metadata for an existing book by re-parsing the book file.
+  ///
+  /// Re-extracts metadata (title, author, publisher, description, etc.)
+  /// from the book file and returns an updated Book entity.
+  /// The original book ID, file path, and user data (favorites, progress)
+  /// are preserved.
+  ///
+  /// Returns the updated Book if successful, null if parsing fails.
+  ///
+  /// [book] The book to refresh metadata for
+  Future<Book?> refreshMetadata(Book book) async {
+    debugPrint('refreshMetadata - Refreshing metadata for: ${book.title}');
+    debugPrint('refreshMetadata - Book file path: ${book.filePath}');
+    debugPrint('refreshMetadata - Book format: ${book.format}');
+
+    final file = File(book.filePath);
+    if (!await file.exists()) {
+      debugPrint('refreshMetadata - Book file does not exist');
+      return null;
+    }
+
+    // Currently only EPUB metadata refresh is supported
+    if (book.format.toLowerCase() != 'epub') {
+      debugPrint(
+        'refreshMetadata - Format ${book.format} not supported for metadata refresh',
+      );
+      return null;
+    }
+
+    try {
+      // Parse EPUB to extract fresh metadata
+      final reader = await epub.EpubReader.open(book.filePath);
+      final metadata = reader.metadata;
+
+      debugPrint('refreshMetadata - Extracted title: ${metadata.title}');
+      debugPrint('refreshMetadata - Extracted author: ${metadata.author}');
+
+      // Extract cover if missing or force refresh
+      String? coverPath = book.coverPath;
+      if (coverPath == null || coverPath.isEmpty) {
+        final cover = reader.getCoverImage();
+        if (cover != null) {
+          coverPath = await _saveCoverImage(book.id, cover.bytes);
+          debugPrint('refreshMetadata - Extracted new cover: $coverPath');
+        }
+      }
+
+      // Return updated book preserving user data
+      return book.copyWith(
+        title: metadata.title,
+        author: metadata.author ?? 'Unknown',
+        publisher: metadata.publisher,
+        description: metadata.description,
+        language: metadata.language,
+        publishedDate: metadata.date,
+        subjects: metadata.subjects,
+        coverPath: coverPath,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('refreshMetadata - Failed to parse EPUB: $e');
+      debugPrint('refreshMetadata - Stack: $stackTrace');
+      return null;
+    }
+  }
+
+  /// Refresh metadata for multiple books.
+  ///
+  /// Returns a map of book IDs to updated Book entities.
+  /// Books that fail to refresh are not included in the result.
+  ///
+  /// [books] The books to refresh metadata for
+  /// [onProgress] Optional callback for progress updates (current, total)
+  Future<Map<String, Book>> refreshMetadataForBooks(
+    List<Book> books, {
+    void Function(int current, int total)? onProgress,
+  }) async {
+    final results = <String, Book>{};
+    var current = 0;
+
+    for (final book in books) {
+      current++;
+      onProgress?.call(current, books.length);
+
+      final updated = await refreshMetadata(book);
+      if (updated != null) {
+        results[book.id] = updated;
+      }
+    }
+
+    debugPrint(
+      'refreshMetadataForBooks - Refreshed ${results.length}/${books.length} books',
+    );
+    return results;
+  }
 }
