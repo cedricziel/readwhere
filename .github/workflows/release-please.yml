@@ -207,6 +207,9 @@ jobs:
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: readwhere-macos.dmg
+          append_body: true
           body: |
-            ## macOS Note
-            The macOS build is unsigned. On first launch, right-click the app and select "Open", then click "Open" in the dialog to bypass Gatekeeper.
+
+            ---
+            ## Platform Notes
+            **macOS:** The build is unsigned. On first launch, right-click the app and select "Open", then click "Open" in the dialog to bypass Gatekeeper.
