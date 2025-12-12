@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:readwhere_cbr/readwhere_cbr.dart' as cbr;
+import 'package:readwhere_cbz/readwhere_cbz.dart' as cbz;
 import 'package:readwhere_epub/readwhere_epub.dart' as epub;
 
 import '../../domain/entities/book.dart';
@@ -384,6 +386,8 @@ class BookImportService {
   /// The original book ID, file path, and user data (favorites, progress)
   /// are preserved.
   ///
+  /// Supports EPUB, CBZ, and CBR formats.
+  ///
   /// Returns the updated Book if successful, null if parsing fails.
   ///
   /// [book] The book to refresh metadata for
@@ -398,23 +402,33 @@ class BookImportService {
       return null;
     }
 
-    // Currently only EPUB metadata refresh is supported
-    if (book.format.toLowerCase() != 'epub') {
-      debugPrint(
-        'refreshMetadata - Format ${book.format} not supported for metadata refresh',
-      );
-      return null;
-    }
+    final format = book.format.toLowerCase();
 
+    switch (format) {
+      case 'epub':
+        return _refreshEpubMetadata(book);
+      case 'cbz':
+        return _refreshCbzMetadata(book);
+      case 'cbr':
+        return _refreshCbrMetadata(book);
+      default:
+        debugPrint(
+          'refreshMetadata - Format $format not supported for metadata refresh',
+        );
+        return null;
+    }
+  }
+
+  /// Refresh metadata for an EPUB book.
+  Future<Book?> _refreshEpubMetadata(Book book) async {
     try {
-      // Parse EPUB to extract fresh metadata
       final reader = await epub.EpubReader.open(book.filePath);
       final metadata = reader.metadata;
 
       debugPrint('refreshMetadata - Extracted title: ${metadata.title}');
       debugPrint('refreshMetadata - Extracted author: ${metadata.author}');
 
-      // Extract cover if missing or force refresh
+      // Extract cover if missing
       String? coverPath = book.coverPath;
       if (coverPath == null || coverPath.isEmpty) {
         final cover = reader.getCoverImage();
@@ -424,7 +438,6 @@ class BookImportService {
         }
       }
 
-      // Return updated book preserving user data
       return book.copyWith(
         title: metadata.title,
         author: metadata.author ?? 'Unknown',
@@ -437,6 +450,88 @@ class BookImportService {
       );
     } catch (e, stackTrace) {
       debugPrint('refreshMetadata - Failed to parse EPUB: $e');
+      debugPrint('refreshMetadata - Stack: $stackTrace');
+      return null;
+    }
+  }
+
+  /// Refresh metadata for a CBZ book.
+  Future<Book?> _refreshCbzMetadata(Book book) async {
+    try {
+      final reader = await cbz.CbzReader.open(book.filePath);
+      final cbzBook = reader.book;
+
+      debugPrint('refreshMetadata - Extracted title: ${cbzBook.displayTitle}');
+      debugPrint('refreshMetadata - Extracted author: ${cbzBook.author}');
+
+      // Extract cover if missing
+      String? coverPath = book.coverPath;
+      if (coverPath == null || coverPath.isEmpty) {
+        final coverBytes = reader.getCoverBytes();
+        if (coverBytes != null) {
+          coverPath = await _saveCoverImage(book.id, coverBytes);
+          debugPrint('refreshMetadata - Extracted new cover: $coverPath');
+        }
+      }
+
+      reader.dispose();
+
+      // Build subjects from genres + tags
+      final subjects = [...cbzBook.genres, ...cbzBook.tags];
+
+      return book.copyWith(
+        title: cbzBook.displayTitle,
+        author: cbzBook.author ?? 'Unknown',
+        publisher: cbzBook.publisher,
+        description: cbzBook.summary,
+        language: cbzBook.languageISO,
+        publishedDate: cbzBook.releaseDate,
+        subjects: subjects.isNotEmpty ? subjects : null,
+        coverPath: coverPath,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('refreshMetadata - Failed to parse CBZ: $e');
+      debugPrint('refreshMetadata - Stack: $stackTrace');
+      return null;
+    }
+  }
+
+  /// Refresh metadata for a CBR book.
+  Future<Book?> _refreshCbrMetadata(Book book) async {
+    try {
+      final reader = await cbr.CbrReader.open(book.filePath);
+      final cbrBook = reader.book;
+
+      debugPrint('refreshMetadata - Extracted title: ${cbrBook.displayTitle}');
+      debugPrint('refreshMetadata - Extracted author: ${cbrBook.author}');
+
+      // Extract cover if missing
+      String? coverPath = book.coverPath;
+      if (coverPath == null || coverPath.isEmpty) {
+        final coverBytes = reader.getCoverBytes();
+        if (coverBytes != null) {
+          coverPath = await _saveCoverImage(book.id, coverBytes);
+          debugPrint('refreshMetadata - Extracted new cover: $coverPath');
+        }
+      }
+
+      await reader.dispose();
+
+      // Build subjects from genres + tags
+      final subjects = [...cbrBook.genres, ...cbrBook.tags];
+
+      return book.copyWith(
+        title: cbrBook.displayTitle,
+        author: cbrBook.author ?? 'Unknown',
+        publisher: cbrBook.publisher,
+        description: cbrBook.summary,
+        language: cbrBook.languageISO,
+        publishedDate: cbrBook.releaseDate,
+        subjects: subjects.isNotEmpty ? subjects : null,
+        coverPath: coverPath,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('refreshMetadata - Failed to parse CBR: $e');
       debugPrint('refreshMetadata - Stack: $stackTrace');
       return null;
     }
