@@ -456,13 +456,41 @@ class BookImportService {
   }
 
   /// Refresh metadata for a CBZ book.
+  ///
+  /// If the file is actually a RAR archive (mislabeled .cbz), falls back
+  /// to CBR parsing.
   Future<Book?> _refreshCbzMetadata(Book book) async {
+    // Check if the file is actually a RAR archive (mislabeled .cbz)
+    final file = File(book.filePath);
+    final bytes = await file.readAsBytes();
+    if (bytes.length >= 4 &&
+        bytes[0] == 0x52 &&
+        bytes[1] == 0x61 &&
+        bytes[2] == 0x72 &&
+        bytes[3] == 0x21) {
+      // RAR signature detected, use CBR reader
+      debugPrint(
+        'refreshMetadata - CBZ file is actually RAR, using CBR reader',
+      );
+      return _refreshCbrMetadata(book);
+    }
+
     try {
       final reader = await cbz.CbzReader.open(book.filePath);
       final cbzBook = reader.book;
 
       debugPrint('refreshMetadata - Extracted title: ${cbzBook.displayTitle}');
       debugPrint('refreshMetadata - Extracted author: ${cbzBook.author}');
+      debugPrint(
+        'refreshMetadata - Has ComicInfo: ${cbzBook.comicInfo != null}',
+      );
+      debugPrint(
+        'refreshMetadata - Has MetronInfo: ${cbzBook.metronInfo != null}',
+      );
+
+      // Check if we have actual metadata or just defaults
+      final hasMetadata =
+          cbzBook.comicInfo != null || cbzBook.metronInfo != null;
 
       // Extract cover if missing
       String? coverPath = book.coverPath;
@@ -476,12 +504,24 @@ class BookImportService {
 
       reader.dispose();
 
+      // If no metadata file was found, preserve existing book info
+      // (only update cover if we found one)
+      if (!hasMetadata) {
+        debugPrint(
+          'refreshMetadata - No metadata file found, preserving existing title',
+        );
+        if (coverPath != null && coverPath != book.coverPath) {
+          return book.copyWith(coverPath: coverPath);
+        }
+        return book; // Return unchanged book
+      }
+
       // Build subjects from genres + tags
       final subjects = [...cbzBook.genres, ...cbzBook.tags];
 
       return book.copyWith(
         title: cbzBook.displayTitle,
-        author: cbzBook.author ?? 'Unknown',
+        author: cbzBook.author ?? book.author,
         publisher: cbzBook.publisher,
         description: cbzBook.summary,
         language: cbzBook.languageISO,
@@ -504,6 +544,16 @@ class BookImportService {
 
       debugPrint('refreshMetadata - Extracted title: ${cbrBook.displayTitle}');
       debugPrint('refreshMetadata - Extracted author: ${cbrBook.author}');
+      debugPrint(
+        'refreshMetadata - Has ComicInfo: ${cbrBook.comicInfo != null}',
+      );
+      debugPrint(
+        'refreshMetadata - Has MetronInfo: ${cbrBook.metronInfo != null}',
+      );
+
+      // Check if we have actual metadata or just defaults
+      final hasMetadata =
+          cbrBook.comicInfo != null || cbrBook.metronInfo != null;
 
       // Extract cover if missing
       String? coverPath = book.coverPath;
@@ -517,12 +567,24 @@ class BookImportService {
 
       await reader.dispose();
 
+      // If no metadata file was found, preserve existing book info
+      // (only update cover if we found one)
+      if (!hasMetadata) {
+        debugPrint(
+          'refreshMetadata - No metadata file found, preserving existing title',
+        );
+        if (coverPath != null && coverPath != book.coverPath) {
+          return book.copyWith(coverPath: coverPath);
+        }
+        return book; // Return unchanged book
+      }
+
       // Build subjects from genres + tags
       final subjects = [...cbrBook.genres, ...cbrBook.tags];
 
       return book.copyWith(
         title: cbrBook.displayTitle,
-        author: cbrBook.author ?? 'Unknown',
+        author: cbrBook.author ?? book.author,
         publisher: cbrBook.publisher,
         description: cbrBook.summary,
         language: cbrBook.languageISO,
