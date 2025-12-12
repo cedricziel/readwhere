@@ -329,6 +329,53 @@ void main() {
 
         expect(find.byType(RefreshIndicator), findsOneWidget);
       });
+
+      testWidgets('pull to refresh calls refreshAllMetadata', (tester) async {
+        when(mockLibraryProvider.books).thenReturn([createTestBook()]);
+        when(mockLibraryProvider.bookCount).thenReturn(1);
+        when(
+          mockLibraryProvider.refreshAllMetadata(
+            onProgress: anyNamed('onProgress'),
+          ),
+        ).thenAnswer((_) async => 1);
+
+        await tester.pumpWidget(buildTestWidget());
+
+        // Perform pull to refresh gesture on grid view
+        await tester.fling(find.byType(GridView), const Offset(0, 300), 1000);
+        await tester.pumpAndSettle();
+
+        verify(
+          mockLibraryProvider.refreshAllMetadata(
+            onProgress: anyNamed('onProgress'),
+          ),
+        ).called(1);
+      });
+
+      testWidgets('pull to refresh shows snackbar with refresh count', (
+        tester,
+      ) async {
+        when(
+          mockLibraryProvider.books,
+        ).thenReturn([createTestBook(), createTestBook(id: '2')]);
+        when(mockLibraryProvider.bookCount).thenReturn(2);
+        when(
+          mockLibraryProvider.refreshAllMetadata(
+            onProgress: anyNamed('onProgress'),
+          ),
+        ).thenAnswer((_) async => 2);
+
+        await tester.pumpWidget(buildTestWidget());
+
+        // Perform pull to refresh
+        await tester.fling(find.byType(GridView), const Offset(0, 300), 1000);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Refreshed metadata for 2 of 2 books'),
+          findsOneWidget,
+        );
+      });
     });
 
     group('theming', () {
