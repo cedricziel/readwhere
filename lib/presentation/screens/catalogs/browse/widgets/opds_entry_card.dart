@@ -93,8 +93,25 @@ class OpdsEntryCard extends StatelessWidget {
   }
 
   Widget _buildCover(BuildContext context, bool isNavigation) {
+    // Always try to show cover image first if available
+    if (coverUrl != null && coverUrl!.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: coverUrl!,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => _buildPlaceholder(context, isNavigation),
+        errorWidget: (context, url, error) =>
+            _buildPlaceholder(context, isNavigation),
+      );
+    }
+
+    // Fall back to placeholder (folder icon for navigation, book icon for books)
+    return _buildPlaceholder(context, isNavigation);
+  }
+
+  Widget _buildPlaceholder(BuildContext context, bool isNavigation) {
     final theme = Theme.of(context);
 
+    // Navigation entries get folder icon, books get book icon
     if (isNavigation) {
       return Container(
         color: theme.colorScheme.secondaryContainer,
@@ -105,21 +122,6 @@ class OpdsEntryCard extends StatelessWidget {
         ),
       );
     }
-
-    if (coverUrl != null && coverUrl!.isNotEmpty) {
-      return CachedNetworkImage(
-        imageUrl: coverUrl!,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => _buildPlaceholder(context),
-        errorWidget: (context, url, error) => _buildPlaceholder(context),
-      );
-    }
-
-    return _buildPlaceholder(context);
-  }
-
-  Widget _buildPlaceholder(BuildContext context) {
-    final theme = Theme.of(context);
 
     return Container(
       color: theme.colorScheme.surfaceContainerHighest,
@@ -295,8 +297,29 @@ class OpdsEntryListTile extends StatelessWidget {
   }
 
   Widget _buildThumbnail(BuildContext context, bool isNavigation) {
+    // Always try to show cover image first if available
+    if (coverUrl != null && coverUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: CachedNetworkImage(
+          imageUrl: coverUrl!,
+          fit: BoxFit.cover,
+          placeholder: (context, url) =>
+              _buildPlaceholderThumb(context, isNavigation),
+          errorWidget: (context, url, error) =>
+              _buildPlaceholderThumb(context, isNavigation),
+        ),
+      );
+    }
+
+    // Fall back to placeholder (folder icon for navigation, book icon for books)
+    return _buildPlaceholderThumb(context, isNavigation);
+  }
+
+  Widget _buildPlaceholderThumb(BuildContext context, bool isNavigation) {
     final theme = Theme.of(context);
 
+    // Navigation entries get folder icon, books get book icon
     if (isNavigation) {
       return Container(
         decoration: BoxDecoration(
@@ -309,24 +332,6 @@ class OpdsEntryListTile extends StatelessWidget {
         ),
       );
     }
-
-    if (coverUrl != null && coverUrl!.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: CachedNetworkImage(
-          imageUrl: coverUrl!,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => _buildPlaceholderThumb(context),
-          errorWidget: (context, url, error) => _buildPlaceholderThumb(context),
-        ),
-      );
-    }
-
-    return _buildPlaceholderThumb(context);
-  }
-
-  Widget _buildPlaceholderThumb(BuildContext context) {
-    final theme = Theme.of(context);
 
     return Container(
       decoration: BoxDecoration(

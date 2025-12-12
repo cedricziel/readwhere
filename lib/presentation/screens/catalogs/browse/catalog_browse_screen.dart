@@ -499,17 +499,18 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
   }
 
   String? _resolveCoverUrl(OpdsEntry entry) {
-    final coverLink = entry.coverLink;
-    if (coverLink == null) return null;
+    // Try thumbnailUrl first (which already falls back to coverUrl internally)
+    final url = entry.thumbnailUrl ?? entry.coverUrl;
+    if (url == null || url.isEmpty) return null;
 
     // Simple URL resolution - if already absolute, return as-is
-    if (coverLink.href.startsWith('http')) {
-      return coverLink.href;
+    if (url.startsWith('http')) {
+      return url;
     }
 
     // For relative URLs, we'd need the base URL which is now in OpdsProvider
     // For now, return the href and let image loading handle relative paths
-    return coverLink.href;
+    return url;
   }
 
   Widget _buildEmptyState() {
