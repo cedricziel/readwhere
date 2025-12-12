@@ -146,7 +146,7 @@ class OpdsPlugin extends PluginBase with CatalogBrowsingCapability {
     String query, {
     int? page,
   }) async {
-    _log.info('Searching OPDS catalog: $query');
+    _log.info('Searching OPDS catalog: "$query" (page: ${page ?? 1})');
 
     // First get the root feed to find the search link
     final rootFeed = await _client.fetchFeed(catalog.url);
@@ -155,7 +155,7 @@ class OpdsPlugin extends PluginBase with CatalogBrowsingCapability {
       throw UnsupportedError('This OPDS catalog does not support search');
     }
 
-    final searchResult = await _client.search(rootFeed, query);
+    final searchResult = await _client.search(rootFeed, query, page: page);
 
     _log.info('Search found ${searchResult.entries.length} entries');
     return searchResult.toBrowseResult();

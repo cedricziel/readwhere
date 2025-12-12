@@ -138,8 +138,9 @@ class OpdsClient {
   ///
   /// [rootFeed] The root feed (to get search URL template)
   /// [query] The search query
+  /// [page] Optional page number (1-based) for paginated results
   /// Returns search results as an [OpdsFeed]
-  Future<OpdsFeed> search(OpdsFeed rootFeed, String query) async {
+  Future<OpdsFeed> search(OpdsFeed rootFeed, String query, {int? page}) async {
     final searchLink = rootFeed.searchLink;
     if (searchLink == null) {
       throw OpdsException('Catalog does not support search');
@@ -149,10 +150,10 @@ class OpdsClient {
     String searchUrl;
     if (searchLink.type.contains('opensearchdescription')) {
       // Need to fetch and parse OpenSearch description
-      searchUrl = await _getOpenSearchUrl(searchLink.href, query);
+      searchUrl = await _getOpenSearchUrl(searchLink.href, query, page: page);
     } else {
       // Direct search URL with template
-      searchUrl = _applySearchTemplate(searchLink.href, query);
+      searchUrl = _applySearchTemplate(searchLink.href, query, page: page);
     }
 
     return fetchFeed(searchUrl);
@@ -273,7 +274,11 @@ class OpdsClient {
   }
 
   /// Get actual search URL from OpenSearch description
-  Future<String> _getOpenSearchUrl(String descriptionUrl, String query) async {
+  Future<String> _getOpenSearchUrl(
+    String descriptionUrl,
+    String query, {
+    int? page,
+  }) async {
     try {
       final response = await _httpClient
           .get(Uri.parse(descriptionUrl), headers: {'User-Agent': userAgent})
@@ -294,7 +299,7 @@ class OpdsClient {
       }
 
       final template = templateMatch.group(1)!;
-      return _applySearchTemplate(template, query);
+      return _applySearchTemplate(template, query, page: page);
     } catch (e) {
       if (e is OpdsException) rethrow;
       throw OpdsException('Failed to parse OpenSearch description: $e');
@@ -302,19 +307,57 @@ class OpdsClient {
   }
 
   /// Apply search query to URL template
-  String _applySearchTemplate(String template, String query) {
-    // OpenSearch uses {searchTerms} placeholder
+  ///
+  /// Handles OpenSearch template parameters:
+  /// - {searchTerms} - The search query
+  /// - {startPage} - Page number (1-based)
+  /// - {startIndex} - Start index for results (0-based or 1-based depending on server)
+  /// - {count} - Items per page (optional, server-dependent)
+  String _applySearchTemplate(String template, String query, {int? page}) {
+    // OpenSearch uses {searchTerms} placeholder (case-insensitive variants)
     var url = template
         .replaceAll('{searchTerms}', Uri.encodeComponent(query))
         .replaceAll('{searchterms}', Uri.encodeComponent(query));
+
+    // Handle pagination placeholders
+    if (page != null && page > 1) {
+      // {startPage} is 1-based page number
+      url = url.replaceAll('{startPage}', page.toString());
+      url = url.replaceAll('{startpage}', page.toString());
+
+      // {startIndex} is typically 0-based or 1-based start offset
+      // Assume 20 items per page if not specified
+      const defaultPageSize = 20;
+      final startIndex = (page - 1) * defaultPageSize;
+      url = url.replaceAll('{startIndex}', startIndex.toString());
+      url = url.replaceAll('{startindex}', startIndex.toString());
+    } else {
+      // Remove pagination placeholders for first page
+      url = url.replaceAll(RegExp(r'[&?]?[^&]*\{startPage\}[^&]*'), '');
+      url = url.replaceAll(RegExp(r'[&?]?[^&]*\{startpage\}[^&]*'), '');
+      url = url.replaceAll(RegExp(r'[&?]?[^&]*\{startIndex\}[^&]*'), '');
+      url = url.replaceAll(RegExp(r'[&?]?[^&]*\{startindex\}[^&]*'), '');
+    }
+
+    // Remove optional count placeholder (we let server use default)
+    url = url.replaceAll(RegExp(r'[&?]?[^&]*\{count[^}]*\}[^&]*'), '');
 
     // Some servers use simpler query parameter
     if (!url.contains(Uri.encodeComponent(query))) {
       final uri = Uri.parse(url);
       final params = Map<String, String>.from(uri.queryParameters);
       params['q'] = query;
+      if (page != null && page > 1) {
+        params['page'] = page.toString();
+      }
       url = uri.replace(queryParameters: params).toString();
     }
+
+    // Clean up any double ampersands or trailing ampersands from removed placeholders
+    url = url
+        .replaceAll('&&', '&')
+        .replaceAll('?&', '?')
+        .replaceAll(RegExp(r'[&?]$'), '');
 
     return url;
   }

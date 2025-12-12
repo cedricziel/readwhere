@@ -1529,13 +1529,17 @@ class MockOpdsClient extends _i1.Mock implements _i9.OpdsClient {
           as _i7.Future<_i9.OpdsFeed>);
 
   @override
-  _i7.Future<_i9.OpdsFeed> search(_i9.OpdsFeed? rootFeed, String? query) =>
+  _i7.Future<_i9.OpdsFeed> search(
+    _i9.OpdsFeed? rootFeed,
+    String? query, {
+    int? page,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#search, [rootFeed, query]),
+            Invocation.method(#search, [rootFeed, query], {#page: page}),
             returnValue: _i7.Future<_i9.OpdsFeed>.value(
               _FakeOpdsFeed_14(
                 this,
-                Invocation.method(#search, [rootFeed, query]),
+                Invocation.method(#search, [rootFeed, query], {#page: page}),
               ),
             ),
           )
