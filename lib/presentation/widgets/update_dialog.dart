@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/services/update_service.dart';
@@ -106,12 +107,38 @@ class UpdateDialog extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Container(
-                constraints: const BoxConstraints(maxHeight: 200),
-                child: SingleChildScrollView(
-                  child: Text(
-                    updateInfo.releaseNotes!,
-                    style: theme.textTheme.bodyMedium,
+                constraints: const BoxConstraints(maxHeight: 300),
+                child: Markdown(
+                  data: updateInfo.releaseNotes!,
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  styleSheet: MarkdownStyleSheet(
+                    p: theme.textTheme.bodyMedium,
+                    h1: theme.textTheme.titleLarge,
+                    h2: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    h3: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    listBullet: theme.textTheme.bodyMedium,
+                    code: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: 'monospace',
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                    ),
                   ),
+                  onTapLink: (text, href, title) async {
+                    if (href != null) {
+                      final url = Uri.parse(href);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(
+                          url,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      }
+                    }
+                  },
                 ),
               ),
             ],
