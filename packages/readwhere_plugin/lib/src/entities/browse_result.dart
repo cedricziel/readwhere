@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'catalog_entry.dart';
+import 'catalog_facet.dart';
 import 'catalog_link.dart';
 
 /// Result of browsing or searching a catalog.
@@ -20,6 +21,7 @@ class BrowseResult extends Equatable {
     this.previousPageUrl,
     this.searchLinks = const [],
     this.navigationLinks = const [],
+    this.facetGroups = const [],
     this.properties = const {},
   });
 
@@ -36,6 +38,7 @@ class BrowseResult extends Equatable {
       previousPageUrl = null,
       searchLinks = const [],
       navigationLinks = const [],
+      facetGroups = const [],
       properties = const {};
 
   /// The entries returned by the browse/search operation.
@@ -71,6 +74,9 @@ class BrowseResult extends Equatable {
   /// Additional navigation links (e.g., subcategories).
   final List<CatalogLink> navigationLinks;
 
+  /// Available facet groups for filtering results.
+  final List<CatalogFacetGroup> facetGroups;
+
   /// Additional provider-specific properties.
   final Map<String, dynamic> properties;
 
@@ -89,6 +95,9 @@ class BrowseResult extends Equatable {
   /// Whether search is available for this catalog/section.
   bool get hasSearch => searchLinks.isNotEmpty;
 
+  /// Whether facets are available for filtering.
+  bool get hasFacets => facetGroups.isNotEmpty;
+
   /// Creates a copy of this result with the given fields replaced.
   BrowseResult copyWith({
     List<CatalogEntry>? entries,
@@ -102,6 +111,7 @@ class BrowseResult extends Equatable {
     String? previousPageUrl,
     List<CatalogLink>? searchLinks,
     List<CatalogLink>? navigationLinks,
+    List<CatalogFacetGroup>? facetGroups,
     Map<String, dynamic>? properties,
   }) {
     return BrowseResult(
@@ -116,6 +126,7 @@ class BrowseResult extends Equatable {
       previousPageUrl: previousPageUrl ?? this.previousPageUrl,
       searchLinks: searchLinks ?? this.searchLinks,
       navigationLinks: navigationLinks ?? this.navigationLinks,
+      facetGroups: facetGroups ?? this.facetGroups,
       properties: properties ?? this.properties,
     );
   }
@@ -133,6 +144,7 @@ class BrowseResult extends Equatable {
     previousPageUrl,
     searchLinks,
     navigationLinks,
+    facetGroups,
     properties,
   ];
 }

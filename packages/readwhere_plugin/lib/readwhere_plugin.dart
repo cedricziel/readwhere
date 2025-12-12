@@ -96,6 +96,7 @@ export 'src/storage/credential_storage.dart';
 export 'src/entities/account_info.dart';
 export 'src/entities/browse_result.dart';
 export 'src/entities/catalog_entry.dart';
+export 'src/entities/catalog_facet.dart';
 export 'src/entities/catalog_file.dart';
 export 'src/entities/catalog_info.dart';
 export 'src/entities/catalog_link.dart';

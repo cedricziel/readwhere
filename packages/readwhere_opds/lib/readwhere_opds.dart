@@ -11,6 +11,7 @@ library;
 export 'src/entities/opds_feed.dart';
 export 'src/entities/opds_entry.dart';
 export 'src/entities/opds_link.dart';
+export 'src/entities/opds_facet.dart';
 
 // Models (XML parsing)
 export 'src/models/opds_feed_model.dart';

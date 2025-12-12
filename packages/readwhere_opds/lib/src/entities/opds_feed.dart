@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'opds_entry.dart';
+import 'opds_facet.dart';
 import 'opds_link.dart';
 
 /// The kind of OPDS feed
@@ -120,6 +121,43 @@ class OpdsFeed extends Equatable {
   /// Get the last page link
   OpdsLink? get lastPageLink {
     return links.where((l) => l.rel == OpdsLinkRel.last).firstOrNull;
+  }
+
+  /// Get all facet links
+  List<OpdsLink> get facetLinks {
+    return links.where((l) => l.isFacet).toList();
+  }
+
+  /// Whether this feed has facets for filtering
+  bool get hasFacets => facetLinks.isNotEmpty;
+
+  /// Get all facet groups organized by group name
+  ///
+  /// Facets are grouped by their `facetGroup` attribute.
+  /// Facets without a group are placed in an "Other" group.
+  List<OpdsFacetGroup> get facetGroups {
+    final facets = facetLinks;
+    if (facets.isEmpty) return const [];
+
+    // Group facets by facetGroup attribute
+    final groupMap = <String, List<OpdsFacet>>{};
+
+    for (final link in facets) {
+      final groupName = link.facetGroup ?? 'Other';
+      final facet = OpdsFacet(
+        title: link.title ?? link.href,
+        href: link.href,
+        count: link.count,
+        isActive: link.activeFacet ?? false,
+      );
+
+      groupMap.putIfAbsent(groupName, () => []).add(facet);
+    }
+
+    // Convert to list of OpdsFacetGroup
+    return groupMap.entries
+        .map((e) => OpdsFacetGroup(name: e.key, facets: e.value))
+        .toList();
   }
 
   /// Get all navigation entries

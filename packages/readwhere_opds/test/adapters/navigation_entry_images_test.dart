@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Navigation entry image links', () {

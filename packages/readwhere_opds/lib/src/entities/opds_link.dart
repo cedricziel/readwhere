@@ -20,6 +20,7 @@ class OpdsLinkRel {
       'http://opds-spec.org/acquisition/sample';
   static const String image = 'http://opds-spec.org/image';
   static const String thumbnail = 'http://opds-spec.org/image/thumbnail';
+  static const String facet = 'http://opds-spec.org/facet';
   static const String related = 'related';
   static const String alternate = 'alternate';
 
@@ -78,6 +79,15 @@ class OpdsLink extends Equatable {
   /// Optional currency code (for paid acquisition)
   final String? currency;
 
+  /// Facet group name (for facet links)
+  final String? facetGroup;
+
+  /// Whether this facet is active (for facet links)
+  final bool? activeFacet;
+
+  /// Item count for this facet (from thr:count)
+  final int? count;
+
   const OpdsLink({
     required this.href,
     required this.rel,
@@ -86,6 +96,9 @@ class OpdsLink extends Equatable {
     this.length,
     this.price,
     this.currency,
+    this.facetGroup,
+    this.activeFacet,
+    this.count,
   });
 
   /// Whether this is a navigation link
@@ -105,6 +118,9 @@ class OpdsLink extends Equatable {
 
   /// Whether this is a search link
   bool get isSearch => rel == OpdsLinkRel.search;
+
+  /// Whether this is a facet link
+  bool get isFacet => rel == OpdsLinkRel.facet;
 
   /// Whether this is a pagination link
   bool get isPagination =>
@@ -211,6 +227,9 @@ class OpdsLink extends Equatable {
     int? length,
     String? price,
     String? currency,
+    String? facetGroup,
+    bool? activeFacet,
+    int? count,
   }) {
     return OpdsLink(
       href: href ?? this.href,
@@ -220,11 +239,25 @@ class OpdsLink extends Equatable {
       length: length ?? this.length,
       price: price ?? this.price,
       currency: currency ?? this.currency,
+      facetGroup: facetGroup ?? this.facetGroup,
+      activeFacet: activeFacet ?? this.activeFacet,
+      count: count ?? this.count,
     );
   }
 
   @override
-  List<Object?> get props => [href, rel, type, title, length, price, currency];
+  List<Object?> get props => [
+    href,
+    rel,
+    type,
+    title,
+    length,
+    price,
+    currency,
+    facetGroup,
+    activeFacet,
+    count,
+  ];
 
   @override
   String toString() => 'OpdsLink(rel: $rel, type: $type, href: $href)';

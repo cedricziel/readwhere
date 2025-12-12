@@ -1,6 +1,7 @@
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 import '../entities/opds_entry.dart';
+import '../entities/opds_facet.dart';
 import '../entities/opds_feed.dart';
 import '../entities/opds_link.dart';
 
@@ -149,6 +150,11 @@ BrowseResult opdsFeedToBrowseResult(OpdsFeed feed) {
     }
   }
 
+  // Convert facet groups
+  final facetGroups = feed.facetGroups
+      .map((group) => _opdsFacetGroupToCatalogFacetGroup(group))
+      .toList();
+
   return BrowseResult(
     entries: entries,
     title: feed.title,
@@ -161,6 +167,7 @@ BrowseResult opdsFeedToBrowseResult(OpdsFeed feed) {
     previousPageUrl: feed.previousPageLink?.href,
     searchLinks: searchLinks,
     navigationLinks: navigationLinks,
+    facetGroups: facetGroups,
     properties: {
       'feedId': feed.id,
       'feedKind': feed.kind.name,
@@ -170,6 +177,24 @@ BrowseResult opdsFeedToBrowseResult(OpdsFeed feed) {
       if (feed.itemsPerPage != null) 'itemsPerPage': feed.itemsPerPage,
       if (feed.startIndex != null) 'startIndex': feed.startIndex,
     },
+  );
+}
+
+/// Converts an [OpdsFacetGroup] to a [CatalogFacetGroup].
+CatalogFacetGroup _opdsFacetGroupToCatalogFacetGroup(OpdsFacetGroup group) {
+  return CatalogFacetGroup(
+    name: group.name,
+    facets: group.facets.map(_opdsFacetToCatalogFacet).toList(),
+  );
+}
+
+/// Converts an [OpdsFacet] to a [CatalogFacet].
+CatalogFacet _opdsFacetToCatalogFacet(OpdsFacet facet) {
+  return CatalogFacet(
+    title: facet.title,
+    href: facet.href,
+    count: facet.count,
+    isActive: facet.isActive,
   );
 }
 

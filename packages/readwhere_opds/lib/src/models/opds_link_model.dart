@@ -12,6 +12,9 @@ class OpdsLinkModel extends OpdsLink {
     super.length,
     super.price,
     super.currency,
+    super.facetGroup,
+    super.activeFacet,
+    super.count,
   });
 
   /// Parse an OpdsLink from an XML atom:link element
@@ -54,6 +57,24 @@ class OpdsLinkModel extends OpdsLink {
       currency = priceElement.getAttribute('currencycode');
     }
 
+    // Parse facet attributes (OPDS 1.1+)
+    // opds:facetGroup - the group this facet belongs to
+    final facetGroup =
+        element.getAttribute('opds:facetGroup') ??
+        _getNamespacedAttribute(element, 'facetGroup');
+
+    // opds:activeFacet - whether this facet is active
+    final activeFacetStr =
+        element.getAttribute('opds:activeFacet') ??
+        _getNamespacedAttribute(element, 'activeFacet');
+    final activeFacet = activeFacetStr?.toLowerCase() == 'true';
+
+    // thr:count - number of items matching this facet
+    final countStr =
+        element.getAttribute('thr:count') ??
+        _getNamespacedAttribute(element, 'count');
+    final count = countStr != null ? int.tryParse(countStr) : null;
+
     return OpdsLinkModel(
       href: href,
       rel: rel,
@@ -62,7 +83,21 @@ class OpdsLinkModel extends OpdsLink {
       length: length,
       price: price,
       currency: currency,
+      facetGroup: facetGroup,
+      activeFacet: activeFacetStr != null ? activeFacet : null,
+      count: count,
     );
+  }
+
+  /// Get an attribute that may have a namespace prefix
+  static String? _getNamespacedAttribute(XmlElement element, String localName) {
+    // Try common namespace prefixes
+    for (final prefix in ['opds', 'thr', 'opensearch']) {
+      final value = element.getAttribute('$prefix:$localName');
+      if (value != null) return value;
+    }
+    // Try without namespace
+    return element.getAttribute(localName);
   }
 
   /// Resolve a relative URL against a base URL
@@ -88,6 +123,9 @@ class OpdsLinkModel extends OpdsLink {
       length: link.length,
       price: link.price,
       currency: link.currency,
+      facetGroup: link.facetGroup,
+      activeFacet: link.activeFacet,
+      count: link.count,
     );
   }
 
@@ -101,6 +139,9 @@ class OpdsLinkModel extends OpdsLink {
       length: length,
       price: price,
       currency: currency,
+      facetGroup: facetGroup,
+      activeFacet: activeFacet,
+      count: count,
     );
   }
 }
