@@ -43,6 +43,20 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
   List<Panel>? _currentPanels;
   int? _lastDetectedPage;
 
+  // Track chapter index to detect changes and force SelectionArea rebuild
+  int? _lastChapterIndex;
+  Key _selectionAreaKey = UniqueKey();
+
+  /// Updates the SelectionArea key when chapter changes to prevent
+  /// Flutter framework bug with stale selection indices.
+  void _updateSelectionAreaKeyIfNeeded(int currentChapterIndex) {
+    if (_lastChapterIndex != currentChapterIndex) {
+      _lastChapterIndex = currentChapterIndex;
+      // Use UniqueKey to force complete rebuild of SelectionArea
+      _selectionAreaKey = UniqueKey();
+    }
+  }
+
   @override
   void dispose() {
     _transformationController.dispose();
@@ -597,13 +611,14 @@ class _FixedLayoutReaderState extends State<FixedLayoutReader> {
     int viewportHeight,
     ReaderProvider readerProvider,
   ) {
+    // Update selection area key when chapter changes
+    _updateSelectionAreaKeyIfNeeded(readerProvider.currentChapterIndex);
+
     return SelectionArea(
-      // Use a key that changes when chapter or content changes to avoid
-      // Flutter framework bug with stale selection indices (issue #123456).
-      // The hashCode ensures a new SelectionArea when content loads.
-      key: ValueKey(
-        'selection_${readerProvider.currentChapterIndex}_${htmlContent.hashCode}',
-      ),
+      // Use UniqueKey that changes when chapter changes to force
+      // complete rebuild and avoid Flutter framework bug with
+      // stale selection indices (flutter/flutter#123456).
+      key: _selectionAreaKey,
       child: Html(
         data: htmlContent,
         style: {

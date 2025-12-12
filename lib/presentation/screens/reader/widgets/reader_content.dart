@@ -35,6 +35,10 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
   Offset? _pointerDownPosition;
   DateTime? _pointerDownTime;
 
+  // Track chapter index to detect changes and force SelectionArea rebuild
+  int? _lastChapterIndex;
+  Key _selectionAreaKey = UniqueKey();
+
   // Threshold for tap detection
   static const double _tapMaxDistance = 20.0; // Max movement in pixels
   static const Duration _tapMaxDuration = Duration(
@@ -47,6 +51,18 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
     // Reset pointer tracking state when widget updates to prevent stale state
     _pointerDownPosition = null;
     _pointerDownTime = null;
+  }
+
+  /// Updates the SelectionArea key when chapter changes to prevent
+  /// Flutter framework bug with stale selection indices.
+  void _updateSelectionAreaKeyIfNeeded(int currentChapterIndex) {
+    if (_lastChapterIndex != currentChapterIndex) {
+      _lastChapterIndex = currentChapterIndex;
+      // Use UniqueKey to force complete rebuild of SelectionArea
+      // This prevents the assertion failure when selection indices
+      // reference selectables from the previous chapter
+      _selectionAreaKey = UniqueKey();
+    }
   }
 
   void _handlePointerDown(PointerDownEvent event) {
@@ -149,6 +165,10 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
           );
         }
 
+        // Update selection area key when chapter changes to prevent
+        // Flutter framework bug with stale selection indices
+        _updateSelectionAreaKeyIfNeeded(readerProvider.currentChapterIndex);
+
         // Use Listener to intercept raw pointer events for tap detection
         // This works around SelectionArea absorbing tap gestures
         // Wrap in SizedBox.expand to ensure full-screen hit area
@@ -159,13 +179,10 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
             onPointerUp: _handlePointerUp,
             onPointerCancel: _handlePointerCancel,
             child: SelectionArea(
-              // Use a key that changes when chapter or content changes to avoid
-              // Flutter framework bug with stale selection indices (issue #123456).
-              // The hashCode ensures a new SelectionArea when content loads.
-              key: ValueKey(
-                'selection_${readerProvider.currentChapterIndex}_'
-                '${readerProvider.currentChapterHtml.hashCode}',
-              ),
+              // Use UniqueKey that changes when chapter changes to force
+              // complete rebuild and avoid Flutter framework bug with
+              // stale selection indices (flutter/flutter#123456).
+              key: _selectionAreaKey,
               child: SingleChildScrollView(
                 controller: widget.scrollController,
                 padding: EdgeInsets.symmetric(
@@ -592,8 +609,20 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
   String _injectEpubCss(String html, String css) {
     if (css.isEmpty) return html;
 
+    // Sanitize CSS to prevent layout issues with flutter_html
+    // Some EPUB CSS rules cause rendering problems like one-char-per-line
+    var sanitizedCss = css
+        // Remove fixed widths that can break text flow
+        .replaceAll(RegExp(r'width\s*:\s*\d+[^;]*;'), '')
+        // Remove max-width that can constrain content
+        .replaceAll(RegExp(r'max-width\s*:\s*\d+[^;]*;'), '')
+        // Remove column layouts that flutter_html doesn't support well
+        .replaceAll(RegExp(r'column-[^:]+\s*:[^;]+;'), '')
+        // Remove word-break: break-all which can cause one-char-per-line
+        .replaceAll(RegExp(r'word-break\s*:\s*break-all[^;]*;'), '');
+
     // Wrap CSS in a style tag
-    final styleTag = '<style type="text/css">\n$css\n</style>';
+    final styleTag = '<style type="text/css">\n$sanitizedCss\n</style>';
 
     // Inject into <head> if present, otherwise prepend to content
     if (html.contains('<head>')) {
