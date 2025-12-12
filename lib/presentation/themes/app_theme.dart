@@ -81,7 +81,10 @@ class AppTheme {
       brightness: Brightness.light,
 
       // Typography using Google Fonts (Inter for UI)
-      textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),
+      // Apply color scheme colors to ensure proper contrast in light mode
+      textTheme: GoogleFonts.interTextTheme(
+        ThemeData(colorScheme: _lightColorScheme, useMaterial3: true).textTheme,
+      ),
 
       // AppBar theme
       appBarTheme: AppBarTheme(
@@ -165,24 +168,39 @@ class AppTheme {
         elevation: 3,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600);
+            return GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: _lightColorScheme.onSurface,
+            );
           }
-          return GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w500);
+          return GoogleFonts.nunito(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: _lightColorScheme.onSurfaceVariant,
+          );
         }),
       ),
 
       // Navigation rail theme
       navigationRailTheme: NavigationRailThemeData(
         elevation: 0,
+        backgroundColor: _lightColorScheme.surface,
         labelType: NavigationRailLabelType.all,
         useIndicator: true,
         selectedLabelTextStyle: GoogleFonts.nunito(
           fontSize: 14,
           fontWeight: FontWeight.w600,
+          color: _lightColorScheme.onSurface,
         ),
         unselectedLabelTextStyle: GoogleFonts.nunito(
           fontSize: 14,
           fontWeight: FontWeight.w500,
+          color: _lightColorScheme.onSurfaceVariant,
+        ),
+        selectedIconTheme: IconThemeData(color: _lightColorScheme.onSurface),
+        unselectedIconTheme: IconThemeData(
+          color: _lightColorScheme.onSurfaceVariant,
         ),
       ),
 
@@ -224,6 +242,41 @@ class AppTheme {
         ),
       ),
 
+      // Popup menu theme
+      popupMenuTheme: PopupMenuThemeData(
+        color: _lightColorScheme.surfaceContainer,
+        textStyle: TextStyle(color: _lightColorScheme.onSurface, fontSize: 14),
+        labelTextStyle: WidgetStateProperty.all(
+          TextStyle(color: _lightColorScheme.onSurface),
+        ),
+      ),
+
+      // Dropdown menu theme
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: TextStyle(color: _lightColorScheme.onSurface),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(
+            _lightColorScheme.surfaceContainer,
+          ),
+        ),
+      ),
+
+      // Menu theme
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(
+            _lightColorScheme.surfaceContainer,
+          ),
+        ),
+      ),
+
+      // Menu button theme
+      menuButtonTheme: MenuButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.all(_lightColorScheme.onSurface),
+        ),
+      ),
+
       // Snackbar theme
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -240,7 +293,10 @@ class AppTheme {
       brightness: Brightness.dark,
 
       // Typography using Google Fonts (Inter for UI)
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+      // Apply color scheme colors to ensure proper contrast in dark mode
+      textTheme: GoogleFonts.interTextTheme(
+        ThemeData(colorScheme: _darkColorScheme, useMaterial3: true).textTheme,
+      ),
 
       // AppBar theme
       appBarTheme: AppBarTheme(
@@ -324,24 +380,39 @@ class AppTheme {
         elevation: 3,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600);
+            return GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: _darkColorScheme.onSurface,
+            );
           }
-          return GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w500);
+          return GoogleFonts.nunito(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: _darkColorScheme.onSurfaceVariant,
+          );
         }),
       ),
 
       // Navigation rail theme
       navigationRailTheme: NavigationRailThemeData(
         elevation: 0,
+        backgroundColor: _darkColorScheme.surface,
         labelType: NavigationRailLabelType.all,
         useIndicator: true,
         selectedLabelTextStyle: GoogleFonts.nunito(
           fontSize: 14,
           fontWeight: FontWeight.w600,
+          color: _darkColorScheme.onSurface,
         ),
         unselectedLabelTextStyle: GoogleFonts.nunito(
           fontSize: 14,
           fontWeight: FontWeight.w500,
+          color: _darkColorScheme.onSurfaceVariant,
+        ),
+        selectedIconTheme: IconThemeData(color: _darkColorScheme.onSurface),
+        unselectedIconTheme: IconThemeData(
+          color: _darkColorScheme.onSurfaceVariant,
         ),
       ),
 
@@ -380,6 +451,41 @@ class AppTheme {
         elevation: 3,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+      ),
+
+      // Popup menu theme
+      popupMenuTheme: PopupMenuThemeData(
+        color: _darkColorScheme.surfaceContainer,
+        textStyle: TextStyle(color: _darkColorScheme.onSurface, fontSize: 14),
+        labelTextStyle: WidgetStateProperty.all(
+          TextStyle(color: _darkColorScheme.onSurface),
+        ),
+      ),
+
+      // Dropdown menu theme
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: TextStyle(color: _darkColorScheme.onSurface),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(
+            _darkColorScheme.surfaceContainer,
+          ),
+        ),
+      ),
+
+      // Menu theme
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(
+            _darkColorScheme.surfaceContainer,
+          ),
+        ),
+      ),
+
+      // Menu button theme
+      menuButtonTheme: MenuButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.all(_darkColorScheme.onSurface),
         ),
       ),
 
