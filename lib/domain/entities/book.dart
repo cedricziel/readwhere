@@ -30,6 +30,23 @@ class Book extends Equatable {
   /// Entry ID in the source catalog (for tracking remote books)
   final String? sourceEntryId;
 
+  // Extended metadata fields
+
+  /// Publisher name
+  final String? publisher;
+
+  /// Book description/summary
+  final String? description;
+
+  /// Primary language (BCP 47 code like "en", "de")
+  final String? language;
+
+  /// Publication date
+  final DateTime? publishedDate;
+
+  /// Subject categories/tags
+  final List<String> subjects;
+
   const Book({
     required this.id,
     required this.title,
@@ -47,6 +64,11 @@ class Book extends Equatable {
     this.hasMediaOverlays = false,
     this.sourceCatalogId,
     this.sourceEntryId,
+    this.publisher,
+    this.description,
+    this.language,
+    this.publishedDate,
+    this.subjects = const [],
   }) : assert(
          readingProgress == null ||
              (readingProgress >= 0.0 && readingProgress <= 1.0),
@@ -80,6 +102,11 @@ class Book extends Equatable {
     bool? hasMediaOverlays,
     String? sourceCatalogId,
     String? sourceEntryId,
+    String? publisher,
+    String? description,
+    String? language,
+    DateTime? publishedDate,
+    List<String>? subjects,
   }) {
     return Book(
       id: id ?? this.id,
@@ -98,6 +125,11 @@ class Book extends Equatable {
       hasMediaOverlays: hasMediaOverlays ?? this.hasMediaOverlays,
       sourceCatalogId: sourceCatalogId ?? this.sourceCatalogId,
       sourceEntryId: sourceEntryId ?? this.sourceEntryId,
+      publisher: publisher ?? this.publisher,
+      description: description ?? this.description,
+      language: language ?? this.language,
+      publishedDate: publishedDate ?? this.publishedDate,
+      subjects: subjects ?? this.subjects,
     );
   }
 
@@ -119,6 +151,11 @@ class Book extends Equatable {
     hasMediaOverlays,
     sourceCatalogId,
     sourceEntryId,
+    publisher,
+    description,
+    language,
+    publishedDate,
+    subjects,
   ];
 
   @override

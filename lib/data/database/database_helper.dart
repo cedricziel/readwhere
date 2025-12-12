@@ -36,7 +36,9 @@ class DatabaseHelper {
   /// Version 7: Added feed_items table for RSS feed reader functionality
   /// Version 8: Added full_content and content_scraped_at columns to feed_items
   ///            for article content scraping
-  static const int _databaseVersion = 8;
+  /// Version 9: Added extended metadata columns to books table
+  ///            (publisher, description, language, published_date, subjects)
+  static const int _databaseVersion = 9;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -165,6 +167,12 @@ class DatabaseHelper {
     if (oldVersion < 8) {
       await db.execute(FeedItemsTable.addFullContentColumnQuery());
       await db.execute(FeedItemsTable.addContentScrapedAtColumnQuery());
+    }
+    // Version 9: Add extended metadata columns to books table
+    if (oldVersion < 9) {
+      for (final query in BooksTable.migrationV9()) {
+        await db.execute(query);
+      }
     }
   }
 

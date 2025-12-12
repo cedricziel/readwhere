@@ -19,6 +19,13 @@ class BooksTable {
   static const String columnSourceCatalogId = 'source_catalog_id';
   static const String columnSourceEntryId = 'source_entry_id';
 
+  // Extended metadata columns (v9)
+  static const String columnPublisher = 'publisher';
+  static const String columnDescription = 'description';
+  static const String columnLanguage = 'language';
+  static const String columnPublishedDate = 'published_date';
+  static const String columnSubjects = 'subjects';
+
   /// Map of column names for easy reference
   static const Map<String, String> columns = {
     'id': columnId,
@@ -36,6 +43,11 @@ class BooksTable {
     'hasMediaOverlays': columnHasMediaOverlays,
     'sourceCatalogId': columnSourceCatalogId,
     'sourceEntryId': columnSourceEntryId,
+    'publisher': columnPublisher,
+    'description': columnDescription,
+    'language': columnLanguage,
+    'publishedDate': columnPublishedDate,
+    'subjects': columnSubjects,
   };
 
   /// Returns the SQL query to create the books table
@@ -56,7 +68,12 @@ class BooksTable {
         $columnIsFixedLayout INTEGER NOT NULL DEFAULT 0,
         $columnHasMediaOverlays INTEGER NOT NULL DEFAULT 0,
         $columnSourceCatalogId TEXT,
-        $columnSourceEntryId TEXT
+        $columnSourceEntryId TEXT,
+        $columnPublisher TEXT,
+        $columnDescription TEXT,
+        $columnLanguage TEXT,
+        $columnPublishedDate INTEGER,
+        $columnSubjects TEXT
       )
     ''';
   }
@@ -75,6 +92,17 @@ class BooksTable {
     return [
       'ALTER TABLE $tableName ADD COLUMN $columnSourceCatalogId TEXT',
       'ALTER TABLE $tableName ADD COLUMN $columnSourceEntryId TEXT',
+    ];
+  }
+
+  /// Migration queries for version 9 (adds extended metadata columns)
+  static List<String> migrationV9() {
+    return [
+      'ALTER TABLE $tableName ADD COLUMN $columnPublisher TEXT',
+      'ALTER TABLE $tableName ADD COLUMN $columnDescription TEXT',
+      'ALTER TABLE $tableName ADD COLUMN $columnLanguage TEXT',
+      'ALTER TABLE $tableName ADD COLUMN $columnPublishedDate INTEGER',
+      'ALTER TABLE $tableName ADD COLUMN $columnSubjects TEXT',
     ];
   }
 

@@ -253,75 +253,8 @@ class BookCard extends StatelessWidget {
   void _showBookDetails(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(book.title),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDetailRow('Author', book.author),
-              _buildDetailRow('Format', book.format.toUpperCase()),
-              _buildDetailRow(
-                'File Size',
-                '${(book.fileSize / 1024 / 1024).toStringAsFixed(2)} MB',
-              ),
-              _buildDetailRow('Added', _formatDate(book.addedAt)),
-              if (book.lastOpenedAt != null)
-                _buildDetailRow('Last Opened', _formatDate(book.lastOpenedAt!)),
-              if (book.readingProgress != null)
-                _buildDetailRow(
-                  'Progress',
-                  '${(book.readingProgress! * 100).toStringAsFixed(0)}%',
-                ),
-              // EPUB-specific details
-              if (book.format.toLowerCase() == 'epub') ...[
-                const Divider(height: 16),
-                _buildDetailRow(
-                  'Protection',
-                  EncryptionBadge.getDescription(book.encryptionType),
-                ),
-                if (book.isFixedLayout)
-                  _buildDetailRow('Layout', 'Fixed-layout (pre-paginated)'),
-                if (book.hasMediaOverlays)
-                  _buildDetailRow('Audio', 'Has read-aloud narration'),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
+      builder: (context) => _BookDetailsDialog(book: book),
     );
-  }
-
-  /// Builds a detail row for the book details dialog
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-
-  /// Formats a DateTime to a readable string
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
   }
 
   /// Shows a confirmation dialog before deleting the book
@@ -364,5 +297,153 @@ class BookCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Dialog widget for showing book details with expandable description
+class _BookDetailsDialog extends StatefulWidget {
+  final Book book;
+
+  const _BookDetailsDialog({required this.book});
+
+  @override
+  State<_BookDetailsDialog> createState() => _BookDetailsDialogState();
+}
+
+class _BookDetailsDialogState extends State<_BookDetailsDialog> {
+  bool _isDescriptionExpanded = false;
+
+  Book get book => widget.book;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      title: Text(book.title),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDetailRow('Author', book.author),
+            if (book.publisher != null && book.publisher!.isNotEmpty)
+              _buildDetailRow('Publisher', book.publisher!),
+            if (book.language != null && book.language!.isNotEmpty)
+              _buildDetailRow('Language', book.language!),
+            if (book.publishedDate != null)
+              _buildDetailRow('Published', _formatDate(book.publishedDate!)),
+            _buildDetailRow('Format', book.format.toUpperCase()),
+            _buildDetailRow(
+              'File Size',
+              '${(book.fileSize / 1024 / 1024).toStringAsFixed(2)} MB',
+            ),
+            _buildDetailRow('Added', _formatDate(book.addedAt)),
+            if (book.lastOpenedAt != null)
+              _buildDetailRow('Last Opened', _formatDate(book.lastOpenedAt!)),
+            if (book.readingProgress != null)
+              _buildDetailRow(
+                'Progress',
+                '${(book.readingProgress! * 100).toStringAsFixed(0)}%',
+              ),
+            // Description with expand/collapse
+            if (book.description != null && book.description!.isNotEmpty) ...[
+              const Divider(height: 16),
+              Text(
+                'Description:',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                book.description!,
+                maxLines: _isDescriptionExpanded ? null : 3,
+                overflow: _isDescriptionExpanded
+                    ? TextOverflow.visible
+                    : TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
+              ),
+              if (book.description!.length > 150)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isDescriptionExpanded = !_isDescriptionExpanded;
+                    });
+                  },
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    _isDescriptionExpanded ? 'Show less' : 'Show more',
+                  ),
+                ),
+            ],
+            // Subjects as chips
+            if (book.subjects.isNotEmpty) ...[
+              const Divider(height: 16),
+              Text(
+                'Subjects:',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: book.subjects.map((subject) {
+                  return Chip(
+                    label: Text(subject, style: theme.textTheme.labelSmall),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                  );
+                }).toList(),
+              ),
+            ],
+            // EPUB-specific details
+            if (book.format.toLowerCase() == 'epub') ...[
+              const Divider(height: 16),
+              _buildDetailRow(
+                'Protection',
+                EncryptionBadge.getDescription(book.encryptionType),
+              ),
+              if (book.isFixedLayout)
+                _buildDetailRow('Layout', 'Fixed-layout (pre-paginated)'),
+              if (book.hasMediaOverlays)
+                _buildDetailRow('Audio', 'Has read-aloud narration'),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

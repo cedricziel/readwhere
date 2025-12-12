@@ -78,6 +78,11 @@ class BookImportService {
     String title = p.basenameWithoutExtension(filePath);
     String author = 'Unknown';
     String? coverPath;
+    String? publisher;
+    String? description;
+    String? language;
+    DateTime? publishedDate;
+    List<String> subjects = const [];
 
     // Read the file bytes first (while we still have temporary sandbox access)
     final bytes = await file.readAsBytes();
@@ -105,6 +110,11 @@ class BookImportService {
 
       title = metadata.title;
       author = metadata.author ?? 'Unknown';
+      publisher = metadata.publisher;
+      description = metadata.description;
+      language = metadata.language;
+      publishedDate = metadata.date;
+      subjects = metadata.subjects;
 
       // Save cover image if available
       final cover = reader.getCoverImage();
@@ -129,6 +139,11 @@ class BookImportService {
       format: 'epub',
       fileSize: fileSize,
       addedAt: DateTime.now(),
+      publisher: publisher,
+      description: description,
+      language: language,
+      publishedDate: publishedDate,
+      subjects: subjects,
     );
   }
 

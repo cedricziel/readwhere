@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../domain/entities/book.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import '../database/tables/books_table.dart';
@@ -24,6 +26,11 @@ class BookModel extends Book {
     super.hasMediaOverlays,
     super.sourceCatalogId,
     super.sourceEntryId,
+    super.publisher,
+    super.description,
+    super.language,
+    super.publishedDate,
+    super.subjects,
   });
 
   /// Create a BookModel from a Map (SQLite row)
@@ -58,7 +65,31 @@ class BookModel extends Book {
       hasMediaOverlays: (map[BooksTable.columnHasMediaOverlays] as int?) == 1,
       sourceCatalogId: map[BooksTable.columnSourceCatalogId] as String?,
       sourceEntryId: map[BooksTable.columnSourceEntryId] as String?,
+      publisher: map[BooksTable.columnPublisher] as String?,
+      description: map[BooksTable.columnDescription] as String?,
+      language: map[BooksTable.columnLanguage] as String?,
+      publishedDate: map[BooksTable.columnPublishedDate] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              map[BooksTable.columnPublishedDate] as int,
+            )
+          : null,
+      subjects: _parseSubjects(map[BooksTable.columnSubjects] as String?),
     );
+  }
+
+  /// Parse subjects JSON array from database string
+  static List<String> _parseSubjects(String? value) {
+    if (value == null || value.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is List) {
+        return decoded.cast<String>();
+      }
+    } catch (_) {
+      // If JSON parsing fails, try comma-separated fallback
+      return value.split(',').map((s) => s.trim()).toList();
+    }
+    return const [];
   }
 
   /// Parse encryption type string to enum
@@ -99,6 +130,11 @@ class BookModel extends Book {
       hasMediaOverlays: book.hasMediaOverlays,
       sourceCatalogId: book.sourceCatalogId,
       sourceEntryId: book.sourceEntryId,
+      publisher: book.publisher,
+      description: book.description,
+      language: book.language,
+      publishedDate: book.publishedDate,
+      subjects: book.subjects,
     );
   }
 
@@ -125,6 +161,13 @@ class BookModel extends Book {
       BooksTable.columnHasMediaOverlays: hasMediaOverlays ? 1 : 0,
       BooksTable.columnSourceCatalogId: sourceCatalogId,
       BooksTable.columnSourceEntryId: sourceEntryId,
+      BooksTable.columnPublisher: publisher,
+      BooksTable.columnDescription: description,
+      BooksTable.columnLanguage: language,
+      BooksTable.columnPublishedDate: publishedDate?.millisecondsSinceEpoch,
+      BooksTable.columnSubjects: subjects.isNotEmpty
+          ? jsonEncode(subjects)
+          : null,
     };
   }
 
@@ -147,6 +190,11 @@ class BookModel extends Book {
       hasMediaOverlays: hasMediaOverlays,
       sourceCatalogId: sourceCatalogId,
       sourceEntryId: sourceEntryId,
+      publisher: publisher,
+      description: description,
+      language: language,
+      publishedDate: publishedDate,
+      subjects: subjects,
     );
   }
 }

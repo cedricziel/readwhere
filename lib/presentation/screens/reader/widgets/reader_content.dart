@@ -134,6 +134,12 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
                 readerProvider.currentBook?.title ?? 'Book Title',
               );
 
+        // Inject EPUB's embedded CSS into HTML for proper styling
+        final epubCss = readerProvider.currentChapterCss;
+        if (epubCss.isNotEmpty) {
+          htmlContent = _injectEpubCss(htmlContent, epubCss);
+        }
+
         // Inject highlighting CSS for media overlay sync
         if (highlightedElementId != null) {
           htmlContent = _injectHighlightStyle(
@@ -577,6 +583,26 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
         ],
       ),
     );
+  }
+
+  /// Injects the EPUB's embedded CSS into the HTML content.
+  ///
+  /// This preserves the publisher's intended styling for code blocks,
+  /// tips, callouts, and other formatted content.
+  String _injectEpubCss(String html, String css) {
+    if (css.isEmpty) return html;
+
+    // Wrap CSS in a style tag
+    final styleTag = '<style type="text/css">\n$css\n</style>';
+
+    // Inject into <head> if present, otherwise prepend to content
+    if (html.contains('<head>')) {
+      return html.replaceFirst('<head>', '<head>$styleTag');
+    } else if (html.contains('<body>')) {
+      return html.replaceFirst('<body>', '<body>$styleTag');
+    } else {
+      return styleTag + html;
+    }
   }
 
   /// Injects CSS styling to highlight the element with the given ID.
