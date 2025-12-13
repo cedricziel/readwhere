@@ -56,6 +56,7 @@ class _FeedsScreenState extends State<FeedsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Subscribed to "${result.name}"'),
+          duration: const Duration(seconds: 3),
           action: SnackBarAction(
             label: 'Open',
             onPressed: () => _openFeed(result),

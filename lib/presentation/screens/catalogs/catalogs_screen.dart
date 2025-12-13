@@ -45,6 +45,7 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Added "${result.name}"'),
+          duration: const Duration(seconds: 3),
           action: SnackBarAction(
             label: 'Open',
             onPressed: () => _openCatalog(result),

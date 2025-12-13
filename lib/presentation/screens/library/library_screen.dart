@@ -670,6 +670,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Added "${book.title}" to library'),
+                  duration: const Duration(seconds: 3),
                   action: SnackBarAction(
                     label: 'Open',
                     onPressed: () => _openBook(book.id),

@@ -113,6 +113,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Downloaded "$title"'),
+          duration: const Duration(seconds: 3),
           action: SnackBarAction(
             label: 'Open',
             onPressed: () => context.push(AppRoutes.readerPath(bookId)),
