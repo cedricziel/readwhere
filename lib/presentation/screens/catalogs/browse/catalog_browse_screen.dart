@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
+import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../providers/library_provider.dart';
 import '../../../router/routes.dart';
 import '../../../widgets/common/cache_status_indicator.dart';
+import '../../../widgets/facets/facet_filter_bar.dart';
+import '../../../widgets/facets/facet_selection_sheet.dart';
 import 'widgets/feed_breadcrumbs.dart';
 import 'widgets/opds_entry_card.dart';
 import 'widgets/opds_navigation_mosaic_card.dart';
@@ -317,6 +320,65 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     }
   }
 
+  /// Builds the facet filter bar for OPDS facets
+  Widget _buildFacetFilterBar(OpdsProvider provider, OpdsFeed feed) {
+    final facetGroups = _convertToPluginFacets(feed.facetGroups);
+
+    return FacetFilterBar(
+      facetGroups: facetGroups,
+      isCatalogMode: true,
+      onFacetTap: (facet, group) {
+        // Navigate to facet URL
+        _navigateToFacet(provider, facet.href);
+      },
+      onShowFilters: () => _showFacetSelectionSheet(provider, feed),
+      onClearAll: null, // OPDS facets are server-side, no clear action
+    );
+  }
+
+  /// Shows the facet selection bottom sheet
+  void _showFacetSelectionSheet(OpdsProvider provider, OpdsFeed feed) {
+    final facetGroups = _convertToPluginFacets(feed.facetGroups);
+
+    showFacetSelectionSheet(
+      context: context,
+      facetGroups: facetGroups,
+      onFacetSelected: (facet, group) {
+        // Navigate to facet URL (immediate action in catalog mode)
+        _navigateToFacet(provider, facet.href);
+      },
+      isCatalogMode: true,
+    );
+  }
+
+  /// Navigate to a facet by its href
+  void _navigateToFacet(OpdsProvider provider, String href) {
+    // Create an OpdsLink from the facet href
+    final link = OpdsLink(
+      href: href,
+      type: 'application/atom+xml;profile=opds-catalog',
+      rel: OpdsLinkRel.facet,
+    );
+    provider.navigateToFeed(link);
+  }
+
+  /// Converts OPDS facet groups to plugin CatalogFacetGroup format
+  List<CatalogFacetGroup> _convertToPluginFacets(List<OpdsFacetGroup> groups) {
+    return groups.map((group) {
+      return CatalogFacetGroup(
+        name: group.name,
+        facets: group.facets.map((facet) {
+          return CatalogFacet(
+            title: facet.title,
+            href: facet.href,
+            count: facet.count,
+            isActive: facet.isActive,
+          );
+        }).toList(),
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
@@ -402,6 +464,10 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
                     breadcrumbs: provider.breadcrumbs,
                     onTap: (index) => _handleBreadcrumbTap(provider, index),
                   ),
+
+                // Facet filter bar
+                if (feed?.hasFacets == true)
+                  _buildFacetFilterBar(provider, feed!),
 
                 // Cache status indicator
                 CacheStatusIndicator(

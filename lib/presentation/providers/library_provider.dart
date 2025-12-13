@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../data/services/book_import_service.dart';
 import '../../domain/entities/book.dart';
+import '../../domain/entities/library_facet.dart';
 import '../../domain/repositories/book_repository.dart';
 
 /// Sort order options for the library
@@ -55,9 +56,14 @@ class LibraryProvider extends ChangeNotifier {
   LibraryViewMode _viewMode = LibraryViewMode.grid;
   String _searchQuery = '';
 
+  // Facet filter state
+  // Key: field key (e.g., "format"), Value: set of selected values
+  Map<String, Set<String>> _selectedFacets = {};
+
   // Getters
-  /// All books in the library
-  List<Book> get books => _filteredBooks.isNotEmpty || _searchQuery.isNotEmpty
+  /// All books in the library (filtered by search and facets)
+  List<Book> get books =>
+      _filteredBooks.isNotEmpty || _searchQuery.isNotEmpty || hasFacetFilters
       ? _filteredBooks
       : _books;
 
@@ -75,6 +81,13 @@ class LibraryProvider extends ChangeNotifier {
 
   /// Current search query
   String get searchQuery => _searchQuery;
+
+  /// Currently selected facets by field key
+  Map<String, Set<String>> get selectedFacets =>
+      Map.unmodifiable(_selectedFacets);
+
+  /// Whether any facet filters are active
+  bool get hasFacetFilters => _selectedFacets.isNotEmpty;
 
   /// Number of books in the library
   int get bookCount => _books.length;
@@ -411,8 +424,302 @@ class LibraryProvider extends ChangeNotifier {
   /// Clear the current search and show all books
   void clearSearch() {
     _searchQuery = '';
-    _filteredBooks = [];
+    _applyFilters();
     notifyListeners();
+  }
+
+  // ===== Facet Filtering =====
+
+  /// Compute available facet groups from current books
+  ///
+  /// Returns facet groups with counts based on all books (not filtered).
+  /// Active facets are marked based on current selections.
+  List<LibraryFacetGroup> getAvailableFacetGroups() {
+    final groups = <LibraryFacetGroup>[];
+
+    // Format facets
+    groups.add(_buildFormatFacets());
+
+    // Language facets
+    groups.add(_buildLanguageFacets());
+
+    // Subject facets
+    final subjectGroup = _buildSubjectFacets();
+    if (subjectGroup.facets.isNotEmpty) {
+      groups.add(subjectGroup);
+    }
+
+    // Status facets (favorites, reading progress)
+    groups.add(_buildStatusFacets());
+
+    return groups;
+  }
+
+  LibraryFacetGroup _buildFormatFacets() {
+    final formatCounts = <String, int>{};
+    for (final book in _books) {
+      final format = book.format.toLowerCase();
+      formatCounts[format] = (formatCounts[format] ?? 0) + 1;
+    }
+
+    final selectedFormats =
+        _selectedFacets[LibraryFacetFields.format] ?? <String>{};
+
+    final facets = formatCounts.entries.map((e) {
+      final id = '${LibraryFacetFields.format}:${e.key}';
+      return LibraryFacet(
+        id: id,
+        title: e.key.toUpperCase(),
+        count: e.value,
+        isActive: selectedFormats.contains(e.key),
+      );
+    }).toList()..sort((a, b) => b.count.compareTo(a.count));
+
+    return LibraryFacetGroup(
+      name: 'Format',
+      fieldKey: LibraryFacetFields.format,
+      facets: facets,
+    );
+  }
+
+  LibraryFacetGroup _buildLanguageFacets() {
+    final languageCounts = <String, int>{};
+    for (final book in _books) {
+      final lang = book.language ?? 'unknown';
+      languageCounts[lang] = (languageCounts[lang] ?? 0) + 1;
+    }
+
+    final selectedLanguages =
+        _selectedFacets[LibraryFacetFields.language] ?? <String>{};
+
+    final facets = languageCounts.entries.map((e) {
+      final id = '${LibraryFacetFields.language}:${e.key}';
+      return LibraryFacet(
+        id: id,
+        title: _getLanguageName(e.key),
+        count: e.value,
+        isActive: selectedLanguages.contains(e.key),
+      );
+    }).toList()..sort((a, b) => b.count.compareTo(a.count));
+
+    return LibraryFacetGroup(
+      name: 'Language',
+      fieldKey: LibraryFacetFields.language,
+      facets: facets,
+    );
+  }
+
+  LibraryFacetGroup _buildSubjectFacets() {
+    final subjectCounts = <String, int>{};
+    for (final book in _books) {
+      for (final subject in book.subjects) {
+        final normalized = subject.toLowerCase().trim();
+        if (normalized.isNotEmpty) {
+          subjectCounts[normalized] = (subjectCounts[normalized] ?? 0) + 1;
+        }
+      }
+    }
+
+    final selectedSubjects =
+        _selectedFacets[LibraryFacetFields.subject] ?? <String>{};
+
+    // Only show top 20 subjects
+    final sortedEntries = subjectCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topSubjects = sortedEntries.take(20);
+
+    final facets = topSubjects.map((e) {
+      final id = '${LibraryFacetFields.subject}:${e.key}';
+      return LibraryFacet(
+        id: id,
+        title: _capitalize(e.key),
+        count: e.value,
+        isActive: selectedSubjects.contains(e.key),
+      );
+    }).toList();
+
+    return LibraryFacetGroup(
+      name: 'Subject',
+      fieldKey: LibraryFacetFields.subject,
+      facets: facets,
+    );
+  }
+
+  LibraryFacetGroup _buildStatusFacets() {
+    final selectedStatus =
+        _selectedFacets[LibraryFacetFields.status] ?? <String>{};
+
+    final favoriteCount = _books.where((b) => b.isFavorite).length;
+    final unreadCount = _books
+        .where((b) => b.readingProgress == null || b.readingProgress == 0)
+        .length;
+    final inProgressCount = _books
+        .where(
+          (b) =>
+              b.readingProgress != null &&
+              b.readingProgress! > 0 &&
+              b.readingProgress! < 1,
+        )
+        .length;
+    final completedCount = _books.where((b) => b.readingProgress == 1.0).length;
+
+    return LibraryFacetGroup(
+      name: 'Status',
+      fieldKey: LibraryFacetFields.status,
+      facets: [
+        LibraryFacet(
+          id: '${LibraryFacetFields.status}:${LibraryStatusFacets.favorites}',
+          title: 'Favorites',
+          count: favoriteCount,
+          isActive: selectedStatus.contains(LibraryStatusFacets.favorites),
+        ),
+        LibraryFacet(
+          id: '${LibraryFacetFields.status}:${LibraryStatusFacets.unread}',
+          title: 'Unread',
+          count: unreadCount,
+          isActive: selectedStatus.contains(LibraryStatusFacets.unread),
+        ),
+        LibraryFacet(
+          id: '${LibraryFacetFields.status}:${LibraryStatusFacets.inProgress}',
+          title: 'In Progress',
+          count: inProgressCount,
+          isActive: selectedStatus.contains(LibraryStatusFacets.inProgress),
+        ),
+        LibraryFacet(
+          id: '${LibraryFacetFields.status}:${LibraryStatusFacets.completed}',
+          title: 'Completed',
+          count: completedCount,
+          isActive: selectedStatus.contains(LibraryStatusFacets.completed),
+        ),
+      ],
+    );
+  }
+
+  /// Toggle a facet selection
+  ///
+  /// [fieldKey] The facet group field key (e.g., "format", "language")
+  /// [value] The facet value to toggle (e.g., "epub", "en")
+  void toggleFacet(String fieldKey, String value) {
+    final selections = _selectedFacets.putIfAbsent(fieldKey, () => <String>{});
+
+    if (selections.contains(value)) {
+      selections.remove(value);
+      if (selections.isEmpty) {
+        _selectedFacets.remove(fieldKey);
+      }
+    } else {
+      selections.add(value);
+    }
+
+    _applyFilters();
+    notifyListeners();
+  }
+
+  /// Set facet selections from a map (used when applying from sheet)
+  ///
+  /// [selections] Map of field key to set of selected values
+  void setFacetSelections(Map<String, Set<String>> selections) {
+    _selectedFacets = Map.from(
+      selections.map((k, v) => MapEntry(k, Set<String>.from(v))),
+    );
+    _applyFilters();
+    notifyListeners();
+  }
+
+  /// Clear all facet filters
+  void clearFacetFilters() {
+    _selectedFacets.clear();
+    _applyFilters();
+    notifyListeners();
+  }
+
+  /// Apply combined search and facet filtering
+  void _applyFilters() {
+    var result = List<Book>.from(_books);
+
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      result = result
+          .where(
+            (book) =>
+                book.title.toLowerCase().contains(query) ||
+                book.author.toLowerCase().contains(query),
+          )
+          .toList();
+    }
+
+    // Apply facet filters
+    for (final entry in _selectedFacets.entries) {
+      final fieldKey = entry.key;
+      final values = entry.value;
+
+      if (values.isEmpty) continue;
+
+      result = result.where((book) {
+        switch (fieldKey) {
+          case LibraryFacetFields.format:
+            return values.contains(book.format.toLowerCase());
+
+          case LibraryFacetFields.language:
+            final lang = book.language ?? 'unknown';
+            return values.contains(lang);
+
+          case LibraryFacetFields.subject:
+            final bookSubjects = book.subjects
+                .map((s) => s.toLowerCase().trim())
+                .toSet();
+            return values.any((v) => bookSubjects.contains(v));
+
+          case LibraryFacetFields.status:
+            return values.any((status) {
+              switch (status) {
+                case LibraryStatusFacets.favorites:
+                  return book.isFavorite;
+                case LibraryStatusFacets.unread:
+                  return book.readingProgress == null ||
+                      book.readingProgress == 0;
+                case LibraryStatusFacets.inProgress:
+                  return book.readingProgress != null &&
+                      book.readingProgress! > 0 &&
+                      book.readingProgress! < 1;
+                case LibraryStatusFacets.completed:
+                  return book.readingProgress == 1.0;
+                default:
+                  return false;
+              }
+            });
+
+          default:
+            return true;
+        }
+      }).toList();
+    }
+
+    _filteredBooks = result;
+  }
+
+  String _getLanguageName(String code) {
+    const languageNames = {
+      'en': 'English',
+      'de': 'German',
+      'fr': 'French',
+      'es': 'Spanish',
+      'it': 'Italian',
+      'pt': 'Portuguese',
+      'nl': 'Dutch',
+      'ru': 'Russian',
+      'ja': 'Japanese',
+      'zh': 'Chinese',
+      'ko': 'Korean',
+      'unknown': 'Unknown',
+    };
+    return languageNames[code] ?? code.toUpperCase();
+  }
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
   }
 
   /// Get the filtered books based on search query and sort order
@@ -453,19 +760,8 @@ class LibraryProvider extends ChangeNotifier {
     }
   }
 
-  /// Apply search filter to books
+  /// Apply search filter to books (legacy - calls _applyFilters)
   void _applySearch() {
-    if (_searchQuery.isNotEmpty) {
-      final query = _searchQuery.toLowerCase();
-      _filteredBooks = _books
-          .where(
-            (book) =>
-                book.title.toLowerCase().contains(query) ||
-                book.author.toLowerCase().contains(query),
-          )
-          .toList();
-    } else {
-      _filteredBooks = [];
-    }
+    _applyFilters();
   }
 }

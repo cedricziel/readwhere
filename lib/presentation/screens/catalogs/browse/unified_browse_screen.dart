@@ -8,6 +8,8 @@ import '../../../../domain/entities/catalog.dart';
 import '../../../providers/library_provider.dart';
 import '../../../providers/unified_catalog_browsing_provider.dart';
 import '../../../router/routes.dart';
+import '../../../widgets/facets/facet_filter_bar.dart';
+import '../../../widgets/facets/facet_selection_sheet.dart';
 import 'widgets/mosaic_preview_card.dart';
 
 /// Unified browse screen for all catalog types.
@@ -273,37 +275,81 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _onRefresh,
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: _provider.entries.length + (_provider.isLoading ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index >= _provider.entries.length) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
+    final hasFacets = _provider.currentResult?.hasFacets ?? false;
 
-          final entry = _provider.entries[index];
+    return Column(
+      children: [
+        // Facet filter bar
+        if (hasFacets) _buildFacetFilterBar(),
 
-          // Use mosaic tile for navigation entries
-          if (entry.type == CatalogEntryType.navigation ||
-              entry.type == CatalogEntryType.collection) {
-            return _buildMosaicTile(entry);
-          }
+        // Content
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount:
+                  _provider.entries.length + (_provider.isLoading ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index >= _provider.entries.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-          return _CatalogEntryTile(
-            entry: entry,
-            downloadProgress: _provider.getDownloadProgress(entry.id),
-            isDownloaded: _provider.isDownloaded(entry.id),
-            onTap: () => _onEntryTap(entry),
-            onDownload: () => _onDownloadOnly(entry),
-            onOpen: () => _downloadAndOpen(entry),
-          );
-        },
-      ),
+                final entry = _provider.entries[index];
+
+                // Use mosaic tile for navigation entries
+                if (entry.type == CatalogEntryType.navigation ||
+                    entry.type == CatalogEntryType.collection) {
+                  return _buildMosaicTile(entry);
+                }
+
+                return _CatalogEntryTile(
+                  entry: entry,
+                  downloadProgress: _provider.getDownloadProgress(entry.id),
+                  isDownloaded: _provider.isDownloaded(entry.id),
+                  onTap: () => _onEntryTap(entry),
+                  onDownload: () => _onDownloadOnly(entry),
+                  onOpen: () => _downloadAndOpen(entry),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the facet filter bar for catalog facets
+  Widget _buildFacetFilterBar() {
+    final facetGroups = _provider.currentResult?.facetGroups ?? [];
+
+    return FacetFilterBar(
+      facetGroups: facetGroups,
+      isCatalogMode: true,
+      onFacetTap: (facet, group) {
+        // Navigate to facet URL
+        _provider.navigateToPath(facet.href);
+      },
+      onShowFilters: () => _showFacetSelectionSheet(),
+      onClearAll: null, // Catalog facets are server-side
+    );
+  }
+
+  /// Shows the facet selection bottom sheet
+  void _showFacetSelectionSheet() {
+    final facetGroups = _provider.currentResult?.facetGroups ?? [];
+
+    showFacetSelectionSheet(
+      context: context,
+      facetGroups: facetGroups,
+      onFacetSelected: (facet, group) {
+        // Navigate to facet URL (immediate action in catalog mode)
+        _provider.navigateToPath(facet.href);
+      },
+      isCatalogMode: true,
     );
   }
 

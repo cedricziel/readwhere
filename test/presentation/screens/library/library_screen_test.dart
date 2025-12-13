@@ -27,6 +27,12 @@ void main() {
       mockLibraryProvider.sortOrder,
     ).thenReturn(LibrarySortOrder.recentlyAdded);
     when(mockLibraryProvider.loadLibrary()).thenAnswer((_) async {});
+
+    // Facet-related stubs
+    when(mockLibraryProvider.selectedFacets).thenReturn({});
+    when(mockLibraryProvider.hasFacetFilters).thenReturn(false);
+    when(mockLibraryProvider.getAvailableFacetGroups()).thenReturn([]);
+    when(mockLibraryProvider.bookCount).thenReturn(0);
   });
 
   Widget buildTestWidget() {
@@ -123,6 +129,7 @@ void main() {
           createTestBook(title: 'Book 1'),
           createTestBook(title: 'Book 2'),
         ]);
+        when(mockLibraryProvider.bookCount).thenReturn(2);
         when(mockLibraryProvider.viewMode).thenReturn(LibraryViewMode.grid);
 
         await tester.pumpWidget(buildTestWidget());
@@ -136,6 +143,7 @@ void main() {
           createTestBook(title: 'Book 1'),
           createTestBook(title: 'Book 2'),
         ]);
+        when(mockLibraryProvider.bookCount).thenReturn(2);
         when(mockLibraryProvider.viewMode).thenReturn(LibraryViewMode.list);
 
         await tester.pumpWidget(buildTestWidget());
@@ -148,6 +156,7 @@ void main() {
         when(
           mockLibraryProvider.books,
         ).thenReturn([createTestBook(title: 'The Great Gatsby')]);
+        when(mockLibraryProvider.bookCount).thenReturn(1);
 
         await tester.pumpWidget(buildTestWidget());
 
@@ -310,6 +319,7 @@ void main() {
       testWidgets('has floating action button with add icon', (tester) async {
         // Give it some books so empty state doesn't show
         when(mockLibraryProvider.books).thenReturn([createTestBook()]);
+        when(mockLibraryProvider.bookCount).thenReturn(1);
 
         await tester.pumpWidget(buildTestWidget());
 
@@ -324,6 +334,7 @@ void main() {
         tester,
       ) async {
         when(mockLibraryProvider.books).thenReturn([createTestBook()]);
+        when(mockLibraryProvider.bookCount).thenReturn(1);
 
         await tester.pumpWidget(buildTestWidget());
 

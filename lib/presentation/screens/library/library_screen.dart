@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../domain/entities/library_facet.dart';
 import '../../providers/library_provider.dart';
 import '../../widgets/common/app_logo.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/loading_indicator.dart';
+import '../../widgets/facets/facet_filter_bar.dart';
+import '../../widgets/facets/facet_selection_sheet.dart';
 import '../../router/routes.dart';
 import 'widgets/book_card.dart';
 import 'widgets/book_list_tile.dart';
@@ -69,13 +72,25 @@ class _LibraryScreenState extends State<LibraryScreen> {
             return _buildErrorState(libraryProvider);
           }
 
-          // Empty state
-          if (libraryProvider.books.isEmpty) {
+          // Empty state (no books at all, not just filtered)
+          if (libraryProvider.bookCount == 0) {
             return _buildEmptyState();
           }
 
-          // Books display
-          return _buildBooksView(libraryProvider);
+          // Books display with facet filter bar
+          return Column(
+            children: [
+              // Facet filter bar
+              _buildFacetFilterBar(libraryProvider),
+
+              // Books view
+              Expanded(
+                child: libraryProvider.books.isEmpty
+                    ? _buildNoResultsState()
+                    : _buildBooksView(libraryProvider),
+              ),
+            ],
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -246,6 +261,118 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  /// Builds the facet filter bar for filtering books
+  Widget _buildFacetFilterBar(LibraryProvider libraryProvider) {
+    final facetGroups = libraryProvider.getAvailableFacetGroups();
+    final catalogFacetGroups = facetGroups
+        .map((g) => g.toCatalogFacetGroup())
+        .toList();
+
+    return FacetFilterBar(
+      facetGroups: catalogFacetGroups,
+      isCatalogMode: false,
+      onFacetTap: (facet, group) {
+        // Extract field key and value from facet href (which is the id)
+        final parts = facet.href.split(':');
+        if (parts.length == 2) {
+          libraryProvider.toggleFacet(parts[0], parts[1]);
+        }
+      },
+      onShowFilters: () => _showFacetSelectionSheet(libraryProvider),
+      onClearAll: libraryProvider.hasFacetFilters
+          ? () => libraryProvider.clearFacetFilters()
+          : null,
+    );
+  }
+
+  /// Shows the facet selection bottom sheet
+  void _showFacetSelectionSheet(LibraryProvider libraryProvider) {
+    final facetGroups = libraryProvider.getAvailableFacetGroups();
+    final catalogFacetGroups = facetGroups
+        .map((g) => g.toCatalogFacetGroup())
+        .toList();
+
+    // Convert selections to use facet hrefs (which are ids like "format:epub")
+    final currentSelections = <String, Set<String>>{};
+    for (final entry in libraryProvider.selectedFacets.entries) {
+      currentSelections[_getGroupName(entry.key)] = entry.value;
+    }
+
+    showFacetSelectionSheet(
+      context: context,
+      facetGroups: catalogFacetGroups,
+      onFacetSelected: (facet, group) {
+        // This callback is not used in library mode
+      },
+      isCatalogMode: false,
+      selectedFacets: currentSelections,
+      onClear: () => libraryProvider.clearFacetFilters(),
+      onApply: (selections) {
+        // Convert group names back to field keys and set selections
+        final fieldSelections = <String, Set<String>>{};
+        for (final group in facetGroups) {
+          final groupSelections = selections[group.name];
+          if (groupSelections != null && groupSelections.isNotEmpty) {
+            fieldSelections[group.fieldKey] = groupSelections;
+          }
+        }
+        libraryProvider.setFacetSelections(fieldSelections);
+      },
+    );
+  }
+
+  /// Get group name for a field key
+  String _getGroupName(String fieldKey) {
+    switch (fieldKey) {
+      case LibraryFacetFields.format:
+        return 'Format';
+      case LibraryFacetFields.language:
+        return 'Language';
+      case LibraryFacetFields.subject:
+        return 'Subject';
+      case LibraryFacetFields.status:
+        return 'Status';
+      default:
+        return fieldKey;
+    }
+  }
+
+  /// Builds the state when filters result in no matches
+  Widget _buildNoResultsState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.filter_list_off, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'No books match your filters',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Try adjusting your filters',
+            style: TextStyle(color: Colors.grey[500]),
+          ),
+          const SizedBox(height: 16),
+          Consumer<LibraryProvider>(
+            builder: (context, provider, _) {
+              return TextButton.icon(
+                onPressed: () => provider.clearFacetFilters(),
+                icon: const Icon(Icons.clear_all),
+                label: const Text('Clear Filters'),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
