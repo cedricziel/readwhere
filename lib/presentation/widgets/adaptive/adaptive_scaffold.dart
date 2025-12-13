@@ -61,9 +61,11 @@ class AdaptiveScaffold extends StatelessWidget {
             selectedIndex: selectedIndex,
             onDestinationSelected: onDestinationSelected,
             extended: isDesktop,
+            // Desktop (extended): labels shown inline, so use 'none'
+            // Tablet (collapsed): show only selected label to save space
             labelType: isDesktop
                 ? NavigationRailLabelType.none
-                : NavigationRailLabelType.all,
+                : NavigationRailLabelType.selected,
             destinations: destinations.map((dest) {
               return NavigationRailDestination(
                 icon: Icon(dest.icon),

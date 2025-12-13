@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/library_facet.dart';
 import '../../providers/library_provider.dart';
 import '../../widgets/common/app_logo.dart';
@@ -102,7 +103,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   /// Builds the app bar with title, search, view toggle, and sort menu
+  /// On mobile, consolidates actions into overflow menu for better touch UX
   PreferredSizeWidget _buildAppBar() {
+    final isMobile = context.isMobile;
+
     return AppBar(
       leading: _isSearching
           ? null
@@ -128,7 +132,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             )
           : const Text('Library'),
       actions: [
-        // Search icon
+        // Search icon - always visible
         IconButton(
           icon: Icon(_isSearching ? Icons.close : Icons.search),
           tooltip: _isSearching ? 'Close search' : 'Search',
@@ -146,122 +150,238 @@ class _LibraryScreenState extends State<LibraryScreen> {
             });
           },
         ),
-        // View mode toggle
-        Consumer<LibraryProvider>(
-          builder: (context, libraryProvider, child) {
-            return IconButton(
-              icon: Icon(
-                libraryProvider.viewMode == LibraryViewMode.grid
-                    ? Icons.view_list
-                    : Icons.grid_view,
-              ),
-              tooltip: libraryProvider.viewMode == LibraryViewMode.grid
-                  ? 'List view'
-                  : 'Grid view',
-              onPressed: () {
-                libraryProvider.setViewMode(
+
+        // On larger screens: show individual action buttons
+        if (!isMobile) ...[
+          // View mode toggle
+          Consumer<LibraryProvider>(
+            builder: (context, libraryProvider, child) {
+              return IconButton(
+                icon: Icon(
                   libraryProvider.viewMode == LibraryViewMode.grid
-                      ? LibraryViewMode.list
-                      : LibraryViewMode.grid,
-                );
-              },
-            );
-          },
-        ),
-        // Sort menu
-        Consumer<LibraryProvider>(
-          builder: (context, libraryProvider, child) {
-            return PopupMenuButton<LibrarySortOrder>(
-              icon: const Icon(Icons.sort),
-              tooltip: 'Sort',
-              onSelected: (order) {
-                libraryProvider.setSortOrder(order);
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: LibrarySortOrder.recentlyAdded,
-                  child: Row(
-                    children: [
-                      if (libraryProvider.sortOrder ==
-                          LibrarySortOrder.recentlyAdded)
-                        const Icon(Icons.check, size: 20),
-                      if (libraryProvider.sortOrder !=
-                          LibrarySortOrder.recentlyAdded)
-                        const SizedBox(width: 20),
-                      const SizedBox(width: 8),
-                      const Text('Recently Added'),
-                    ],
-                  ),
+                      ? Icons.view_list
+                      : Icons.grid_view,
                 ),
-                PopupMenuItem(
-                  value: LibrarySortOrder.recentlyOpened,
-                  child: Row(
-                    children: [
-                      if (libraryProvider.sortOrder ==
-                          LibrarySortOrder.recentlyOpened)
-                        const Icon(Icons.check, size: 20),
-                      if (libraryProvider.sortOrder !=
-                          LibrarySortOrder.recentlyOpened)
-                        const SizedBox(width: 20),
-                      const SizedBox(width: 8),
-                      const Text('Recently Opened'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: LibrarySortOrder.title,
-                  child: Row(
-                    children: [
-                      if (libraryProvider.sortOrder == LibrarySortOrder.title)
-                        const Icon(Icons.check, size: 20),
-                      if (libraryProvider.sortOrder != LibrarySortOrder.title)
-                        const SizedBox(width: 20),
-                      const SizedBox(width: 8),
-                      const Text('Title'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: LibrarySortOrder.author,
-                  child: Row(
-                    children: [
-                      if (libraryProvider.sortOrder == LibrarySortOrder.author)
-                        const Icon(Icons.check, size: 20),
-                      if (libraryProvider.sortOrder != LibrarySortOrder.author)
-                        const SizedBox(width: 20),
-                      const SizedBox(width: 8),
-                      const Text('Author'),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        // More options menu
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert),
-          tooltip: 'More options',
-          onSelected: (value) {
-            if (value == 'refresh_all_metadata') {
-              _refreshAllMetadata();
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'refresh_all_metadata',
-              child: Row(
-                children: [
-                  Icon(Icons.refresh, size: 20),
-                  SizedBox(width: 12),
-                  Text('Refresh All Metadata'),
-                ],
-              ),
-            ),
-          ],
-        ),
+                tooltip: libraryProvider.viewMode == LibraryViewMode.grid
+                    ? 'List view'
+                    : 'Grid view',
+                onPressed: () {
+                  libraryProvider.setViewMode(
+                    libraryProvider.viewMode == LibraryViewMode.grid
+                        ? LibraryViewMode.list
+                        : LibraryViewMode.grid,
+                  );
+                },
+              );
+            },
+          ),
+          // Sort menu
+          Consumer<LibraryProvider>(
+            builder: (context, libraryProvider, child) {
+              return PopupMenuButton<LibrarySortOrder>(
+                icon: const Icon(Icons.sort),
+                tooltip: 'Sort',
+                onSelected: (order) {
+                  libraryProvider.setSortOrder(order);
+                },
+                itemBuilder: (context) => _buildSortMenuItems(libraryProvider),
+              );
+            },
+          ),
+          // More options menu
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'More options',
+            onSelected: _handleMoreMenuSelection,
+            itemBuilder: (context) => _buildMoreMenuItems(),
+          ),
+        ],
+
+        // On mobile: consolidated overflow menu
+        if (isMobile)
+          Consumer<LibraryProvider>(
+            builder: (context, libraryProvider, child) {
+              return PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                tooltip: 'Options',
+                onSelected: (value) =>
+                    _handleMobileMenuSelection(value, libraryProvider),
+                itemBuilder: (context) =>
+                    _buildMobileMenuItems(libraryProvider),
+              );
+            },
+          ),
       ],
     );
+  }
+
+  /// Builds sort menu items
+  List<PopupMenuEntry<LibrarySortOrder>> _buildSortMenuItems(
+    LibraryProvider libraryProvider,
+  ) {
+    return [
+      PopupMenuItem(
+        value: LibrarySortOrder.recentlyAdded,
+        child: _buildSortMenuItem(
+          'Recently Added',
+          libraryProvider.sortOrder == LibrarySortOrder.recentlyAdded,
+        ),
+      ),
+      PopupMenuItem(
+        value: LibrarySortOrder.recentlyOpened,
+        child: _buildSortMenuItem(
+          'Recently Opened',
+          libraryProvider.sortOrder == LibrarySortOrder.recentlyOpened,
+        ),
+      ),
+      PopupMenuItem(
+        value: LibrarySortOrder.title,
+        child: _buildSortMenuItem(
+          'Title',
+          libraryProvider.sortOrder == LibrarySortOrder.title,
+        ),
+      ),
+      PopupMenuItem(
+        value: LibrarySortOrder.author,
+        child: _buildSortMenuItem(
+          'Author',
+          libraryProvider.sortOrder == LibrarySortOrder.author,
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildSortMenuItem(String label, bool isSelected) {
+    return Row(
+      children: [
+        if (isSelected) const Icon(Icons.check, size: 20),
+        if (!isSelected) const SizedBox(width: 20),
+        const SizedBox(width: 8),
+        Text(label),
+      ],
+    );
+  }
+
+  /// Builds more menu items for desktop
+  List<PopupMenuEntry<String>> _buildMoreMenuItems() {
+    return [
+      const PopupMenuItem(
+        value: 'refresh_all_metadata',
+        child: Row(
+          children: [
+            Icon(Icons.refresh, size: 20),
+            SizedBox(width: 12),
+            Text('Refresh All Metadata'),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  /// Builds consolidated menu items for mobile
+  List<PopupMenuEntry<String>> _buildMobileMenuItems(
+    LibraryProvider libraryProvider,
+  ) {
+    final isGridView = libraryProvider.viewMode == LibraryViewMode.grid;
+
+    return [
+      // View mode toggle
+      PopupMenuItem(
+        value: 'toggle_view',
+        child: Row(
+          children: [
+            Icon(isGridView ? Icons.view_list : Icons.grid_view, size: 20),
+            const SizedBox(width: 12),
+            Text(isGridView ? 'List View' : 'Grid View'),
+          ],
+        ),
+      ),
+      const PopupMenuDivider(),
+      // Sort options header
+      const PopupMenuItem(
+        enabled: false,
+        height: 32,
+        child: Text(
+          'Sort by',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+        ),
+      ),
+      PopupMenuItem(
+        value: 'sort_recently_added',
+        child: _buildSortMenuItem(
+          'Recently Added',
+          libraryProvider.sortOrder == LibrarySortOrder.recentlyAdded,
+        ),
+      ),
+      PopupMenuItem(
+        value: 'sort_recently_opened',
+        child: _buildSortMenuItem(
+          'Recently Opened',
+          libraryProvider.sortOrder == LibrarySortOrder.recentlyOpened,
+        ),
+      ),
+      PopupMenuItem(
+        value: 'sort_title',
+        child: _buildSortMenuItem(
+          'Title',
+          libraryProvider.sortOrder == LibrarySortOrder.title,
+        ),
+      ),
+      PopupMenuItem(
+        value: 'sort_author',
+        child: _buildSortMenuItem(
+          'Author',
+          libraryProvider.sortOrder == LibrarySortOrder.author,
+        ),
+      ),
+      const PopupMenuDivider(),
+      // More options
+      const PopupMenuItem(
+        value: 'refresh_all_metadata',
+        child: Row(
+          children: [
+            Icon(Icons.refresh, size: 20),
+            SizedBox(width: 12),
+            Text('Refresh All Metadata'),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  /// Handles more menu selection (desktop)
+  void _handleMoreMenuSelection(String value) {
+    if (value == 'refresh_all_metadata') {
+      _refreshAllMetadata();
+    }
+  }
+
+  /// Handles mobile consolidated menu selection
+  void _handleMobileMenuSelection(String value, LibraryProvider provider) {
+    switch (value) {
+      case 'toggle_view':
+        provider.setViewMode(
+          provider.viewMode == LibraryViewMode.grid
+              ? LibraryViewMode.list
+              : LibraryViewMode.grid,
+        );
+        break;
+      case 'sort_recently_added':
+        provider.setSortOrder(LibrarySortOrder.recentlyAdded);
+        break;
+      case 'sort_recently_opened':
+        provider.setSortOrder(LibrarySortOrder.recentlyOpened);
+        break;
+      case 'sort_title':
+        provider.setSortOrder(LibrarySortOrder.title);
+        break;
+      case 'sort_author':
+        provider.setSortOrder(LibrarySortOrder.author);
+        break;
+      case 'refresh_all_metadata':
+        _refreshAllMetadata();
+        break;
+    }
   }
 
   /// Builds the facet filter bar for filtering books
@@ -499,7 +619,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   /// Opens the book in the reader
   void _openBook(String bookId) {
-    context.push(AppRoutes.readerPath(bookId));
+    GoRouter.of(context).push(AppRoutes.readerPath(bookId));
   }
 
   /// Shows the file picker to import a book

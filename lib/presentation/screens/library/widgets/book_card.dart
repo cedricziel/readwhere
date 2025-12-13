@@ -418,14 +418,12 @@ class _BookDetailsDialogState extends State<_BookDetailsDialog> {
               ),
               const SizedBox(height: 8),
               Wrap(
-                spacing: 6,
-                runSpacing: 6,
+                spacing: 8,
+                runSpacing: 8,
                 children: book.subjects.map((subject) {
                   return Chip(
                     label: Text(subject, style: theme.textTheme.labelSmall),
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                   );
                 }).toList(),
               ),
