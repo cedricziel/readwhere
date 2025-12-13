@@ -29,6 +29,9 @@ class NextcloudProvider extends ChangeNotifier {
 
   List<String> _pathStack = [];
 
+  /// Whether navigateBack() would succeed (pathStack has more than one entry)
+  bool get canNavigateBack => _pathStack.length > 1;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -139,14 +142,12 @@ class NextcloudProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Get breadcrumb list for current path
+  /// Get breadcrumb list for current path (actual folder names only)
   List<String> get breadcrumbs {
     if (_currentPath == '/' || _currentPath.isEmpty) {
-      return ['Home'];
+      return ['/'];
     }
-
-    final parts = _currentPath.split('/').where((s) => s.isNotEmpty).toList();
-    return ['Home', ...parts];
+    return _currentPath.split('/').where((s) => s.isNotEmpty).toList();
   }
 
   Future<void> _loadDirectory() async {

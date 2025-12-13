@@ -165,17 +165,10 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
     final provider = sl<NextcloudProvider>();
     final breadcrumbs = provider.breadcrumbs;
 
-    // Navigate to that path
-    if (index == 0) {
-      // Home - go back to root
-      final parts = provider.currentPath.split('/').where((s) => s.isNotEmpty);
-      if (parts.isNotEmpty) {
-        provider.navigateTo('/${parts.first}');
-      }
-    } else if (index < breadcrumbs.length - 1) {
-      // Navigate to intermediate path
-      // breadcrumbs = ['Home', 'Books', 'Fiction'] -> index 1 = '/Books'
-      final pathParts = breadcrumbs.sublist(1, index + 1);
+    // Only allow tapping non-last breadcrumbs
+    if (index < breadcrumbs.length - 1) {
+      // Build path from breadcrumb parts up to tapped index
+      final pathParts = breadcrumbs.sublist(0, index + 1);
       provider.navigateTo('/${pathParts.join('/')}');
     }
     // If it's the last breadcrumb, do nothing (already there)
@@ -200,7 +193,7 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
                       provider.closeBrowser();
                       Navigator.of(context).pop();
                     }
-                  } else if (provider.breadcrumbs.length > 1) {
+                  } else if (provider.canNavigateBack) {
                     provider.navigateBack();
                   } else {
                     provider.closeBrowser();

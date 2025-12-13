@@ -227,7 +227,7 @@ void main() {
 
         // Assert
         expect(provider.currentPath, '/Books/Fiction');
-        expect(provider.breadcrumbs, ['Home', 'Books', 'Fiction']);
+        expect(provider.breadcrumbs, ['Books', 'Fiction']);
         expect(provider.error, isNull);
       });
 
@@ -261,7 +261,7 @@ void main() {
 
         // Assert: path is rolled back to previous state
         expect(provider.currentPath, '/Books');
-        expect(provider.breadcrumbs, ['Home', 'Books']);
+        expect(provider.breadcrumbs, ['Books']);
         expect(provider.error, isNotNull);
         expect(provider.error, contains('Not found'));
       });
@@ -350,7 +350,7 @@ void main() {
 
         // Assert: still at root, stack not corrupted
         expect(provider.currentPath, '/Books');
-        expect(provider.breadcrumbs, ['Home', 'Books']);
+        expect(provider.breadcrumbs, ['Books']);
 
         // Can still navigate back (should return false since at root)
         final canGoBack = provider.navigateBackWithoutLoad();
@@ -359,7 +359,7 @@ void main() {
     });
 
     group('breadcrumbs', () {
-      test('returns Home for root path', () async {
+      test('returns / for root path', () async {
         when(mockClient.listDirectory(
           serverUrl: anyNamed('serverUrl'),
           userId: anyNamed('userId'),
@@ -375,7 +375,7 @@ void main() {
           booksFolder: '/',
         );
 
-        expect(provider.breadcrumbs, ['Home']);
+        expect(provider.breadcrumbs, ['/']);
       });
 
       test('returns correct breadcrumbs for nested path', () async {
@@ -395,7 +395,7 @@ void main() {
         );
         await provider.navigateTo('/Books/Fiction/SciFi');
 
-        expect(provider.breadcrumbs, ['Home', 'Books', 'Fiction', 'SciFi']);
+        expect(provider.breadcrumbs, ['Books', 'Fiction', 'SciFi']);
       });
     });
   });
