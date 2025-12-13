@@ -96,5 +96,10 @@
 			</dict>
 		</dict>
 	</array>
+	<!-- Background fetch for sync -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
 </dict>
 </plist>

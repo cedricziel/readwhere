@@ -6,6 +6,10 @@
     <!-- Required for installing APK updates -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
 
+    <!-- Background task permissions (WorkManager) -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <application
         android:label="ReadWhere"
         android:name="${applicationName}"
