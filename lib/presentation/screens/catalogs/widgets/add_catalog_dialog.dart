@@ -386,7 +386,7 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
         ? 'Subscribe to Feed'
         : 'Add Server';
 
-    return AlertDialog(
+    return AlertDialog.adaptive(
       title: Text(dialogTitle),
       content: SingleChildScrollView(
         child: Form(

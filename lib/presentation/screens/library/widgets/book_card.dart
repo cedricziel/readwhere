@@ -298,7 +298,7 @@ class BookCard extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => AlertDialog.adaptive(
         title: const Text('Delete Book'),
         content: Text(
           'Are you sure you want to delete "$bookTitle"? This action cannot be undone.',
@@ -349,7 +349,7 @@ class _BookDetailsDialogState extends State<_BookDetailsDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return AlertDialog(
+    return AlertDialog.adaptive(
       title: Text(book.title),
       content: SingleChildScrollView(
         child: Column(

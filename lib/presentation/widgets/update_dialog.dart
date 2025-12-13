@@ -29,7 +29,7 @@ class UpdateDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return AlertDialog(
+    return AlertDialog.adaptive(
       title: Row(
         children: [
           Icon(Icons.system_update, color: theme.colorScheme.primary),

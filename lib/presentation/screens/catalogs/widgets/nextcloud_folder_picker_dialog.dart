@@ -186,7 +186,7 @@ class _NextcloudFolderPickerDialogState
 
     final folderName = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         title: const Text('New Folder'),
         content: Form(
           key: formKey,
@@ -297,7 +297,7 @@ class _NextcloudFolderPickerDialogState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return AlertDialog(
+    return AlertDialog.adaptive(
       title: const Text('Select Starting Folder'),
       contentPadding: EdgeInsets.zero,
       content: SizedBox(

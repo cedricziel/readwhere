@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:logging/logging.dart';
@@ -8,6 +9,7 @@ import 'presentation/providers/settings_provider.dart';
 import 'presentation/providers/update_provider.dart';
 import 'presentation/router/app_router.dart';
 import 'presentation/themes/app_theme.dart';
+import 'presentation/themes/cupertino_theme.dart';
 import 'presentation/widgets/update_dialog.dart';
 
 final _log = Logger('ReadWhereApp');
@@ -91,20 +93,41 @@ class _ReadWhereAppState extends State<ReadWhereApp> {
   Widget build(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settingsProvider, child) {
-        return MaterialApp.router(
-          title: 'ReadWhere',
-          debugShowCheckedModeBanner: false,
+        // Determine effective brightness for Cupertino theme
+        final brightness = _effectiveBrightness(settingsProvider.themeMode);
 
-          // Theme configuration
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: settingsProvider.themeMode,
+        // Wrap with CupertinoTheme to support adaptive widgets on Apple platforms.
+        // Adaptive widgets like Switch.adaptive(), Slider.adaptive(), etc.
+        // will automatically use Cupertino styling when running on iOS/macOS.
+        return CupertinoTheme(
+          data: AppCupertinoTheme.fromBrightness(brightness),
+          child: MaterialApp.router(
+            title: 'ReadWhere',
+            debugShowCheckedModeBanner: false,
 
-          // Router configuration
-          routerConfig: _router,
+            // Theme configuration
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: settingsProvider.themeMode,
+
+            // Router configuration
+            routerConfig: _router,
+          ),
         );
       },
     );
+  }
+
+  /// Returns the effective brightness based on theme mode.
+  Brightness _effectiveBrightness(ThemeMode themeMode) {
+    switch (themeMode) {
+      case ThemeMode.light:
+        return Brightness.light;
+      case ThemeMode.dark:
+        return Brightness.dark;
+      case ThemeMode.system:
+        return SchedulerBinding.instance.platformDispatcher.platformBrightness;
+    }
   }
 
   @override

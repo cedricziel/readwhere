@@ -71,7 +71,7 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
   Future<void> _confirmDeleteCatalog(Catalog catalog) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         title: const Text('Remove Server'),
         content: Text(
           'Remove "${catalog.name}" from your servers?\n\n'

@@ -800,7 +800,7 @@ class _RefreshMetadataProgressDialogState
   Widget build(BuildContext context) {
     final progress = _total > 0 ? _current / _total : 0.0;
 
-    return AlertDialog(
+    return AlertDialog.adaptive(
       title: Text(_isComplete ? 'Refresh Complete' : 'Refreshing Metadata'),
       content: Column(
         mainAxisSize: MainAxisSize.min,

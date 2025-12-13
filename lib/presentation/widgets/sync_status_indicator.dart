@@ -143,7 +143,7 @@ class _SyncStatusIndicatorState extends State<SyncStatusIndicator>
   void _showStatusDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         title: Row(
           children: [
             _buildIcon(context),

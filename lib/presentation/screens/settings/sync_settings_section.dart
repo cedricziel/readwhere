@@ -104,7 +104,7 @@ class SyncSettingsSection extends StatelessWidget {
   ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         title: const Text('Sync Interval'),
         content: Column(
           mainAxisSize: MainAxisSize.min,

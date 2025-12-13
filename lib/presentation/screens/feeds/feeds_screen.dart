@@ -73,7 +73,7 @@ class _FeedsScreenState extends State<FeedsScreen> {
   Future<void> _confirmUnsubscribe(Catalog feed) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         title: const Text('Unsubscribe'),
         content: Text(
           'Unsubscribe from "${feed.name}"?\n\n'

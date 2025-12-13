@@ -162,7 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return ListTile(
       title: Text('Font Size: ${fontSize.toStringAsFixed(0)}'),
-      subtitle: Slider(
+      subtitle: Slider.adaptive(
         value: fontSize,
         min: 12.0,
         max: 32.0,
@@ -206,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         title: const Text('Select Font Family'),
         content: SizedBox(
           width: double.maxFinite,
@@ -249,7 +249,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return ListTile(
       title: Text('Line Height: ${lineHeight.toStringAsFixed(1)}'),
-      subtitle: Slider(
+      subtitle: Slider.adaptive(
         value: lineHeight,
         min: 1.0,
         max: 2.5,
@@ -321,7 +321,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showClearCacheDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         title: const Text('Clear Cache'),
         content: const Text(
           'This will clear cached images and temporary files. Your books and reading progress will not be affected.',
@@ -491,7 +491,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showResetSettingsDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog.adaptive(
         title: const Text('Reset All Settings'),
         content: const Text(
           'This will reset all settings to their default values. Your books and reading progress will not be affected.',

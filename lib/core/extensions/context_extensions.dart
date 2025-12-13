@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 /// Extension methods for BuildContext.
@@ -357,4 +360,59 @@ extension ContextExtensions on BuildContext {
   void unfocus() {
     FocusScope.of(this).unfocus();
   }
+
+  // ============================================================================
+  // Platform Detection (for adaptive widgets)
+  // ============================================================================
+
+  /// Returns true if running on an Apple platform (iOS or macOS).
+  ///
+  /// Used for determining whether to use Cupertino-style widgets.
+  /// Returns false on web, even if the browser is on an Apple device,
+  /// since web apps should use Material Design.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (context.isApplePlatform) {
+  ///   // Use Cupertino-style widgets
+  /// }
+  /// ```
+  bool get isApplePlatform {
+    if (kIsWeb) return false;
+    return Platform.isIOS || Platform.isMacOS;
+  }
+
+  /// Returns true if Cupertino-style widgets should be used.
+  ///
+  /// This is an alias for [isApplePlatform] for semantic clarity when
+  /// choosing between Material and Cupertino widgets. Use Flutter's
+  /// built-in `.adaptive()` constructors where available:
+  /// - `Switch.adaptive()`
+  /// - `Slider.adaptive()`
+  /// - `AlertDialog.adaptive()`
+  /// - `CircularProgressIndicator.adaptive()`
+  /// - `Radio.adaptive()`
+  /// - `Checkbox.adaptive()`
+  ///
+  /// Example:
+  /// ```dart
+  /// // For widgets without .adaptive(), use this:
+  /// if (context.useCupertino) {
+  ///   return CupertinoButton(child: Text('OK'), onPressed: onTap);
+  /// }
+  /// return FilledButton(onPressed: onTap, child: Text('OK'));
+  /// ```
+  bool get useCupertino => isApplePlatform;
+
+  /// Returns true if Material-style widgets should be used.
+  ///
+  /// This is the inverse of [useCupertino] for semantic clarity.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (context.useMaterial) {
+  ///   return FilledButton(onPressed: onTap, child: Text('OK'));
+  /// }
+  /// ```
+  bool get useMaterial => !useCupertino;
 }

@@ -23,7 +23,7 @@ class LoadingIndicator extends StatelessWidget {
     Widget indicator = SizedBox(
       width: size,
       height: size,
-      child: CircularProgressIndicator(
+      child: CircularProgressIndicator.adaptive(
         strokeWidth: size != null ? size! / 8 : 4.0,
         valueColor: color != null
             ? AlwaysStoppedAnimation<Color>(color!)
@@ -75,7 +75,7 @@ class CompactLoadingIndicator extends StatelessWidget {
     return SizedBox(
       width: indicatorSize,
       height: indicatorSize,
-      child: CircularProgressIndicator(
+      child: CircularProgressIndicator.adaptive(
         strokeWidth: indicatorSize / 8,
         valueColor: color != null
             ? AlwaysStoppedAnimation<Color>(color!)
