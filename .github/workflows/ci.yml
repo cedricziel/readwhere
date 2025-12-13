@@ -94,6 +94,45 @@ jobs:
           name: app-release-debug-signed
           path: build/app/outputs/flutter-apk/app-release.apk
 
+  # PDF package integration tests (requires native code on macOS)
+  pdf-integration:
+    name: PDF Integration Tests
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Download sample media
+        run: dart run readwhere_sample_media:download
+
+      - name: Analyze readwhere_pdf
+        run: flutter analyze packages/readwhere_pdf
+
+      - name: Analyze readwhere_pdf_plugin
+        run: flutter analyze packages/readwhere_pdf_plugin
+
+      - name: Run readwhere_pdf integration tests
+        working-directory: packages/readwhere_pdf
+        env:
+          SAMPLE_MEDIA_PATH: ${{ github.workspace }}/.dart_tool/sample_media
+        run: flutter test integration_test/ -d macos
+
+      - name: Run readwhere_pdf_plugin integration tests
+        working-directory: packages/readwhere_pdf_plugin
+        env:
+          SAMPLE_MEDIA_PATH: ${{ github.workspace }}/.dart_tool/sample_media
+        run: flutter test integration_test/ -d macos
+
   # Build Widgetbook to verify widget use cases compile
   widgetbook:
     name: Widgetbook
