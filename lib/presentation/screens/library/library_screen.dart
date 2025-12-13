@@ -480,6 +480,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   /// Calculates the number of columns for grid view based on screen width
+  /// Breakpoints aligned with 360px minimum target width
   int _calculateCrossAxisCount(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
@@ -489,10 +490,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
       return 5; // Large screens
     } else if (width >= 600) {
       return 4; // Tablets
-    } else if (width >= 400) {
-      return 3; // Large phones
+    } else if (width >= 360) {
+      return 3; // Phones (360px minimum target)
     } else {
-      return 2; // Small phones
+      return 2; // Very small screens (fallback)
     }
   }
 

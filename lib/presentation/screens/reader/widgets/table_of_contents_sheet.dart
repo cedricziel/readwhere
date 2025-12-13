@@ -48,10 +48,11 @@ class TableOfContentsSheet extends StatelessWidget {
                   children: [
                     const Icon(Icons.list, size: 24),
                     const SizedBox(width: 12),
-                    const Text(
+                    Text(
                       'Table of Contents',
                       style: TextStyle(
-                        fontSize: 20,
+                        // Use textScaler for accessibility
+                        fontSize: MediaQuery.textScalerOf(context).scale(20),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -69,7 +70,7 @@ class TableOfContentsSheet extends StatelessWidget {
               // Table of contents list
               Flexible(
                 child: toc.isEmpty
-                    ? _buildEmptyState()
+                    ? _buildEmptyState(context)
                     : ListView.builder(
                         shrinkWrap: true,
                         itemCount: toc.length,
@@ -90,7 +91,8 @@ class TableOfContentsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context);
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Column(
@@ -100,12 +102,20 @@ class TableOfContentsSheet extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'No table of contents available',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            style: TextStyle(
+              // Use textScaler for accessibility
+              fontSize: textScaler.scale(16),
+              color: Colors.grey[600],
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'This book may not have chapter information',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            style: TextStyle(
+              // Use textScaler for accessibility
+              fontSize: textScaler.scale(14),
+              color: Colors.grey[500],
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -185,7 +195,10 @@ class TableOfContentsSheet extends StatelessWidget {
                     child: Text(
                       entry.title,
                       style: TextStyle(
-                        fontSize: indentLevel == 0 ? 16 : 14,
+                        // Use textScaler for accessibility
+                        fontSize: MediaQuery.textScalerOf(
+                          context,
+                        ).scale(indentLevel == 0 ? 16 : 14),
                         fontWeight: isCurrentChapter
                             ? FontWeight.w600
                             : (indentLevel == 0

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../domain/entities/book.dart';
 import '../../../providers/library_provider.dart';
+import '../../../widgets/adaptive/responsive_layout.dart';
 import 'encryption_badge.dart';
 
 /// A card widget displaying a book in grid view.
@@ -454,18 +455,29 @@ class _BookDetailsDialogState extends State<_BookDetailsDialog> {
   }
 
   Widget _buildDetailRow(String label, String value) {
+    // Use responsive label width: narrower on mobile to fit small screens
+    final labelWidth = context.responsiveValue<double>(
+      mobile: 80,
+      tablet: 100,
+      desktop: 120,
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 100,
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: labelWidth,
+              maxWidth: labelWidth,
+            ),
             child: Text(
               '$label:',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
+          const SizedBox(width: 8),
           Expanded(child: Text(value)),
         ],
       ),

@@ -30,8 +30,9 @@ class DownloadButton extends StatelessWidget {
     }
 
     if (isDownloading) {
-      return SizedBox(
-        width: 120,
+      // Use constraints instead of fixed width to allow shrinking on small screens
+      return ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 80, maxWidth: 120),
         child: Stack(
           alignment: Alignment.center,
           children: [

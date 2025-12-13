@@ -162,9 +162,10 @@ class _TopBar extends StatelessWidget {
               Expanded(
                 child: Text(
                   bookTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    // Use textScaler for accessibility - respects system text size
+                    fontSize: MediaQuery.textScalerOf(context).scale(16),
                     fontWeight: FontWeight.w500,
                   ),
                   maxLines: 1,
@@ -299,9 +300,10 @@ class _BottomBar extends StatelessWidget {
                       ),
                       label: Text(
                         chapterText,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 14,
+                          // Use textScaler for accessibility
+                          fontSize: MediaQuery.textScalerOf(context).scale(14),
                         ),
                       ),
                       style: TextButton.styleFrom(
@@ -348,9 +350,10 @@ class _BottomBar extends StatelessWidget {
                     width: 48,
                     child: Text(
                       '${progress.toStringAsFixed(0)}%',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        // Use textScaler for accessibility
+                        fontSize: MediaQuery.textScalerOf(context).scale(12),
                         fontWeight: FontWeight.w500,
                       ),
                       textAlign: TextAlign.right,

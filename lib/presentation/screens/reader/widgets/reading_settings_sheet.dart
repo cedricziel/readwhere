@@ -71,9 +71,13 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
               children: [
                 const Icon(Icons.text_format, size: 24),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   'Reading Settings',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    // Use textScaler for accessibility
+                    fontSize: MediaQuery.textScalerOf(context).scale(20),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
@@ -158,12 +162,16 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
   }
 
   Widget _buildThemeSelector() {
+    final textScaler = MediaQuery.textScalerOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Theme',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: textScaler.scale(16),
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 12),
         Row(
@@ -227,7 +235,8 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
                 label,
                 style: TextStyle(
                   color: textColor,
-                  fontSize: 12,
+                  // Use textScaler for accessibility
+                  fontSize: MediaQuery.textScalerOf(context).scale(12),
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
@@ -239,19 +248,26 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
   }
 
   Widget _buildFontSizeControl() {
+    final textScaler = MediaQuery.textScalerOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Font Size',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: textScaler.scale(16),
+                fontWeight: FontWeight.w600,
+              ),
             ),
             Text(
               '${_tempSettings.fontSize.toInt()}',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: textScaler.scale(14),
+                color: Colors.grey[600],
+              ),
             ),
           ],
         ),
@@ -278,6 +294,7 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
   }
 
   Widget _buildFontFamilyControl() {
+    final textScaler = MediaQuery.textScalerOf(context);
     final fontFamilies = [
       'Georgia',
       'Merriweather',
@@ -289,9 +306,12 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Font Family',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: textScaler.scale(16),
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
@@ -320,19 +340,26 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
   }
 
   Widget _buildLineHeightControl() {
+    final textScaler = MediaQuery.textScalerOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Line Height',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: textScaler.scale(16),
+                fontWeight: FontWeight.w600,
+              ),
             ),
             Text(
               _tempSettings.lineHeight.toStringAsFixed(1),
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: textScaler.scale(14),
+                color: Colors.grey[600],
+              ),
             ),
           ],
         ),
@@ -351,19 +378,26 @@ class _ReadingSettingsSheetState extends State<ReadingSettingsSheet> {
   }
 
   Widget _buildMarginControl() {
+    final textScaler = MediaQuery.textScalerOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Margins',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: textScaler.scale(16),
+                fontWeight: FontWeight.w600,
+              ),
             ),
             Text(
               '${_tempSettings.marginHorizontal.toInt()}',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: textScaler.scale(14),
+                color: Colors.grey[600],
+              ),
             ),
           ],
         ),
