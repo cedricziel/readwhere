@@ -105,7 +105,7 @@ jobs:
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev ninja-build libblkid-dev liblzma-dev
+          sudo apt-get install -y libgtk-3-dev ninja-build libblkid-dev liblzma-dev libsecret-1-dev
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
