@@ -3,9 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/catalog.dart';
 import '../../providers/catalogs_provider.dart';
 import '../../router/routes.dart';
+import '../../widgets/adaptive/responsive_layout.dart';
 import 'widgets/add_catalog_dialog.dart';
 import 'widgets/catalog_card.dart';
 import 'widgets/nextcloud_folder_picker_dialog.dart';
@@ -53,14 +55,15 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
   }
 
   void _openCatalog(Catalog catalog) {
+    final router = GoRouter.of(context);
     if (catalog.isNextcloud) {
-      context.push(AppRoutes.nextcloudBrowsePath(catalog.id));
+      router.push(AppRoutes.nextcloudBrowsePath(catalog.id));
     } else if (catalog.isRss) {
-      context.push(AppRoutes.rssBrowsePath(catalog.id));
+      router.push(AppRoutes.rssBrowsePath(catalog.id));
     } else if (catalog.isFanfiction) {
-      context.push(AppRoutes.fanfictionBrowsePath(catalog.id));
+      router.push(AppRoutes.fanfictionBrowsePath(catalog.id));
     } else {
-      context.push(AppRoutes.catalogBrowsePath(catalog.id));
+      router.push(AppRoutes.catalogBrowsePath(catalog.id));
     }
   }
 
@@ -176,7 +179,7 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(context.spacingXL),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -213,7 +216,7 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
   Widget _buildErrorState(CatalogsProvider provider) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(context.spacingXL),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -254,23 +257,49 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
       return _buildEmptyState();
     }
 
+    // Use grid layout in phone landscape for better horizontal space usage
+    final useGrid = context.isPhoneLandscape;
+    final padding = context.spacingM;
+
     return RefreshIndicator(
       onRefresh: () => provider.loadCatalogs(),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: servers.length,
-        itemBuilder: (context, index) {
-          final catalog = servers[index];
-          return CatalogCard(
-            catalog: catalog,
-            onTap: () => _openCatalog(catalog),
-            onDelete: () => _confirmDeleteCatalog(catalog),
-            onChangeFolder: catalog.isNextcloud
-                ? () => _changeFolder(catalog)
-                : null,
-          );
-        },
-      ),
+      child: useGrid
+          ? GridView.builder(
+              padding: EdgeInsets.all(padding),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 2.5,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: servers.length,
+              itemBuilder: (context, index) {
+                final catalog = servers[index];
+                return CatalogCard(
+                  catalog: catalog,
+                  onTap: () => _openCatalog(catalog),
+                  onDelete: () => _confirmDeleteCatalog(catalog),
+                  onChangeFolder: catalog.isNextcloud
+                      ? () => _changeFolder(catalog)
+                      : null,
+                );
+              },
+            )
+          : ListView.builder(
+              padding: EdgeInsets.all(padding),
+              itemCount: servers.length,
+              itemBuilder: (context, index) {
+                final catalog = servers[index];
+                return CatalogCard(
+                  catalog: catalog,
+                  onTap: () => _openCatalog(catalog),
+                  onDelete: () => _confirmDeleteCatalog(catalog),
+                  onChangeFolder: catalog.isNextcloud
+                      ? () => _changeFolder(catalog)
+                      : null,
+                );
+              },
+            ),
     );
   }
 }

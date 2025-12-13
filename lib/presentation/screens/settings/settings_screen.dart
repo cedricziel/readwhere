@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart' as package_info;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/update_provider.dart';
 import '../../widgets/update_dialog.dart';
@@ -52,7 +53,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: const Text('Settings')),
       body: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, child) {
-          return ListView(
+          // In landscape mode, constrain width for better readability
+          final content = ListView(
             children: [
               _buildSectionHeader('Appearance'),
               _buildThemeModeSelector(settingsProvider),
@@ -73,6 +75,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildAboutInfo(),
             ],
           );
+
+          // Apply max-width constraint in landscape for comfortable reading
+          if (context.isPhoneLandscape) {
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: content,
+              ),
+            );
+          }
+
+          return content;
         },
       ),
     );

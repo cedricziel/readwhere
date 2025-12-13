@@ -603,9 +603,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   /// Calculates the number of columns for grid view based on screen width
   /// Breakpoints aligned with 360px minimum target width
+  /// Accounts for phone landscape orientation for more columns
   int _calculateCrossAxisCount(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
+    // Phone in landscape gets more columns since we have more horizontal space
+    if (context.isPhoneLandscape) {
+      if (width >= 800) {
+        return 5; // Large phone landscape
+      } else if (width >= 600) {
+        return 4; // Medium phone landscape
+      } else {
+        return 3; // Small phone landscape
+      }
+    }
+
+    // Portrait and tablet/desktop calculations
     if (width >= 1200) {
       return 6; // Extra large screens
     } else if (width >= 900) {

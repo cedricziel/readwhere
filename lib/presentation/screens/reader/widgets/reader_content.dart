@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../../../providers/audio_provider.dart';
 import '../../../providers/reader_provider.dart';
 import '../../../themes/reading_themes.dart';
@@ -189,236 +190,257 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
                   horizontal: readingTheme.marginHorizontal,
                   vertical: readingTheme.marginVertical,
                 ),
-                child: Html(
-                  data: htmlContent,
-                  style: {
-                    'body': Style(
-                      margin: Margins.zero,
-                      padding: HtmlPaddings.zero,
-                      fontSize: FontSize(readingTheme.fontSize),
-                      fontFamily: readingTheme.fontFamily,
-                      lineHeight: LineHeight(readingTheme.lineHeight),
-                      color: readingTheme.textColor,
+                // In landscape mode on phones, constrain content width for better readability
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      // Max width in landscape: 600px for comfortable reading column
+                      // In portrait or tablet/desktop, use full width
+                      maxWidth: context.isPhoneLandscape
+                          ? 600
+                          : double.infinity,
                     ),
-                    'p': Style(
-                      margin: Margins.only(bottom: readingTheme.fontSize),
-                      textAlign: TextAlign.justify,
-                    ),
-                    'h1': Style(
-                      fontSize: FontSize(readingTheme.fontSize * 1.8),
-                      fontWeight: FontWeight.bold,
-                      margin: Margins.only(
-                        top: readingTheme.fontSize * 2,
-                        bottom: readingTheme.fontSize,
-                      ),
-                    ),
-                    'h2': Style(
-                      fontSize: FontSize(readingTheme.fontSize * 1.5),
-                      fontWeight: FontWeight.bold,
-                      margin: Margins.only(
-                        top: readingTheme.fontSize * 1.5,
-                        bottom: readingTheme.fontSize * 0.75,
-                      ),
-                    ),
-                    'h3': Style(
-                      fontSize: FontSize(readingTheme.fontSize * 1.2),
-                      fontWeight: FontWeight.bold,
-                      margin: Margins.only(
-                        top: readingTheme.fontSize,
-                        bottom: readingTheme.fontSize * 0.5,
-                      ),
-                    ),
-                    'a': Style(
-                      color: readingTheme.linkColor,
-                      textDecoration: TextDecoration.underline,
-                    ),
-                    'em': Style(fontStyle: FontStyle.italic),
-                    'strong': Style(fontWeight: FontWeight.bold),
-                    'blockquote': Style(
-                      margin: Margins.symmetric(
-                        vertical: readingTheme.fontSize,
-                        horizontal: readingTheme.fontSize * 2,
-                      ),
-                      padding: HtmlPaddings.only(left: readingTheme.fontSize),
-                      border: Border(
-                        left: BorderSide(
-                          color: readingTheme.textColor.withValues(alpha: 0.3),
-                          width: 3,
+                    child: Html(
+                      data: htmlContent,
+                      style: {
+                        'body': Style(
+                          margin: Margins.zero,
+                          padding: HtmlPaddings.zero,
+                          fontSize: FontSize(readingTheme.fontSize),
+                          fontFamily: readingTheme.fontFamily,
+                          lineHeight: LineHeight(readingTheme.lineHeight),
+                          color: readingTheme.textColor,
                         ),
-                      ),
-                      fontStyle: FontStyle.italic,
-                    ),
-                    'ul': Style(
-                      margin: Margins.only(
-                        top: readingTheme.fontSize * 0.5,
-                        bottom: readingTheme.fontSize * 0.5,
-                      ),
-                    ),
-                    'ol': Style(
-                      margin: Margins.only(
-                        top: readingTheme.fontSize * 0.5,
-                        bottom: readingTheme.fontSize * 0.5,
-                      ),
-                    ),
-                    'li': Style(
-                      margin: Margins.only(
-                        bottom: readingTheme.fontSize * 0.25,
-                      ),
-                    ),
-                    'img': Style(
-                      margin: Margins.symmetric(
-                        vertical: readingTheme.fontSize,
-                      ),
-                    ),
-                    // Code styling
-                    'code': Style(
-                      fontFamily: 'monospace',
-                      fontSize: FontSize(readingTheme.fontSize * 0.9),
-                      backgroundColor: readingTheme.textColor.withValues(
-                        alpha: 0.08,
-                      ),
-                      padding: HtmlPaddings.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                    ),
-                    'pre': Style(
-                      fontFamily: 'monospace',
-                      fontSize: FontSize(readingTheme.fontSize * 0.85),
-                      backgroundColor: readingTheme.textColor.withValues(
-                        alpha: 0.06,
-                      ),
-                      padding: HtmlPaddings.all(readingTheme.fontSize * 0.75),
-                      margin: Margins.symmetric(
-                        vertical: readingTheme.fontSize,
-                      ),
-                      lineHeight: const LineHeight(1.4),
-                    ),
-                    'pre code': Style(
-                      backgroundColor: Colors.transparent,
-                      padding: HtmlPaddings.zero,
-                    ),
-                    'kbd': Style(
-                      fontFamily: 'monospace',
-                      fontSize: FontSize(readingTheme.fontSize * 0.85),
-                      backgroundColor: readingTheme.textColor.withValues(
-                        alpha: 0.1,
-                      ),
-                      border: Border.all(
-                        color: readingTheme.textColor.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                      padding: HtmlPaddings.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                    ),
-                    'samp': Style(
-                      fontFamily: 'monospace',
-                      fontSize: FontSize(readingTheme.fontSize * 0.9),
-                    ),
-                    'var': Style(
-                      fontFamily: 'monospace',
-                      fontStyle: FontStyle.italic,
-                    ),
-                    // Tables
-                    'table': Style(
-                      margin: Margins.symmetric(
-                        vertical: readingTheme.fontSize,
-                      ),
-                    ),
-                    'th': Style(
-                      fontWeight: FontWeight.bold,
-                      padding: HtmlPaddings.all(8),
-                      backgroundColor: readingTheme.textColor.withValues(
-                        alpha: 0.05,
-                      ),
-                    ),
-                    'td': Style(padding: HtmlPaddings.all(8)),
-                  },
-                  onLinkTap: (url, attributes, element) {
-                    if (url == null) return;
-
-                    // Handle anchor links within current chapter
-                    if (url.startsWith('#')) {
-                      // TODO: Implement anchor navigation within chapter
-                      debugPrint('Navigate to anchor: $url');
-                      return;
-                    }
-
-                    // Check if it's an external link (http/https/mailto/tel)
-                    if (url.startsWith('http://') ||
-                        url.startsWith('https://') ||
-                        url.startsWith('mailto:') ||
-                        url.startsWith('tel:')) {
-                      // TODO: Open external link in browser
-                      debugPrint('External link: $url');
-                      return;
-                    }
-
-                    // Treat as internal EPUB link (chapter navigation)
-                    // Links like 'chapter.xhtml', 'text/chapter.xhtml', 'chapter.xhtml#section'
-                    debugPrint('Internal link: $url');
-                    readerProvider.navigateToHref(url);
-                  },
-                  // Handle images from EPUB resources
-                  extensions: [
-                    TagExtension(
-                      tagsToExtend: {'img'},
-                      builder: (extensionContext) {
-                        final src = extensionContext.attributes['src'];
-                        if (src != null) {
-                          // Handle base64 data URIs (used by CBR/CBZ)
-                          if (src.startsWith('data:image/')) {
-                            return Container(
-                              margin: EdgeInsets.symmetric(
-                                vertical: readingTheme.fontSize,
+                        'p': Style(
+                          margin: Margins.only(bottom: readingTheme.fontSize),
+                          textAlign: TextAlign.justify,
+                        ),
+                        'h1': Style(
+                          fontSize: FontSize(readingTheme.fontSize * 1.8),
+                          fontWeight: FontWeight.bold,
+                          margin: Margins.only(
+                            top: readingTheme.fontSize * 2,
+                            bottom: readingTheme.fontSize,
+                          ),
+                        ),
+                        'h2': Style(
+                          fontSize: FontSize(readingTheme.fontSize * 1.5),
+                          fontWeight: FontWeight.bold,
+                          margin: Margins.only(
+                            top: readingTheme.fontSize * 1.5,
+                            bottom: readingTheme.fontSize * 0.75,
+                          ),
+                        ),
+                        'h3': Style(
+                          fontSize: FontSize(readingTheme.fontSize * 1.2),
+                          fontWeight: FontWeight.bold,
+                          margin: Margins.only(
+                            top: readingTheme.fontSize,
+                            bottom: readingTheme.fontSize * 0.5,
+                          ),
+                        ),
+                        'a': Style(
+                          color: readingTheme.linkColor,
+                          textDecoration: TextDecoration.underline,
+                        ),
+                        'em': Style(fontStyle: FontStyle.italic),
+                        'strong': Style(fontWeight: FontWeight.bold),
+                        'blockquote': Style(
+                          margin: Margins.symmetric(
+                            vertical: readingTheme.fontSize,
+                            horizontal: readingTheme.fontSize * 2,
+                          ),
+                          padding: HtmlPaddings.only(
+                            left: readingTheme.fontSize,
+                          ),
+                          border: Border(
+                            left: BorderSide(
+                              color: readingTheme.textColor.withValues(
+                                alpha: 0.3,
                               ),
-                              child: Image.memory(
-                                _decodeDataUri(src),
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildImagePlaceholder(
-                                    '${src.substring(0, 30)}...',
-                                    readingTheme,
-                                    error: 'Failed to decode image',
-                                  );
-                                },
-                              ),
-                            );
-                          }
-
-                          // Try to find the image in the chapter images
-                          final images = readerProvider.currentChapterImages;
-                          final imageBytes = _findImageBytes(src, images);
-
-                          if (imageBytes != null) {
-                            // Render actual image from EPUB
-                            return Container(
-                              margin: EdgeInsets.symmetric(
-                                vertical: readingTheme.fontSize,
-                              ),
-                              child: Image.memory(
-                                imageBytes,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildImagePlaceholder(
-                                    src,
-                                    readingTheme,
-                                    error: 'Failed to load image',
-                                  );
-                                },
-                              ),
-                            );
-                          }
-
-                          // Show placeholder if image not found
-                          return _buildImagePlaceholder(src, readingTheme);
-                        }
-                        return const SizedBox.shrink();
+                              width: 3,
+                            ),
+                          ),
+                          fontStyle: FontStyle.italic,
+                        ),
+                        'ul': Style(
+                          margin: Margins.only(
+                            top: readingTheme.fontSize * 0.5,
+                            bottom: readingTheme.fontSize * 0.5,
+                          ),
+                        ),
+                        'ol': Style(
+                          margin: Margins.only(
+                            top: readingTheme.fontSize * 0.5,
+                            bottom: readingTheme.fontSize * 0.5,
+                          ),
+                        ),
+                        'li': Style(
+                          margin: Margins.only(
+                            bottom: readingTheme.fontSize * 0.25,
+                          ),
+                        ),
+                        'img': Style(
+                          margin: Margins.symmetric(
+                            vertical: readingTheme.fontSize,
+                          ),
+                        ),
+                        // Code styling
+                        'code': Style(
+                          fontFamily: 'monospace',
+                          fontSize: FontSize(readingTheme.fontSize * 0.9),
+                          backgroundColor: readingTheme.textColor.withValues(
+                            alpha: 0.08,
+                          ),
+                          padding: HtmlPaddings.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                        ),
+                        'pre': Style(
+                          fontFamily: 'monospace',
+                          fontSize: FontSize(readingTheme.fontSize * 0.85),
+                          backgroundColor: readingTheme.textColor.withValues(
+                            alpha: 0.06,
+                          ),
+                          padding: HtmlPaddings.all(
+                            readingTheme.fontSize * 0.75,
+                          ),
+                          margin: Margins.symmetric(
+                            vertical: readingTheme.fontSize,
+                          ),
+                          lineHeight: const LineHeight(1.4),
+                        ),
+                        'pre code': Style(
+                          backgroundColor: Colors.transparent,
+                          padding: HtmlPaddings.zero,
+                        ),
+                        'kbd': Style(
+                          fontFamily: 'monospace',
+                          fontSize: FontSize(readingTheme.fontSize * 0.85),
+                          backgroundColor: readingTheme.textColor.withValues(
+                            alpha: 0.1,
+                          ),
+                          border: Border.all(
+                            color: readingTheme.textColor.withValues(
+                              alpha: 0.2,
+                            ),
+                            width: 1,
+                          ),
+                          padding: HtmlPaddings.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                        ),
+                        'samp': Style(
+                          fontFamily: 'monospace',
+                          fontSize: FontSize(readingTheme.fontSize * 0.9),
+                        ),
+                        'var': Style(
+                          fontFamily: 'monospace',
+                          fontStyle: FontStyle.italic,
+                        ),
+                        // Tables
+                        'table': Style(
+                          margin: Margins.symmetric(
+                            vertical: readingTheme.fontSize,
+                          ),
+                        ),
+                        'th': Style(
+                          fontWeight: FontWeight.bold,
+                          padding: HtmlPaddings.all(8),
+                          backgroundColor: readingTheme.textColor.withValues(
+                            alpha: 0.05,
+                          ),
+                        ),
+                        'td': Style(padding: HtmlPaddings.all(8)),
                       },
+                      onLinkTap: (url, attributes, element) {
+                        if (url == null) return;
+
+                        // Handle anchor links within current chapter
+                        if (url.startsWith('#')) {
+                          // TODO: Implement anchor navigation within chapter
+                          debugPrint('Navigate to anchor: $url');
+                          return;
+                        }
+
+                        // Check if it's an external link (http/https/mailto/tel)
+                        if (url.startsWith('http://') ||
+                            url.startsWith('https://') ||
+                            url.startsWith('mailto:') ||
+                            url.startsWith('tel:')) {
+                          // TODO: Open external link in browser
+                          debugPrint('External link: $url');
+                          return;
+                        }
+
+                        // Treat as internal EPUB link (chapter navigation)
+                        // Links like 'chapter.xhtml', 'text/chapter.xhtml', 'chapter.xhtml#section'
+                        debugPrint('Internal link: $url');
+                        readerProvider.navigateToHref(url);
+                      },
+                      // Handle images from EPUB resources
+                      extensions: [
+                        TagExtension(
+                          tagsToExtend: {'img'},
+                          builder: (extensionContext) {
+                            final src = extensionContext.attributes['src'];
+                            if (src != null) {
+                              // Handle base64 data URIs (used by CBR/CBZ)
+                              if (src.startsWith('data:image/')) {
+                                return Container(
+                                  margin: EdgeInsets.symmetric(
+                                    vertical: readingTheme.fontSize,
+                                  ),
+                                  child: Image.memory(
+                                    _decodeDataUri(src),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildImagePlaceholder(
+                                        '${src.substring(0, 30)}...',
+                                        readingTheme,
+                                        error: 'Failed to decode image',
+                                      );
+                                    },
+                                  ),
+                                );
+                              }
+
+                              // Try to find the image in the chapter images
+                              final images =
+                                  readerProvider.currentChapterImages;
+                              final imageBytes = _findImageBytes(src, images);
+
+                              if (imageBytes != null) {
+                                // Render actual image from EPUB
+                                return Container(
+                                  margin: EdgeInsets.symmetric(
+                                    vertical: readingTheme.fontSize,
+                                  ),
+                                  child: Image.memory(
+                                    imageBytes,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildImagePlaceholder(
+                                        src,
+                                        readingTheme,
+                                        error: 'Failed to load image',
+                                      );
+                                    },
+                                  ),
+                                );
+                              }
+
+                              // Show placeholder if image not found
+                              return _buildImagePlaceholder(src, readingTheme);
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
