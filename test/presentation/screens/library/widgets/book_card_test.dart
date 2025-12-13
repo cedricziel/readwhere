@@ -296,8 +296,9 @@ void main() {
         await tester.tap(find.text('Book Details'));
         await tester.pumpAndSettle();
 
-        // AlertDialog should appear with book details
-        expect(find.byType(AlertDialog), findsOneWidget);
+        // Dialog should appear with book details
+        // Note: AlertDialog.adaptive may render differently, so check for content
+        expect(find.text('Format:'), findsOneWidget); // Unique to dialog
         expect(find.text('My Book'), findsAtLeast(1)); // Title in dialog
         expect(
           find.text('Test Author'),

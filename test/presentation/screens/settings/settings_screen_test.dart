@@ -5,6 +5,7 @@ import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:readwhere/domain/entities/reading_settings.dart';
 import 'package:readwhere/presentation/providers/settings_provider.dart';
+import 'package:readwhere/presentation/providers/sync_settings_provider.dart';
 import 'package:readwhere/presentation/providers/update_provider.dart';
 import 'package:readwhere/presentation/screens/settings/settings_screen.dart';
 
@@ -13,10 +14,12 @@ import '../../../mocks/mock_repositories.mocks.dart';
 void main() {
   late MockSettingsProvider mockSettingsProvider;
   late MockUpdateProvider mockUpdateProvider;
+  late MockSyncSettingsProvider mockSyncSettingsProvider;
 
   setUp(() {
     mockSettingsProvider = MockSettingsProvider();
     mockUpdateProvider = MockUpdateProvider();
+    mockSyncSettingsProvider = MockSyncSettingsProvider();
 
     // Register mock in service locator
     final sl = GetIt.instance;
@@ -24,6 +27,12 @@ void main() {
       sl.unregister<UpdateProvider>();
     }
     sl.registerSingleton<UpdateProvider>(mockUpdateProvider);
+
+    // Register SyncSettingsProvider
+    if (sl.isRegistered<SyncSettingsProvider>()) {
+      sl.unregister<SyncSettingsProvider>();
+    }
+    sl.registerSingleton<SyncSettingsProvider>(mockSyncSettingsProvider);
 
     // Stub UpdateProvider
     when(mockUpdateProvider.isChecking).thenReturn(false);
@@ -38,12 +47,26 @@ void main() {
     when(
       mockSettingsProvider.defaultReadingSettings,
     ).thenReturn(ReadingSettings.defaults());
+
+    // Stub SyncSettingsProvider
+    when(mockSyncSettingsProvider.syncEnabled).thenReturn(false);
+    when(mockSyncSettingsProvider.wifiOnly).thenReturn(true);
+    when(mockSyncSettingsProvider.progressSyncEnabled).thenReturn(true);
+    when(mockSyncSettingsProvider.catalogSyncEnabled).thenReturn(true);
+    when(mockSyncSettingsProvider.feedSyncEnabled).thenReturn(true);
+    when(mockSyncSettingsProvider.syncIntervalMinutes).thenReturn(30);
+    when(mockSyncSettingsProvider.lastSyncAt).thenReturn(null);
+    when(mockSyncSettingsProvider.isInitialized).thenReturn(true);
+    when(mockSyncSettingsProvider.lastSyncDescription).thenReturn('Never');
   });
 
   tearDown(() {
     final sl = GetIt.instance;
     if (sl.isRegistered<UpdateProvider>()) {
       sl.unregister<UpdateProvider>();
+    }
+    if (sl.isRegistered<SyncSettingsProvider>()) {
+      sl.unregister<SyncSettingsProvider>();
     }
   });
 
@@ -173,8 +196,8 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
-        // Scroll to find the toggle
-        await tester.drag(find.byType(ListView), const Offset(0, -200));
+        // Scroll to find the toggle (increased offset to account for Sync section)
+        await tester.drag(find.byType(ListView), const Offset(0, -400));
         await tester.pumpAndSettle();
 
         expect(find.text('Haptic Feedback'), findsOneWidget);
@@ -186,8 +209,8 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
-        // Scroll to find the toggle
-        await tester.drag(find.byType(ListView), const Offset(0, -200));
+        // Scroll to find the toggle (increased offset to account for Sync section)
+        await tester.drag(find.byType(ListView), const Offset(0, -400));
         await tester.pumpAndSettle();
 
         expect(find.text('Keep Screen Awake'), findsOneWidget);
@@ -199,8 +222,8 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
-        // Scroll to find the toggle
-        await tester.drag(find.byType(ListView), const Offset(0, -200));
+        // Scroll to find the toggle (increased offset to account for Sync section)
+        await tester.drag(find.byType(ListView), const Offset(0, -400));
         await tester.pumpAndSettle();
 
         // Find and tap the haptic feedback switch
@@ -216,8 +239,8 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
-        // Scroll down
-        await tester.drag(find.byType(ListView), const Offset(0, -300));
+        // Scroll down (increased offset to account for Sync section)
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
         await tester.pumpAndSettle();
 
         expect(find.text('Storage'), findsOneWidget);
@@ -227,8 +250,8 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
-        // Scroll down
-        await tester.drag(find.byType(ListView), const Offset(0, -300));
+        // Scroll down (increased offset to account for Sync section)
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
         await tester.pumpAndSettle();
 
         expect(find.text('Clear Cache'), findsOneWidget);
@@ -239,18 +262,20 @@ void main() {
         await tester.pump();
 
         // Scroll down multiple times to make Clear Cache fully visible and tappable
-        await tester.drag(find.byType(ListView), const Offset(0, -400));
+        // (increased offset to account for Sync section)
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
         await tester.pumpAndSettle();
-        await tester.drag(find.byType(ListView), const Offset(0, -200));
+        await tester.drag(find.byType(ListView), const Offset(0, -300));
         await tester.pumpAndSettle();
 
         // Tap Clear Cache
         await tester.tap(find.text('Clear Cache'));
         await tester.pumpAndSettle();
 
-        // Dialog should appear
-        expect(find.byType(AlertDialog), findsOneWidget);
+        // Dialog should appear with confirmation content
+        // Note: AlertDialog.adaptive may render differently, so check for content
         expect(find.textContaining('clear cached images'), findsOneWidget);
+        expect(find.text('Cancel'), findsOneWidget);
       });
     });
 
@@ -262,9 +287,10 @@ void main() {
         await tester.pump();
 
         // Scroll down multiple times to reach the About section
-        await tester.drag(find.byType(ListView), const Offset(0, -400));
+        // (increased offset to account for Sync section)
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
         await tester.pumpAndSettle();
-        await tester.drag(find.byType(ListView), const Offset(0, -400));
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
         await tester.pumpAndSettle();
 
         expect(find.text('About'), findsOneWidget);
