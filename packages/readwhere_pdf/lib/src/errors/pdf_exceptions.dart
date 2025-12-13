@@ -20,8 +20,12 @@ class PdfReadException extends PdfException {
     : super(message, cause);
 
   @override
-  String toString() =>
-      'PdfReadException: $message${filePath != null ? ' (file: $filePath)' : ''}';
+  String toString() {
+    final buffer = StringBuffer('PdfReadException: $message');
+    if (filePath != null) buffer.write(' (file: $filePath)');
+    if (cause != null) buffer.write('\nCaused by: $cause');
+    return buffer.toString();
+  }
 }
 
 /// Exception thrown when parsing a PDF file fails.

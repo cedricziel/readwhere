@@ -4,18 +4,44 @@ import 'package:path/path.dart' as p;
 
 import '../config/sample_media_config.dart';
 
+/// Environment variable name for setting the sample media path.
+const String _envSampleMediaPath = 'SAMPLE_MEDIA_PATH';
+
 /// Provides paths to sample media files for tests.
 class SampleMediaPaths {
   SampleMediaPaths._();
 
   static Directory? _cachedRootDirectory;
+  static Directory? _overrideRootDirectory;
+
+  /// Sets an explicit root directory for sample media.
+  ///
+  /// Useful for integration tests where [Directory.current] doesn't
+  /// point to the workspace root.
+  static set rootDirectory(Directory? directory) {
+    _overrideRootDirectory = directory;
+    _cachedRootDirectory = null;
+  }
 
   /// Root directory containing extracted sample media.
   ///
-  /// Locates the workspace root by searching upward for pubspec.yaml
-  /// with a workspace key, then returns `.dart_tool/sample_media/`.
+  /// Resolution order:
+  /// 1. Explicit override via [rootDirectory] setter
+  /// 2. Environment variable `SAMPLE_MEDIA_PATH`
+  /// 3. Search upward for workspace pubspec.yaml
+  /// 4. Fallback: assume we're in a package within packages/
   static Directory get rootDirectory {
+    // Check for explicit override
+    if (_overrideRootDirectory != null) return _overrideRootDirectory!;
+
     if (_cachedRootDirectory != null) return _cachedRootDirectory!;
+
+    // Check for environment variable
+    final envPath = Platform.environment[_envSampleMediaPath];
+    if (envPath != null && envPath.isNotEmpty) {
+      _cachedRootDirectory = Directory(envPath);
+      return _cachedRootDirectory!;
+    }
 
     // Find the workspace root by looking for pubspec.yaml with workspace key
     var current = Directory.current;
