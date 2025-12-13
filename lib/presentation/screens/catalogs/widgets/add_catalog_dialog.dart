@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../domain/entities/catalog.dart';
 import '../../../providers/catalogs_provider.dart';
+import 'nextcloud_folder_picker_dialog.dart';
 
 /// Dialog for adding a new catalog (server) connection
 class AddCatalogDialog extends StatefulWidget {
@@ -276,6 +277,30 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
     setState(() {
       _isOAuthPolling = false;
     });
+  }
+
+  /// Open folder picker dialog for Nextcloud
+  Future<void> _openFolderPicker() async {
+    if (_nextcloudServerInfo == null) return;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => NextcloudFolderPickerDialog(
+        serverUrl: _urlController.text.trim(),
+        userId: _nextcloudServerInfo!.userId,
+        username: _usernameController.text.trim(),
+        appPassword: _passwordController.text.trim(),
+        initialPath: _booksFolderController.text.isEmpty
+            ? '/'
+            : _booksFolderController.text,
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _booksFolderController.text = result == '/' ? '' : result;
+      });
+    }
   }
 
   Future<void> _save() async {
@@ -760,14 +785,43 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
               // Books folder field for Nextcloud (shown after validation)
               if (_isValidated && _catalogType == CatalogType.nextcloud) ...[
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _booksFolderController,
-                  decoration: const InputDecoration(
-                    labelText: 'Starting Folder (optional)',
-                    hintText: '/',
-                    prefixIcon: Icon(Icons.folder),
-                    helperText: 'Leave empty to start at root',
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _booksFolderController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'Starting Folder',
+                          hintText: '/',
+                          prefixIcon: const Icon(Icons.folder),
+                          helperText: 'Browse to select a folder',
+                          suffixIcon: _booksFolderController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    setState(() {
+                                      _booksFolderController.clear();
+                                    });
+                                  },
+                                  tooltip: 'Reset to root',
+                                )
+                              : null,
+                        ),
+                        onTap: _openFolderPicker,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: IconButton.filled(
+                        icon: const Icon(Icons.folder_open),
+                        tooltip: 'Browse folders',
+                        onPressed: _openFolderPicker,
+                      ),
+                    ),
+                  ],
                 ),
               ],
 

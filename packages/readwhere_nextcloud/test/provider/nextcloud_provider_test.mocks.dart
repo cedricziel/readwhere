@@ -251,6 +251,30 @@ class MockNextcloudClient extends _i1.Mock implements _i7.NextcloudClient {
       ) as _i8.Future<List<_i10.NextcloudFile>>);
 
   @override
+  _i8.Future<List<_i10.NextcloudFile>> listDirectoryWithCredentials({
+    required String? serverUrl,
+    required String? userId,
+    required String? username,
+    required String? password,
+    required String? path,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #listDirectoryWithCredentials,
+          [],
+          {
+            #serverUrl: serverUrl,
+            #userId: userId,
+            #username: username,
+            #password: password,
+            #path: path,
+          },
+        ),
+        returnValue:
+            _i8.Future<List<_i10.NextcloudFile>>.value(<_i10.NextcloudFile>[]),
+      ) as _i8.Future<List<_i10.NextcloudFile>>);
+
+  @override
   _i8.Future<void> downloadFile({
     required String? serverUrl,
     required String? userId,
