@@ -43,20 +43,3 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-
-# package build dirs
-/packages/**/build
-
-# Widgetbook generated files
-widgetbook/lib/*.g.dart
-widgetbook/lib/**/*.g.dart
-
-# Widgetbook platform folders (regenerated via flutter create)
-widgetbook/macos/
-widgetbook/windows/
-widgetbook/linux/
-widgetbook/android/
-widgetbook/ios/
-widgetbook/web/
-widgetbook/.idea/
-widgetbook/*.iml

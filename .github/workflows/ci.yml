@@ -93,3 +93,35 @@ jobs:
         with:
           name: app-release-debug-signed
           path: build/app/outputs/flutter-apk/app-release.apk
+
+  # Build Widgetbook to verify widget use cases compile
+  widgetbook:
+    name: Widgetbook
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate Widgetbook code
+        working-directory: widgetbook
+        run: |
+          flutter create --platforms=linux .
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze Widgetbook
+        working-directory: widgetbook
+        run: flutter analyze
+
+      - name: Build Widgetbook (Linux)
+        working-directory: widgetbook
+        run: flutter build linux

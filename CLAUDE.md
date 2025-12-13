@@ -163,6 +163,39 @@ cd packages/readwhere_epub
 dart test --coverage=coverage
 ```
 
+## Widgetbook Component Library
+
+The project includes a Widgetbook at `widgetbook/` for previewing widgets in isolation.
+
+### Running Widgetbook
+
+```bash
+# Generate platform support (first time only)
+cd widgetbook && flutter create --platforms=macos .
+
+# Generate use case code
+cd widgetbook && dart run build_runner build --delete-conflicting-outputs
+
+# Run
+cd widgetbook && flutter run -d macos
+cd widgetbook && flutter run -d chrome
+```
+
+### Keeping Widgetbook Aligned
+
+**When creating or modifying widgets:**
+1. Add corresponding use cases in `widgetbook/lib/use_cases/` under the appropriate category (common, adaptive, library, catalog)
+2. Use `@widgetbook.UseCase()` annotations with descriptive names and the `[Category]` path
+3. Demonstrate multiple states: default, loading, error, empty, with/without optional props
+4. Use knobs for interactive property testing (strings, booleans, sliders)
+5. After changes, run `dart run build_runner build --delete-conflicting-outputs` in the widgetbook directory
+
+**Use case organization:**
+- `use_cases/common/` - Shared widgets (EmptyState, LoadingIndicator, etc.)
+- `use_cases/adaptive/` - Responsive/adaptive layouts
+- `use_cases/library/` - Library screen widgets (BookCard, EncryptionBadge)
+- `use_cases/catalog/` - Catalog browsing widgets (OpdsEntryCard, DownloadButton)
+
 ## Commit Guidelines
 
 Use semantic commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`

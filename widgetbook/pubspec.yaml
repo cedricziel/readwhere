@@ -1,0 +1,45 @@
+name: readwhere_widgetbook
+description: Component library for ReadWhere - preview widgets in isolation
+publish_to: 'none'
+version: 0.1.0
+
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Widgetbook
+  widgetbook: ^3.10.0
+  widgetbook_annotation: ^3.2.0
+
+  # Main app - reference for widgets and themes
+  readwhere:
+    path: ../
+
+  # Required for OPDS widgets
+  readwhere_opds:
+    path: ../packages/readwhere_opds
+
+  # Required for EncryptionBadge (EpubEncryptionType)
+  readwhere_plugin:
+    path: ../packages/readwhere_plugin
+
+  # Device frame addon
+  device_frame: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.4.0
+  widgetbook_generator: ^3.10.0
+
+flutter:
+  uses-material-design: true
+
+  # Include assets from main app
+  assets:
+    - ../assets/icons/

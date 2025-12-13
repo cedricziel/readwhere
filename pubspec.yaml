@@ -28,6 +28,7 @@ workspace:
   - packages/readwhere_kavita_plugin
   - packages/readwhere_fanfictionde
   - packages/readwhere_fanfictionde_plugin
+  - widgetbook
 
 dependencies:
   flutter:
