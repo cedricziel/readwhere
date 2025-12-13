@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
 import 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
 import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
+import 'package:readwhere_pdf_plugin/readwhere_pdf_plugin.dart';
 import 'package:readwhere_fanfictionde_plugin/readwhere_fanfictionde_plugin.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
@@ -124,6 +125,11 @@ Future<void> setupServiceLocator() async {
     );
     await registry.register(
       CbrReaderPlugin(),
+      storageFactory: storageFactory,
+      contextFactory: contextFactory,
+    );
+    await registry.register(
+      PdfReaderPlugin(),
       storageFactory: storageFactory,
       contextFactory: contextFactory,
     );

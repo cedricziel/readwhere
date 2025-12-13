@@ -28,6 +28,8 @@ workspace:
   - packages/readwhere_kavita_plugin
   - packages/readwhere_fanfictionde
   - packages/readwhere_fanfictionde_plugin
+  - packages/readwhere_pdf
+  - packages/readwhere_pdf_plugin
   - widgetbook
 
 dependencies:
@@ -123,6 +125,12 @@ dependencies:
     path: packages/readwhere_fanfictionde
   readwhere_fanfictionde_plugin:
     path: packages/readwhere_fanfictionde_plugin
+
+  # PDF Support
+  readwhere_pdf:
+    path: packages/readwhere_pdf
+  readwhere_pdf_plugin:
+    path: packages/readwhere_pdf_plugin
 
   # Networking
   http: ^1.6.0
