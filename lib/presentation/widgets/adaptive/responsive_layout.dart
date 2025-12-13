@@ -180,6 +180,41 @@ enum DeviceType {
   }
 }
 
+/// Standard responsive spacing values for consistent UI across screen sizes.
+///
+/// These values follow a consistent scale:
+/// - Mobile: Compact spacing for smaller screens
+/// - Tablet: Medium spacing for touch-friendly layouts
+/// - Desktop: Spacious layouts with more breathing room
+class ResponsiveSpacing {
+  ResponsiveSpacing._();
+
+  /// Extra-small spacing: 4px (mobile) / 6px (tablet) / 8px (desktop)
+  static const double xsm = 4.0;
+  static const double xst = 6.0;
+  static const double xsd = 8.0;
+
+  /// Small spacing: 8px (mobile) / 12px (tablet) / 16px (desktop)
+  static const double smm = 8.0;
+  static const double smt = 12.0;
+  static const double smd = 16.0;
+
+  /// Medium spacing: 12px (mobile) / 16px (tablet) / 24px (desktop)
+  static const double mdm = 12.0;
+  static const double mdt = 16.0;
+  static const double mdd = 24.0;
+
+  /// Large spacing: 16px (mobile) / 24px (tablet) / 32px (desktop)
+  static const double lgm = 16.0;
+  static const double lgt = 24.0;
+  static const double lgd = 32.0;
+
+  /// Extra-large spacing: 24px (mobile) / 32px (tablet) / 48px (desktop)
+  static const double xlm = 24.0;
+  static const double xlt = 32.0;
+  static const double xld = 48.0;
+}
+
 /// Extension methods for responsive layout on BuildContext.
 extension ResponsiveLayoutExtensions on BuildContext {
   /// Gets the current device type based on screen width.
@@ -242,4 +277,46 @@ extension ResponsiveLayoutExtensions on BuildContext {
       return mobile;
     }
   }
+
+  /// Returns extra-small responsive spacing (4/6/8px).
+  double get spacingXS => responsiveValue(
+    mobile: ResponsiveSpacing.xsm,
+    tablet: ResponsiveSpacing.xst,
+    desktop: ResponsiveSpacing.xsd,
+  );
+
+  /// Returns small responsive spacing (8/12/16px).
+  double get spacingS => responsiveValue(
+    mobile: ResponsiveSpacing.smm,
+    tablet: ResponsiveSpacing.smt,
+    desktop: ResponsiveSpacing.smd,
+  );
+
+  /// Returns medium responsive spacing (12/16/24px).
+  double get spacingM => responsiveValue(
+    mobile: ResponsiveSpacing.mdm,
+    tablet: ResponsiveSpacing.mdt,
+    desktop: ResponsiveSpacing.mdd,
+  );
+
+  /// Returns large responsive spacing (16/24/32px).
+  double get spacingL => responsiveValue(
+    mobile: ResponsiveSpacing.lgm,
+    tablet: ResponsiveSpacing.lgt,
+    desktop: ResponsiveSpacing.lgd,
+  );
+
+  /// Returns extra-large responsive spacing (24/32/48px).
+  double get spacingXL => responsiveValue(
+    mobile: ResponsiveSpacing.xlm,
+    tablet: ResponsiveSpacing.xlt,
+    desktop: ResponsiveSpacing.xld,
+  );
+
+  /// Returns symmetric horizontal padding based on screen size.
+  EdgeInsets get horizontalPadding =>
+      EdgeInsets.symmetric(horizontal: spacingM);
+
+  /// Returns standard screen padding (responsive on all sides).
+  EdgeInsets get screenPadding => EdgeInsets.all(spacingM);
 }

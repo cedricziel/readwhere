@@ -143,6 +143,55 @@ extension ContextExtensions on BuildContext {
   /// ```
   bool get isMobile => screenWidth < 600;
 
+  /// Returns true if the device is a phone in landscape orientation.
+  ///
+  /// This is useful for detecting when special landscape layouts should be used
+  /// on phones, which may require different treatment than tablets in landscape.
+  /// Uses the shorter dimension (height in landscape) to determine if it's a phone.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (context.isPhoneLandscape) {
+  ///   // Show phone-optimized landscape layout (e.g., more columns)
+  /// }
+  /// ```
+  bool get isPhoneLandscape => isLandscape && screenHeight < 600;
+
+  /// Returns true if the layout should use a special landscape layout.
+  ///
+  /// This considers both the device type and orientation to determine if
+  /// a landscape-optimized layout should be used. Returns true for phones
+  /// in landscape mode.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (context.shouldUseLandscapeLayout) {
+  ///   // Use master-detail or side-by-side layout
+  /// }
+  /// ```
+  bool get shouldUseLandscapeLayout => isPhoneLandscape;
+
+  /// Returns the effective width for layout calculations.
+  ///
+  /// In landscape mode on phones, this returns the height (the shorter dimension)
+  /// to maintain consistent breakpoint behavior. For tablets and desktops,
+  /// returns the actual screen width.
+  ///
+  /// This is useful for calculating grid columns and responsive breakpoints
+  /// that should adapt based on the available "vertical" space in landscape.
+  ///
+  /// Example:
+  /// ```dart
+  /// final columns = context.effectiveWidth > 600 ? 4 : 2;
+  /// ```
+  double get effectiveWidth {
+    // For phones in landscape, use height to maintain breakpoint consistency
+    if (isPhoneLandscape) {
+      return screenHeight;
+    }
+    return screenWidth;
+  }
+
   /// Returns true if dark mode is currently active.
   ///
   /// Example:

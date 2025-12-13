@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/library_facet.dart';
 import '../../providers/library_provider.dart';
+import '../../widgets/adaptive/responsive_layout.dart';
 import '../../widgets/common/app_logo.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/loading_indicator.dart';
@@ -524,14 +525,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
   /// Builds the grid view of books
   Widget _buildGridView(LibraryProvider libraryProvider) {
     final books = libraryProvider.books;
+    final spacing = context.spacingS;
 
     return GridView.builder(
-      padding: const EdgeInsets.all(8.0),
+      padding: EdgeInsets.all(spacing),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: _calculateCrossAxisCount(context),
         childAspectRatio: 0.65,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+        crossAxisSpacing: spacing,
+        mainAxisSpacing: spacing,
       ),
       itemCount: books.length,
       itemBuilder: (context, index) {
@@ -546,7 +548,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final books = libraryProvider.books;
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: EdgeInsets.symmetric(vertical: context.spacingS),
       itemCount: books.length,
       itemBuilder: (context, index) {
         final book = books[index];
