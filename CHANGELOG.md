@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.4.0](https://github.com/cedricziel/readwhere/compare/v0.3.0...v0.4.0) (2025-12-13)
+
+
+### Features
+
+* **catalog:** add mosaic cover preview for navigation sections ([647f184](https://github.com/cedricziel/readwhere/commit/647f1845785ad0c2d511ebc17aa629a5175d0afa))
+* **import:** add CBZ/CBR metadata refresh support ([22e60f7](https://github.com/cedricziel/readwhere/commit/22e60f75e747847a76e907544da8bfdeefb9b7b9))
+* **library:** add extended metadata display and EPUB CSS injection ([cae12d8](https://github.com/cedricziel/readwhere/commit/cae12d83bca9fb2292f21bb9c39a8e6b91ab08b4))
+* **library:** add metadata refresh functionality ([9ac17ab](https://github.com/cedricziel/readwhere/commit/9ac17ab7bd7e19f7af133201879f85939b03ba76))
+* **opds:** add pagination support to catalog search ([ccf0fc6](https://github.com/cedricziel/readwhere/commit/ccf0fc6dc8302264a6944b7f95dcf3e95f895d6f))
+* **opds:** implement facet navigation support ([f0b5e58](https://github.com/cedricziel/readwhere/commit/f0b5e582988f50e893714c24e8697c286afb2977))
+* **plugin:** expose extended metadata in CatalogEntry interface ([28e60c0](https://github.com/cedricziel/readwhere/commit/28e60c0415d2b62163e47a59e4c2133e74a0acd9))
+* **ui:** render markdown in update dialog ([2945efc](https://github.com/cedricziel/readwhere/commit/2945efc57768c685ad6316dc26385a83f3fab0f2))
+
+
+### Bug Fixes
+
+* **ci:** preserve changelog in GitHub release body ([2603c47](https://github.com/cedricziel/readwhere/commit/2603c475c17ea4db8241588e5fee2b86b14d5f3a))
+* **import:** preserve book title when comic has no metadata ([c03a2cf](https://github.com/cedricziel/readwhere/commit/c03a2cf0262f2da8f2d713ba0e496c908b2f5e84))
+* **library:** pull-to-refresh now refreshes metadata from book files ([04a98f7](https://github.com/cedricziel/readwhere/commit/04a98f7ed92e51b931cd5868032080e21e960652))
+* **nextcloud:** allow back navigation when server is unavailable ([8e906b4](https://github.com/cedricziel/readwhere/commit/8e906b444bee75bc400e2cdded213a7b4d2e2377))
+* **opds:** resolve encoding and cache constraint issues for Kavita ([98152ef](https://github.com/cedricziel/readwhere/commit/98152ef779aab6f64dde2b4291c2563efa52df78))
+* **reader:** resolve SelectionArea crash and CSS text flow issues ([6e1ec12](https://github.com/cedricziel/readwhere/commit/6e1ec1224f4606c3fdd7d10c9d0e04614e37f4b6))
+* **tests:** add missing currentChapterCss mock stub ([e6fc0ba](https://github.com/cedricziel/readwhere/commit/e6fc0ba52bce92a081d8cb6d24022b8181c1279c))
+* **theme:** add explicit text colors for light mode contrast ([c3af7e1](https://github.com/cedricziel/readwhere/commit/c3af7e1e4cb92a65b31ec18bfc0b47ac57c4243d))
+* **ui:** show cover images for navigation entries in OPDS catalogs ([c8e574c](https://github.com/cedricziel/readwhere/commit/c8e574cfb8257c3a0cb33d6f07347d34ead872a7))
+
 ## [0.3.0](https://github.com/cedricziel/readwhere/compare/v0.2.0...v0.3.0) (2025-12-11)
 
 
