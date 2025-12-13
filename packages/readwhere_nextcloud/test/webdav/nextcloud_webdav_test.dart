@@ -152,5 +152,161 @@ void main() {
         verifyNever(mockStorage.getCredential(any));
       });
     });
+
+    group('createDirectoryWithCredentials', () {
+      test('builds correct WebDAV URL for MKCOL', () async {
+        when(mockDio.request<void>(
+          any,
+          options: anyNamed('options'),
+        )).thenAnswer((_) async => Response(
+              requestOptions: RequestOptions(),
+              statusCode: 201,
+            ));
+
+        await webdav.createDirectoryWithCredentials(
+          serverUrl: 'https://cloud.example.com',
+          userId: 'testuser',
+          username: 'testuser',
+          password: 'testpassword',
+          path: '/NewFolder',
+        );
+
+        final captured = verify(mockDio.request<void>(
+          captureAny,
+          options: anyNamed('options'),
+        )).captured;
+
+        expect(captured.isNotEmpty, true);
+        final url = captured.first as String;
+        expect(url, contains('/remote.php/dav/files/testuser'));
+        expect(url, contains('/NewFolder'));
+      });
+
+      test('uses MKCOL method', () async {
+        when(mockDio.request<void>(
+          any,
+          options: anyNamed('options'),
+        )).thenAnswer((_) async => Response(
+              requestOptions: RequestOptions(),
+              statusCode: 201,
+            ));
+
+        await webdav.createDirectoryWithCredentials(
+          serverUrl: 'https://cloud.example.com',
+          userId: 'user',
+          username: 'user',
+          password: 'pass',
+          path: '/test',
+        );
+
+        verify(mockDio.request<void>(
+          any,
+          options: argThat(
+            predicate<Options>((opts) => opts.method == 'MKCOL'),
+            named: 'options',
+          ),
+        )).called(1);
+      });
+
+      test('normalizes server URL', () async {
+        when(mockDio.request<void>(
+          any,
+          options: anyNamed('options'),
+        )).thenAnswer((_) async => Response(
+              requestOptions: RequestOptions(),
+              statusCode: 201,
+            ));
+
+        await webdav.createDirectoryWithCredentials(
+          serverUrl: 'https://cloud.example.com/',
+          userId: 'user',
+          username: 'user',
+          password: 'pass',
+          path: '/test',
+        );
+
+        final captured = verify(mockDio.request<void>(
+          captureAny,
+          options: anyNamed('options'),
+        )).captured;
+
+        final url = captured.first as String;
+        final pathPortion = url.replaceFirst(RegExp(r'https?://'), '');
+        expect(pathPortion, isNot(contains('//')));
+      });
+
+      test('does not require catalogId (no storage lookup)', () async {
+        when(mockDio.request<void>(
+          any,
+          options: anyNamed('options'),
+        )).thenAnswer((_) async => Response(
+              requestOptions: RequestOptions(),
+              statusCode: 201,
+            ));
+
+        await webdav.createDirectoryWithCredentials(
+          serverUrl: 'https://cloud.example.com',
+          userId: 'user',
+          username: 'user',
+          password: 'pass',
+          path: '/NewFolder',
+        );
+
+        verifyNever(mockStorage.getCredential(any));
+      });
+
+      test('handles nested paths', () async {
+        when(mockDio.request<void>(
+          any,
+          options: anyNamed('options'),
+        )).thenAnswer((_) async => Response(
+              requestOptions: RequestOptions(),
+              statusCode: 201,
+            ));
+
+        await webdav.createDirectoryWithCredentials(
+          serverUrl: 'https://cloud.example.com',
+          userId: 'user',
+          username: 'user',
+          password: 'pass',
+          path: '/Books/Comics/Marvel',
+        );
+
+        final captured = verify(mockDio.request<void>(
+          captureAny,
+          options: anyNamed('options'),
+        )).captured;
+
+        final url = captured.first as String;
+        expect(url, contains('/Books/Comics/Marvel'));
+      });
+
+      test('accepts different userId and username', () async {
+        when(mockDio.request<void>(
+          any,
+          options: anyNamed('options'),
+        )).thenAnswer((_) async => Response(
+              requestOptions: RequestOptions(),
+              statusCode: 201,
+            ));
+
+        await webdav.createDirectoryWithCredentials(
+          serverUrl: 'https://cloud.example.com',
+          userId: 'user123',
+          username: 'admin',
+          password: 'password',
+          path: '/Test',
+        );
+
+        final captured = verify(mockDio.request<void>(
+          captureAny,
+          options: anyNamed('options'),
+        )).captured;
+
+        final url = captured.first as String;
+        expect(url, contains('/files/user123'));
+        expect(url, isNot(contains('/files/admin')));
+      });
+    });
   });
 }
