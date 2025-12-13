@@ -8,8 +8,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/sync_settings_provider.dart';
 import '../../providers/update_provider.dart';
 import '../../widgets/update_dialog.dart';
+import 'sync_settings_section.dart';
 
 /// The settings screen for configuring app preferences.
 ///
@@ -63,6 +65,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildFontSizeSlider(settingsProvider),
               _buildFontFamilySelector(settingsProvider),
               _buildLineHeightSlider(settingsProvider),
+              const Divider(),
+              _buildSectionHeader('Sync'),
+              ChangeNotifierProvider.value(
+                value: sl<SyncSettingsProvider>(),
+                child: const SyncSettingsSection(),
+              ),
               const Divider(),
               _buildSectionHeader('App Behavior'),
               _buildHapticFeedbackToggle(settingsProvider),

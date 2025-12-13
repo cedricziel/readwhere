@@ -16,6 +16,8 @@ import 'package:readwhere_opds_plugin/readwhere_opds_plugin.dart';
 import 'package:readwhere_rss_plugin/readwhere_rss_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../background/background_executor.dart';
+import '../background/background_executor_factory.dart';
 import '../../data/database/database_helper.dart';
 import 'plugin_context_factory.dart';
 import 'plugin_storage_impl.dart';
@@ -24,15 +26,24 @@ import '../../data/repositories/bookmark_repository_impl.dart';
 import '../../data/repositories/catalog_repository_impl.dart';
 import '../../data/repositories/opds_cache_repository_impl.dart';
 import '../../data/repositories/reading_progress_repository_impl.dart';
+import '../../data/repositories/sync_job_repository_impl.dart';
+import '../../data/services/background_sync_manager.dart';
 import '../../data/services/book_import_service.dart';
 import '../../data/services/article_scraper_service.dart';
+import '../../data/services/catalog_sync_service.dart';
+import '../../data/services/connectivity_service_impl.dart';
+import '../../data/services/feed_sync_service.dart';
 import '../../data/services/opds_cache_service.dart';
+import '../../data/services/progress_sync_service.dart';
+import '../../data/services/sync_queue_service.dart';
 import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
 import '../../domain/repositories/opds_cache_repository.dart';
 import '../../domain/repositories/feed_item_repository.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
+import '../../domain/repositories/sync_job_repository.dart';
+import '../../domain/services/connectivity_service.dart';
 import '../../data/repositories/feed_item_repository_impl.dart';
 import '../../presentation/providers/audio_provider.dart';
 import '../../presentation/providers/feed_reader_provider.dart';
@@ -41,6 +52,7 @@ import '../../presentation/providers/unified_catalog_browsing_provider.dart';
 import '../../presentation/providers/library_provider.dart';
 import '../../presentation/providers/reader_provider.dart';
 import '../../presentation/providers/settings_provider.dart';
+import '../../presentation/providers/sync_settings_provider.dart';
 import '../../presentation/providers/theme_provider.dart';
 import '../../presentation/providers/update_provider.dart';
 import '../services/update_service.dart';
@@ -183,6 +195,10 @@ Future<void> setupServiceLocator() async {
     () => FeedItemRepositoryImpl(sl()),
   );
 
+  sl.registerLazySingleton<SyncJobRepository>(
+    () => SyncJobRepositoryImpl(sl()),
+  );
+
   // Services
   sl.registerLazySingleton<BookImportService>(
     () => BookImportService(pluginRegistry: sl<UnifiedPluginRegistry>()),
@@ -203,6 +219,68 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<ArticleScraperService>(
     () => ArticleScraperService(http.Client()),
   );
+
+  // ===== Sync Infrastructure =====
+
+  // Connectivity Service
+  sl.registerLazySingleton<ConnectivityService>(
+    () => ConnectivityServiceImpl(),
+  );
+
+  // Sync Settings Provider
+  sl.registerLazySingleton<SyncSettingsProvider>(() => SyncSettingsProvider());
+
+  // Sync Queue Service
+  sl.registerLazySingleton<SyncQueueService>(
+    () => SyncQueueService(repository: sl<SyncJobRepository>()),
+  );
+
+  // Background Executor (platform-specific)
+  sl.registerLazySingleton<BackgroundExecutor>(
+    () => BackgroundExecutorFactory.create(),
+  );
+
+  // Progress Sync Service
+  sl.registerLazySingleton<ProgressSyncService>(
+    () => ProgressSyncService(
+      progressRepository: sl<ReadingProgressRepository>(),
+      catalogRepository: sl<CatalogRepository>(),
+      pluginRegistry: sl<UnifiedPluginRegistry>(),
+    ),
+  );
+
+  // Catalog Sync Service
+  sl.registerLazySingleton<CatalogSyncService>(
+    () => CatalogSyncService(
+      catalogRepository: sl<CatalogRepository>(),
+      opdsCacheService: sl<OpdsCacheService>(),
+      cacheRepository: sl<OpdsCacheRepository>(),
+    ),
+  );
+
+  // Feed Sync Service
+  sl.registerLazySingleton<FeedSyncService>(
+    () => FeedSyncService(
+      feedItemRepository: sl<FeedItemRepository>(),
+      catalogRepository: sl<CatalogRepository>(),
+      rssClient: sl<RssClient>(),
+    ),
+  );
+
+  // Background Sync Manager (depends on all sync services)
+  sl.registerLazySingletonAsync<BackgroundSyncManager>(() async {
+    final manager = BackgroundSyncManager(
+      connectivityService: sl<ConnectivityService>(),
+      settingsProvider: sl<SyncSettingsProvider>(),
+      queueService: sl<SyncQueueService>(),
+      progressSyncService: sl<ProgressSyncService>(),
+      catalogSyncService: sl<CatalogSyncService>(),
+      feedSyncService: sl<FeedSyncService>(),
+      backgroundExecutor: sl<BackgroundExecutor>(),
+    );
+    await manager.initialize();
+    return manager;
+  });
 
   // Nextcloud services (from readwhere_nextcloud package)
   sl.registerLazySingleton<NextcloudCredentialStorage>(

@@ -11,6 +11,7 @@ import 'tables/cached_opds_entries_table.dart';
 import 'tables/cached_opds_links_table.dart';
 import 'tables/plugin_cache_table.dart';
 import 'tables/feed_items_table.dart';
+import 'tables/sync_jobs_table.dart';
 
 /// SQLite database helper for the readwhere e-reader app
 ///
@@ -41,7 +42,8 @@ class DatabaseHelper {
   /// Version 10: Fixed cached_opds_entries primary key to use composite key
   ///             (feed_id, id) instead of just id
   /// Version 11: Re-run V10 migration with correct drop order for FK constraints
-  static const int _databaseVersion = 11;
+  /// Version 12: Added sync_jobs table for background sync queue
+  static const int _databaseVersion = 12;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -90,6 +92,8 @@ class DatabaseHelper {
     await db.execute(PluginCacheTable.createTableQuery());
     // Feed items table for RSS feed reader
     await db.execute(FeedItemsTable.createTableQuery());
+    // Sync jobs table for background sync queue
+    await db.execute(SyncJobsTable.createTableQuery());
 
     // Create indices for better query performance
     await _createIndices(db);
@@ -109,6 +113,7 @@ class DatabaseHelper {
       ...CachedOpdsLinksTable.createIndices(),
       ...PluginCacheTable.createIndices(),
       ...FeedItemsTable.createIndices(),
+      ...SyncJobsTable.createIndices(),
     ];
 
     for (final index in indices) {
@@ -197,6 +202,12 @@ class DatabaseHelper {
       await db.execute(CachedOpdsLinksTable.createTableQuery());
       for (final index in CachedOpdsLinksTable.createIndices()) {
         await db.execute(index);
+      }
+    }
+    // Version 12: Add sync_jobs table for background sync queue
+    if (oldVersion < 12) {
+      for (final query in SyncJobsTable.migrationV12()) {
+        await db.execute(query);
       }
     }
   }

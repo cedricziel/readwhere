@@ -135,6 +135,11 @@ dependencies:
   # Networking
   http: ^1.6.0
   dio: ^5.9.0
+  connectivity_plus: ^7.0.0
+
+  # Background Execution
+  workmanager: ^0.9.0+3      # Android background tasks
+  background_fetch: ^1.5.0   # iOS background fetch
 
   # Content Sources (RSS/Atom feeds)
   dart_rss: ^3.0.3

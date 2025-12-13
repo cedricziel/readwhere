@@ -5,6 +5,8 @@ import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'package:uuid/uuid.dart';
+import '../../core/di/service_locator.dart';
+import '../../data/services/background_sync_manager.dart';
 import '../../domain/entities/book.dart';
 import '../../domain/entities/reading_progress.dart';
 import '../../domain/entities/bookmark.dart';
@@ -278,19 +280,43 @@ class ReaderProvider extends ChangeNotifier {
   /// Close the currently open book
   ///
   /// Saves the current reading progress before closing.
-  /// Syncs progress to Kavita if applicable.
+  /// Queues progress sync for background execution if applicable.
   /// Clears all reader state.
   Future<void> closeBook() async {
     if (_currentBook == null) return;
 
     final bookToClose = _currentBook!;
+    final progressToSync = _progress;
 
     // Save progress before closing
-    if (_progress != null) {
+    if (progressToSync != null) {
       await saveProgress();
 
-      // Sync progress to Kavita if this book came from a Kavita server
-      await _syncKavitaProgress(bookToClose);
+      // Queue progress sync via background sync manager
+      // This replaces direct Kavita sync with a queued approach that
+      // handles connectivity, retries, and WiFi-only preferences
+      if (bookToClose.isFromCatalog) {
+        try {
+          // Check if BackgroundSyncManager is available
+          if (sl.isRegistered<BackgroundSyncManager>()) {
+            final syncManager = await sl.getAsync<BackgroundSyncManager>();
+            await syncManager.scheduleProgressSync(
+              bookId: bookToClose.id,
+              sourceCatalogId: bookToClose.sourceCatalogId,
+              sourceEntryId: bookToClose.sourceEntryId,
+              progress: progressToSync.progress,
+              cfi: progressToSync.cfi,
+            );
+          } else {
+            // Fallback to direct Kavita sync if sync manager not available
+            await _syncKavitaProgress(bookToClose);
+          }
+        } catch (e) {
+          debugPrint('Failed to queue progress sync: $e');
+          // Fallback to direct sync on error
+          await _syncKavitaProgress(bookToClose);
+        }
+      }
     }
 
     // Dispose the reader controller
