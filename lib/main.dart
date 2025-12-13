@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
@@ -7,12 +9,14 @@ import 'package:readwhere_opds/readwhere_opds.dart';
 import 'app.dart';
 import 'core/di/service_locator.dart';
 import 'core/utils/logger.dart';
+import 'data/services/background_sync_manager.dart';
 import 'presentation/providers/audio_provider.dart';
 import 'presentation/providers/catalogs_provider.dart';
 import 'presentation/providers/library_provider.dart';
 import 'presentation/providers/reader_provider.dart';
 import 'presentation/providers/feed_reader_provider.dart';
 import 'presentation/providers/settings_provider.dart';
+import 'presentation/providers/sync_settings_provider.dart';
 import 'presentation/providers/theme_provider.dart';
 
 /// The main entry point of the ReadWhere e-reader application.
@@ -48,6 +52,14 @@ Future<void> main() async {
 
   // Initialize theme based on settings
   await themeProvider.initialize();
+
+  // Initialize sync settings (loads from SharedPreferences)
+  final syncSettingsProvider = sl<SyncSettingsProvider>();
+  await syncSettingsProvider.initialize();
+
+  // Initialize background sync manager (schedules periodic sync if enabled)
+  // Uses unawaited() to avoid blocking app startup
+  unawaited(sl.getAsync<BackgroundSyncManager>());
 
   runApp(
     MultiProvider(
