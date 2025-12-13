@@ -28,12 +28,15 @@ flutter build apk
 flutter analyze
 
 # Run all tests
-flutter test                              # Main app tests
-dart test -p packages/readwhere_epub      # EPUB package tests
+flutter test                                    # Main app tests
+dart test packages/readwhere_epub/              # EPUB package tests
 
 # Run single test file
 flutter test test/widget_test.dart
 dart test packages/readwhere_epub/test/validation/epub_validator_test.dart
+
+# Run package tests (from package directory)
+cd packages/readwhere_nextcloud && flutter test
 
 # Generate mocks
 dart run build_runner build
@@ -48,6 +51,7 @@ flutter pub get
 ## Pre-commit Hook
 
 The project uses `dart_pre_commit` which enforces:
+
 - **format**: Code formatting
 - **analyze**: Zero analyzer warnings required
 - **outdated**: Dependencies must not be outdated
@@ -71,16 +75,30 @@ lib/
 
 ### Plugin System
 
-Reader plugins provide format support via `packages/readwhere_*_plugin/`:
-- `ReaderPlugin` - Abstract interface defining `canHandle()`, `parseMetadata()`, `openBook()`, `extractCover()`
-- `ReaderCapability` - Mixin for unified plugin system
-- `UnifiedPluginRegistry` - Registry for all plugins (reader, catalog, etc.) integrated with service locator
-- `ReaderController` - Controls reading session state
-- Format plugins: EPUB, CBZ, CBR (each in their own package)
+The app uses a two-tier plugin architecture:
+
+**Format packages** (pure Dart, no Flutter dependencies):
+
+- `readwhere_epub`, `readwhere_cbz`, `readwhere_cbr`, `readwhere_rar` - Format parsing
+- `readwhere_opds`, `readwhere_kavita`, `readwhere_nextcloud` - Catalog protocols
+- `readwhere_rss`, `readwhere_fanfictionde` - Content sources
+
+**Plugins** (bridge packages to app via `readwhere_plugin` interfaces):
+
+- Reader plugins: `readwhere_epub_plugin`, `readwhere_cbz_plugin`, `readwhere_cbr_plugin`
+- Catalog plugins: `readwhere_opds_plugin`, `readwhere_kavita_plugin`, `readwhere_rss_plugin`, `readwhere_fanfictionde_plugin`
+
+Key interfaces:
+
+- `ReaderPlugin` - `canHandle()`, `parseMetadata()`, `openBook()`, `extractCover()`
+- `CatalogBrowsingCapability` - Unified catalog browsing for OPDS, Kavita, RSS
+- `UnifiedPluginRegistry` - Registry integrated with service locator
+- `ReaderController` - Reading session state
 
 ### State Management
 
 Provider pattern with `ChangeNotifier`:
+
 - `LibraryProvider` - Book library state
 - `ReaderProvider` - Reading session state
 - `SettingsProvider` - Persisted app settings (SharedPreferences)
@@ -92,23 +110,30 @@ Uses `get_it` package. Service locator at `lib/core/di/service_locator.dart`. Ca
 
 ## Workspace Structure
 
-This is a Dart workspace with multiple packages:
+This is a Dart workspace with multiple packages under `packages/`:
 
-```
-packages/
-├── readwhere_epub/            # Pure Dart EPUB 3.3 parsing library
-├── readwhere_cbz/             # CBZ comic archive support
-├── readwhere_cbr/             # CBR comic archive support
-├── readwhere_rar/             # RAR 4.x decompression
-├── readwhere_plugin/          # Base plugin interfaces
-├── readwhere_*_plugin/        # Format-specific reader plugins
-├── readwhere_opds/            # OPDS catalog protocol
-├── readwhere_kavita/          # Kavita server integration
-├── readwhere_nextcloud/       # Nextcloud integration
-├── readwhere_webdav/          # WebDAV protocol
-├── readwhere_panel_detection/ # Comic panel detection
-└── readwhere_sample_media/    # Test media downloader
-```
+**Format Libraries** (pure Dart):
+
+- `readwhere_epub` - EPUB 3.3 parsing
+- `readwhere_cbz`, `readwhere_cbr`, `readwhere_rar` - Comic archives
+
+**Catalog/Protocol Libraries**:
+
+- `readwhere_opds` - OPDS catalog protocol
+- `readwhere_kavita` - Kavita server API
+- `readwhere_nextcloud`, `readwhere_webdav` - Nextcloud/WebDAV
+- `readwhere_rss`, `readwhere_opml` - RSS feeds
+- `readwhere_fanfictionde` - Fanfiction.de scraper
+
+**Plugins** (bridge libraries to app):
+
+- `readwhere_plugin` - Base interfaces
+- `readwhere_*_plugin` - Format/catalog-specific implementations
+
+**Utilities**:
+
+- `readwhere_panel_detection` - Comic panel detection
+- `readwhere_sample_media` - Test media downloader
 
 Pure Dart packages use `test` package (not `flutter_test`) and have their own test suites.
 
@@ -132,6 +157,7 @@ final cbzFiles = SampleMediaPaths.cbzFiles;
 ## Test Coverage
 
 Target: 80% coverage. The EPUB package has comprehensive tests (~700+). Run coverage:
+
 ```bash
 cd packages/readwhere_epub
 dart test --coverage=coverage
