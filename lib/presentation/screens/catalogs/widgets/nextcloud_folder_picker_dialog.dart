@@ -230,7 +230,11 @@ class _NextcloudFolderPickerDialogState
       ),
     );
 
-    controller.dispose();
+    // Note: We intentionally don't dispose the controller here.
+    // The dialog's exit animation may still be running, and calling dispose
+    // synchronously can cause "used after disposed" errors if setState
+    // triggers a rebuild. The controller will be garbage collected when
+    // the method returns and all references are released.
 
     if (folderName != null && folderName.isNotEmpty && mounted) {
       await _createFolder(folderName);

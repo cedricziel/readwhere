@@ -281,6 +281,94 @@ void main() {
         expect(find.text('Folder name cannot contain /'), findsOneWidget);
       });
 
+      // Regression test for: TextEditingController was used after being disposed
+      // https://github.com/user/readwhere/issues/XXX
+      //
+      // The bug occurred when:
+      // 1. User creates a folder in the dialog
+      // 2. Dialog closes and controller.dispose() was called immediately
+      // 3. _createFolder() calls setState() which triggers a rebuild
+      // 4. Dialog's exit animation is still running, TextFormField tries to
+      //    access the disposed controller during the rebuild
+      //
+      // The fix: Don't manually dispose the controller; let it be garbage
+      // collected after the dialog animation completes.
+      testWidgets(
+        'does not throw controller disposed error during folder creation',
+        (tester) async {
+          when(
+            mockClient.listDirectoryWithCredentials(
+              serverUrl: anyNamed('serverUrl'),
+              userId: anyNamed('userId'),
+              username: anyNamed('username'),
+              password: anyNamed('password'),
+              path: anyNamed('path'),
+            ),
+          ).thenAnswer((_) async => <NextcloudFile>[]);
+
+          when(
+            mockClient.createDirectoryWithCredentials(
+              serverUrl: anyNamed('serverUrl'),
+              userId: anyNamed('userId'),
+              username: anyNamed('username'),
+              password: anyNamed('password'),
+              path: anyNamed('path'),
+            ),
+          ).thenAnswer((_) async {});
+
+          await openDialogAndWait(tester);
+
+          // Open the create folder dialog
+          await tester.tap(find.byIcon(Icons.create_new_folder_outlined));
+          await tester.pumpAndSettle();
+
+          // Enter folder name
+          await tester.runAsync(() async {
+            await tester.enterText(find.byType(TextFormField), 'TestFolder');
+          });
+          await tester.pump();
+
+          // Tap Create - this is where the bug would occur
+          // The dialog closes, controller.dispose() was called, then setState()
+          // triggers a rebuild while the dialog exit animation is still running
+          await tester.tap(find.text('Create'));
+
+          // Pump individual frames to step through the dialog exit animation
+          // This is when the bug would manifest - during animation frames
+          // after dispose() but before animation completes
+          for (var i = 0; i < 10; i++) {
+            await tester.pump(const Duration(milliseconds: 16));
+            // Check that no exception was thrown during this frame
+            expect(tester.takeException(), isNull);
+          }
+
+          // Let the async folder creation complete
+          await tester.runAsync(() async {
+            await Future<void>.delayed(const Duration(milliseconds: 100));
+          });
+
+          // Pump more frames to complete any remaining animations
+          for (var i = 0; i < 10; i++) {
+            await tester.pump(const Duration(milliseconds: 16));
+            expect(tester.takeException(), isNull);
+          }
+
+          // Final settle to ensure everything is complete
+          await tester.pumpAndSettle();
+
+          // Verify the folder was created successfully
+          verify(
+            mockClient.createDirectoryWithCredentials(
+              serverUrl: 'https://cloud.example.com',
+              userId: 'testuser',
+              username: 'testuser',
+              password: 'testpassword',
+              path: '/TestFolder',
+            ),
+          ).called(1);
+        },
+      );
+
       // This test verifies that createDirectoryWithCredentials is called with correct params
       testWidgets('calls createDirectoryWithCredentials on create', (
         tester,
