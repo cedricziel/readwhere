@@ -35,6 +35,7 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
   final _apiKeyController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _booksFolderController = TextEditingController();
 
   // Explicit FocusNodes help work around macOS keyboard event bugs
   final _urlFocusNode = FocusNode();
@@ -72,6 +73,7 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
     _apiKeyController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _booksFolderController.dispose();
     _urlFocusNode.dispose();
     _apiKeyFocusNode.dispose();
     _nameFocusNode.dispose();
@@ -296,6 +298,9 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
           appPassword: _passwordController.text.trim(),
           userId: _nextcloudServerInfo?.userId,
           serverVersion: _serverVersion,
+          booksFolder: _booksFolderController.text.trim().isEmpty
+              ? null
+              : _booksFolderController.text.trim(),
         );
       } else if (_catalogType == CatalogType.kavita) {
         catalog = await provider.addKavitaCatalog(
@@ -748,6 +753,20 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ],
+
+              // Books folder field for Nextcloud (shown after validation)
+              if (_isValidated && _catalogType == CatalogType.nextcloud) ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _booksFolderController,
+                  decoration: const InputDecoration(
+                    labelText: 'Starting Folder (optional)',
+                    hintText: '/',
+                    prefixIcon: Icon(Icons.folder),
+                    helperText: 'Leave empty to start at root',
                   ),
                 ),
               ],

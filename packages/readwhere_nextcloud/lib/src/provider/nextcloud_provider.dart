@@ -64,7 +64,7 @@ class NextcloudProvider extends ChangeNotifier {
     required String serverUrl,
     required String userId,
     String? username,
-    String booksFolder = '/Books',
+    String booksFolder = '/',
   }) async {
     _catalogId = catalogId;
     _serverUrl = serverUrl;

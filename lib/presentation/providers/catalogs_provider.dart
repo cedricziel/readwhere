@@ -175,7 +175,7 @@ class CatalogsProvider extends ChangeNotifier {
         addedAt: DateTime.now(),
         username: username,
         userId: userId ?? username,
-        booksFolder: booksFolder ?? '/Books',
+        booksFolder: booksFolder ?? '/',
         serverVersion: serverVersion,
       );
 

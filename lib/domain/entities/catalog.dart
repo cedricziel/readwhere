@@ -84,8 +84,8 @@ class Catalog extends Equatable {
     return '$baseUrl/remote.php/dav/files/$userId';
   }
 
-  /// Get the effective books folder path (defaults to /Books)
-  String get effectiveBooksFolder => booksFolder ?? '/Books';
+  /// Get the effective books folder path (defaults to root)
+  String get effectiveBooksFolder => booksFolder ?? '/';
 
   /// Get the full OPDS URL (including API key for Kavita)
   String get opdsUrl {
