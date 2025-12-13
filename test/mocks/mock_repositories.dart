@@ -4,10 +4,18 @@ import 'package:readwhere/domain/repositories/bookmark_repository.dart';
 import 'package:readwhere/domain/repositories/reading_progress_repository.dart';
 import 'package:readwhere/domain/repositories/catalog_repository.dart';
 import 'package:readwhere/domain/repositories/feed_item_repository.dart';
+import 'package:readwhere/domain/repositories/sync_job_repository.dart';
+import 'package:readwhere/domain/services/connectivity_service.dart';
 import 'package:readwhere/data/database/database_helper.dart';
 import 'package:readwhere/data/services/book_import_service.dart';
 import 'package:readwhere/data/services/opds_cache_service.dart';
 import 'package:readwhere/data/services/article_scraper_service.dart';
+import 'package:readwhere/data/services/sync_queue_service.dart';
+import 'package:readwhere/data/services/progress_sync_service.dart';
+import 'package:readwhere/data/services/catalog_sync_service.dart';
+import 'package:readwhere/data/services/feed_sync_service.dart';
+import 'package:readwhere/data/services/background_sync_manager.dart';
+import 'package:readwhere/core/background/background_executor.dart';
 import 'package:readwhere/presentation/providers/library_provider.dart';
 import 'package:readwhere/presentation/providers/settings_provider.dart';
 import 'package:readwhere/presentation/providers/catalogs_provider.dart';
@@ -15,6 +23,7 @@ import 'package:readwhere/presentation/providers/feed_reader_provider.dart';
 import 'package:readwhere/presentation/providers/update_provider.dart';
 import 'package:readwhere/presentation/providers/reader_provider.dart';
 import 'package:readwhere/presentation/providers/audio_provider.dart';
+import 'package:readwhere/presentation/providers/sync_settings_provider.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
@@ -28,6 +37,7 @@ import 'package:sqflite/sqflite.dart';
   ReadingProgressRepository,
   CatalogRepository,
   FeedItemRepository,
+  SyncJobRepository,
   // Database
   DatabaseHelper,
   Database,
@@ -35,6 +45,14 @@ import 'package:sqflite/sqflite.dart';
   BookImportService,
   OpdsCacheService,
   ArticleScraperService,
+  // Sync Services
+  SyncQueueService,
+  ProgressSyncService,
+  CatalogSyncService,
+  FeedSyncService,
+  BackgroundSyncManager,
+  ConnectivityService,
+  BackgroundExecutor,
   // Plugins
   ReaderPlugin,
   ReaderController,
@@ -50,5 +68,6 @@ import 'package:sqflite/sqflite.dart';
   FeedReaderProvider,
   ReaderProvider,
   AudioProvider,
+  SyncSettingsProvider,
 ])
 void main() {}
