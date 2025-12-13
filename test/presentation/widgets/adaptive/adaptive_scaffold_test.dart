@@ -155,7 +155,9 @@ void main() {
         expect(find.byType(NavigationBar), findsNothing);
       });
 
-      testWidgets('shows labels on rail', (tester) async {
+      testWidgets('shows selected label only on collapsed rail', (
+        tester,
+      ) async {
         await tester.binding.setSurfaceSize(TestScreenSizes.tablet);
         addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -164,7 +166,8 @@ void main() {
         );
 
         final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
-        expect(rail.labelType, NavigationRailLabelType.all);
+        // Collapsed rail shows only selected label to save space
+        expect(rail.labelType, NavigationRailLabelType.selected);
       });
 
       testWidgets('has vertical divider after rail', (tester) async {
