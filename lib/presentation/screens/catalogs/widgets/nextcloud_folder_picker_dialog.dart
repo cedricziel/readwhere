@@ -179,6 +179,109 @@ class _NextcloudFolderPickerDialogState
     _loadDirectory();
   }
 
+  /// Show dialog to create a new folder
+  Future<void> _showCreateFolderDialog() async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final folderName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('New Folder'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Folder name',
+              hintText: 'Enter folder name',
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter a folder name';
+              }
+              if (value.contains('/')) {
+                return 'Folder name cannot contain /';
+              }
+              return null;
+            },
+            onFieldSubmitted: (_) {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.of(context).pop(controller.text.trim());
+              }
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.of(context).pop(controller.text.trim());
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+
+    controller.dispose();
+
+    if (folderName != null && folderName.isNotEmpty && mounted) {
+      await _createFolder(folderName);
+    }
+  }
+
+  /// Create a new folder in the current directory
+  Future<void> _createFolder(String name) async {
+    final newPath = _currentPath == '/' ? '/$name' : '$_currentPath/$name';
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      await _client.createDirectoryWithCredentials(
+        serverUrl: widget.serverUrl,
+        userId: widget.userId,
+        username: widget.username,
+        password: widget.appPassword,
+        path: newPath,
+      );
+
+      if (!mounted) return;
+
+      // Navigate into the new folder
+      _navigateTo(newPath);
+    } catch (e) {
+      if (!mounted) return;
+
+      final errorMessage = e.toString();
+      String displayMessage;
+      if (errorMessage.contains('already exists')) {
+        displayMessage = 'A folder with this name already exists';
+      } else if (errorMessage.contains('Parent directory')) {
+        displayMessage = 'Cannot create folder here';
+      } else {
+        displayMessage = 'Failed to create folder';
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(displayMessage)));
+
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   /// Get display name for a path segment
   String _getDisplayName(String path) {
     if (path == '/') return 'Home';
@@ -222,61 +325,75 @@ class _NextcloudFolderPickerDialogState
   Widget _buildBreadcrumbs(ThemeData theme) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.only(left: 16, right: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
       ),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _pathStack.length,
-        separatorBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Icon(
-            Icons.chevron_right,
-            size: 16,
-            color: theme.colorScheme.outline,
-          ),
-        ),
-        itemBuilder: (context, index) {
-          final isLast = index == _pathStack.length - 1;
-          final path = _pathStack[index];
-          final displayName = _getDisplayName(path);
-
-          return Center(
-            child: InkWell(
-              onTap: isLast ? null : () => _navigateToBreadcrumb(index),
-              borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (index == 0)
-                      Icon(
-                        Icons.folder,
-                        size: 16,
-                        color: isLast
-                            ? theme.colorScheme.onSurface
-                            : theme.colorScheme.primary,
-                      ),
-                    if (index == 0) const SizedBox(width: 4),
-                    Text(
-                      displayName,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isLast
-                            ? theme.colorScheme.onSurface
-                            : theme.colorScheme.primary,
-                        fontWeight: isLast
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
+      child: Row(
+        children: [
+          Expanded(
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _pathStack.length,
+              separatorBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: theme.colorScheme.outline,
                 ),
               ),
+              itemBuilder: (context, index) {
+                final isLast = index == _pathStack.length - 1;
+                final path = _pathStack[index];
+                final displayName = _getDisplayName(path);
+
+                return Center(
+                  child: InkWell(
+                    onTap: isLast ? null : () => _navigateToBreadcrumb(index),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (index == 0)
+                            Icon(
+                              Icons.folder,
+                              size: 16,
+                              color: isLast
+                                  ? theme.colorScheme.onSurface
+                                  : theme.colorScheme.primary,
+                            ),
+                          if (index == 0) const SizedBox(width: 4),
+                          Text(
+                            displayName,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: isLast
+                                  ? theme.colorScheme.onSurface
+                                  : theme.colorScheme.primary,
+                              fontWeight: isLast
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+          IconButton(
+            icon: const Icon(Icons.create_new_folder_outlined),
+            onPressed: _isLoading ? null : _showCreateFolderDialog,
+            tooltip: 'New Folder',
+          ),
+        ],
       ),
     );
   }

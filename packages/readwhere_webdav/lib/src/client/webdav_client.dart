@@ -185,6 +185,62 @@ class WebDavClient {
     }
   }
 
+  /// Create a directory at the given path
+  ///
+  /// Uses MKCOL to create a new collection (directory).
+  /// Throws [WebDavException] if the directory cannot be created.
+  Future<void> createDirectory(String path) async {
+    final url = _buildUrl(path);
+
+    try {
+      final response = await _dio.request<void>(
+        url,
+        options: Options(
+          method: 'MKCOL',
+          headers: {
+            ..._getAuthHeaders(),
+            ...config.customHeaders,
+          },
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      if (response.statusCode == 401) {
+        await config.auth.onAuthenticationFailed();
+        throw WebDavException(
+          'Authentication failed',
+          statusCode: response.statusCode,
+        );
+      }
+
+      if (response.statusCode == 405) {
+        throw WebDavException(
+          'Directory already exists',
+          statusCode: response.statusCode,
+        );
+      }
+
+      if (response.statusCode == 409) {
+        throw WebDavException(
+          'Parent directory does not exist',
+          statusCode: response.statusCode,
+        );
+      }
+
+      if (response.statusCode != 201) {
+        throw WebDavException(
+          'Failed to create directory: HTTP ${response.statusCode}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw WebDavException(
+        'Network error: ${e.message}',
+        cause: e,
+      );
+    }
+  }
+
   /// Check if a file has changed by comparing ETags
   ///
   /// Returns true if the file has changed or if [localEtag] is null.

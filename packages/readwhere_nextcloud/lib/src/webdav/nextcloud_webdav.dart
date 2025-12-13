@@ -191,6 +191,32 @@ class NextcloudWebDav {
     return files.map((f) => NextcloudFile.fromWebDavFile(f)).toList();
   }
 
+  /// Create a directory using direct credentials (without storage lookup)
+  ///
+  /// This is useful for creating folders before credentials are saved, such as
+  /// during catalog setup when selecting a starting folder.
+  Future<void> createDirectoryWithCredentials({
+    required String serverUrl,
+    required String userId,
+    required String username,
+    required String password,
+    required String path,
+  }) async {
+    final baseUrl = OcsApiService.normalizeUrl(serverUrl);
+    final webdavUrl = '$baseUrl/remote.php/dav/files/$userId';
+
+    final client = WebDavClient(
+      config: WebDavConfig(
+        baseUrl: webdavUrl,
+        auth: BasicAuth(username: username, password: password),
+        userAgent: userAgent,
+      ),
+      dio: _dio,
+    );
+
+    await client.createDirectory(path);
+  }
+
   /// Build the WebDAV base URL for a Nextcloud server
   String _buildWebDavBaseUrl(String serverUrl, String userId) {
     final baseUrl = OcsApiService.normalizeUrl(serverUrl);

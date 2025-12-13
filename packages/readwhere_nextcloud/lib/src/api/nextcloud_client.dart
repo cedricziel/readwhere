@@ -122,6 +122,25 @@ class NextcloudClient {
         path: path,
       );
 
+  /// Create a directory using direct credentials (without storage lookup)
+  ///
+  /// This is useful for creating folders before credentials are saved, such as
+  /// during catalog setup when selecting a starting folder.
+  Future<void> createDirectoryWithCredentials({
+    required String serverUrl,
+    required String userId,
+    required String username,
+    required String password,
+    required String path,
+  }) =>
+      webdav.createDirectoryWithCredentials(
+        serverUrl: serverUrl,
+        userId: userId,
+        username: username,
+        password: password,
+        path: path,
+      );
+
   /// Download a file
   Future<void> downloadFile({
     required String serverUrl,
