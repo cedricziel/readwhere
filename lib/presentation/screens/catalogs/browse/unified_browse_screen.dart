@@ -8,6 +8,7 @@ import '../../../../domain/entities/catalog.dart';
 import '../../../providers/library_provider.dart';
 import '../../../providers/unified_catalog_browsing_provider.dart';
 import '../../../router/routes.dart';
+import 'widgets/mosaic_preview_card.dart';
 
 /// Unified browse screen for all catalog types.
 ///
@@ -286,6 +287,13 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
           }
 
           final entry = _provider.entries[index];
+
+          // Use mosaic tile for navigation entries
+          if (entry.type == CatalogEntryType.navigation ||
+              entry.type == CatalogEntryType.collection) {
+            return _buildMosaicTile(entry);
+          }
+
           return _CatalogEntryTile(
             entry: entry,
             downloadProgress: _provider.getDownloadProgress(entry.id),
@@ -296,6 +304,28 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildMosaicTile(CatalogEntry entry) {
+    final cachedUrls = _provider.getCachedChildCoverUrls(entry.id);
+    final isFetching = _provider.isFetchingChildCovers(entry.id);
+
+    // Trigger fetch if no cached data and not already fetching
+    if (cachedUrls.isEmpty && !isFetching) {
+      // Schedule fetch after build to avoid calling notifyListeners during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _provider.fetchChildCoverUrls(entry).then((_) {
+          if (mounted) setState(() {});
+        });
+      });
+    }
+
+    return MosaicPreviewListTile(
+      entry: entry,
+      childCoverUrls: cachedUrls,
+      isLoading: isFetching,
+      onTap: () => _onEntryTap(entry),
     );
   }
 }

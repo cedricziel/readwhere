@@ -97,6 +97,105 @@ class OpdsProvider extends BrowsingProvider {
   final Set<String> _downloadedEntryIds = {};
   final Map<String, String> _entryIdToBookId = {};
 
+  // ===== Child Preview Cache =====
+
+  /// Cache for child cover URLs (entry ID → list of cover URLs).
+  final Map<String, List<String>> _childPreviewCache = {};
+
+  /// In-progress fetch requests to avoid duplicate fetches.
+  final Map<String, Future<List<String>>> _pendingPreviewFetches = {};
+
+  /// Get cached child cover URLs for a navigation entry.
+  List<String> getCachedChildCoverUrls(String entryId) {
+    return _childPreviewCache[entryId] ?? [];
+  }
+
+  /// Check if child covers are currently being fetched for an entry.
+  bool isFetchingChildCovers(String entryId) {
+    return _pendingPreviewFetches.containsKey(entryId);
+  }
+
+  /// Fetch child cover URLs for a navigation entry.
+  ///
+  /// Returns up to 4 cover URLs from child entries. Results are cached.
+  Future<List<String>> fetchChildCoverUrls(OpdsEntry entry) async {
+    // Check cache first
+    if (_childPreviewCache.containsKey(entry.id)) {
+      return _childPreviewCache[entry.id]!;
+    }
+
+    // Check if already fetching
+    if (_pendingPreviewFetches.containsKey(entry.id)) {
+      return _pendingPreviewFetches[entry.id]!;
+    }
+
+    // Start fetch
+    final fetchFuture = _doFetchChildCoverUrls(entry);
+    _pendingPreviewFetches[entry.id] = fetchFuture;
+
+    try {
+      final urls = await fetchFuture;
+      _childPreviewCache[entry.id] = urls;
+      return urls;
+    } finally {
+      _pendingPreviewFetches.remove(entry.id);
+    }
+  }
+
+  Future<List<String>> _doFetchChildCoverUrls(OpdsEntry entry) async {
+    if (_catalogId == null || _catalogUrl == null) {
+      return [];
+    }
+
+    // Find a navigation link for this entry
+    final navLink = entry.links.firstWhere(
+      (l) =>
+          l.rel == OpdsLinkRel.subsection ||
+          l.type.contains('atom') ||
+          l.type.contains('opds'),
+      orElse: () => entry.links.isNotEmpty
+          ? entry.links.first
+          : const OpdsLink(href: '', type: '', rel: ''),
+    );
+
+    if (navLink.href.isEmpty) {
+      return [];
+    }
+
+    try {
+      // Resolve URL and fetch child feed
+      final resolvedUrl = _opdsClient.resolveCoverUrl(
+        _catalogUrl!,
+        navLink.href,
+      );
+      final childFeed = await _opdsClient.fetchFeed(
+        resolvedUrl.isNotEmpty ? resolvedUrl : navLink.href,
+      );
+
+      // Extract cover URLs from children (up to 4)
+      final coverUrls = <String>[];
+      for (final child in childFeed.entries) {
+        final coverUrl = child.thumbnailUrl ?? child.coverUrl;
+        if (coverUrl != null && coverUrl.isNotEmpty) {
+          // Resolve cover URL
+          final resolved = _opdsClient.resolveCoverUrl(_catalogUrl!, coverUrl);
+          coverUrls.add(resolved.isNotEmpty ? resolved : coverUrl);
+          if (coverUrls.length >= 4) break;
+        }
+      }
+
+      return coverUrls;
+    } catch (e) {
+      // Silently fail - mosaic will show fallback
+      return [];
+    }
+  }
+
+  /// Clear the child preview cache (e.g., on refresh).
+  void clearChildPreviewCache() {
+    _childPreviewCache.clear();
+  }
+
   // ===== BrowsingProvider Interface =====
 
   @override
@@ -136,6 +235,7 @@ class OpdsProvider extends BrowsingProvider {
 
   @override
   Future<void> refresh() async {
+    clearChildPreviewCache();
     await refreshCurrentFeed();
   }
 
@@ -150,6 +250,7 @@ class OpdsProvider extends BrowsingProvider {
     _searchQuery = '';
     _error = null;
     _clearCacheState();
+    clearChildPreviewCache();
     notifyListeners();
   }
 

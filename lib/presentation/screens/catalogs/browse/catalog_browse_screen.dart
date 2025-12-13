@@ -10,6 +10,7 @@ import '../../../router/routes.dart';
 import '../../../widgets/common/cache_status_indicator.dart';
 import 'widgets/feed_breadcrumbs.dart';
 import 'widgets/opds_entry_card.dart';
+import 'widgets/opds_navigation_mosaic_card.dart';
 
 /// Screen for browsing an OPDS catalog's contents
 class CatalogBrowseScreen extends StatefulWidget {
@@ -455,6 +456,12 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
       itemCount: entries.length,
       itemBuilder: (context, index) {
         final entry = entries[index];
+
+        // Use mosaic card for navigation entries
+        if (entry.isNavigation) {
+          return _buildNavigationMosaicCard(provider, entry);
+        }
+
         final coverUrl = _resolveCoverUrl(entry);
 
         return OpdsEntryCard(
@@ -473,6 +480,28 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
     );
   }
 
+  Widget _buildNavigationMosaicCard(OpdsProvider provider, OpdsEntry entry) {
+    final cachedUrls = provider.getCachedChildCoverUrls(entry.id);
+    final isFetching = provider.isFetchingChildCovers(entry.id);
+
+    // Trigger fetch if no cached data and not already fetching
+    if (cachedUrls.isEmpty && !isFetching) {
+      // Schedule fetch after build to avoid calling notifyListeners during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        provider.fetchChildCoverUrls(entry).then((_) {
+          if (mounted) setState(() {});
+        });
+      });
+    }
+
+    return OpdsNavigationMosaicCard(
+      entry: entry,
+      childCoverUrls: cachedUrls,
+      isLoading: isFetching,
+      onTap: () => _handleEntryTap(provider, entry),
+    );
+  }
+
   Widget _buildListView(OpdsProvider provider, List<OpdsEntry> entries) {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -480,6 +509,12 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
       separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final entry = entries[index];
+
+        // Use mosaic tile for navigation entries
+        if (entry.isNavigation) {
+          return _buildNavigationMosaicTile(provider, entry);
+        }
+
         final coverUrl = _resolveCoverUrl(entry);
 
         return OpdsEntryListTile(
@@ -495,6 +530,28 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
               : null,
         );
       },
+    );
+  }
+
+  Widget _buildNavigationMosaicTile(OpdsProvider provider, OpdsEntry entry) {
+    final cachedUrls = provider.getCachedChildCoverUrls(entry.id);
+    final isFetching = provider.isFetchingChildCovers(entry.id);
+
+    // Trigger fetch if no cached data and not already fetching
+    if (cachedUrls.isEmpty && !isFetching) {
+      // Schedule fetch after build to avoid calling notifyListeners during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        provider.fetchChildCoverUrls(entry).then((_) {
+          if (mounted) setState(() {});
+        });
+      });
+    }
+
+    return OpdsNavigationMosaicTile(
+      entry: entry,
+      childCoverUrls: cachedUrls,
+      isLoading: isFetching,
+      onTap: () => _handleEntryTap(provider, entry),
     );
   }
 
