@@ -7,12 +7,14 @@ class CatalogCard extends StatelessWidget {
   final Catalog catalog;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback? onChangeFolder;
 
   const CatalogCard({
     super.key,
     required this.catalog,
     required this.onTap,
     required this.onDelete,
+    this.onChangeFolder,
   });
 
   @override
@@ -114,12 +116,24 @@ class CatalogCard extends StatelessWidget {
                 icon: const Icon(Icons.more_vert),
                 onSelected: (value) {
                   switch (value) {
+                    case 'change_folder':
+                      onChangeFolder?.call();
+                      break;
                     case 'delete':
                       onDelete();
                       break;
                   }
                 },
                 itemBuilder: (context) => [
+                  if (catalog.isNextcloud && onChangeFolder != null)
+                    const PopupMenuItem(
+                      value: 'change_folder',
+                      child: ListTile(
+                        leading: Icon(Icons.folder_open),
+                        title: Text('Change Starting Folder'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
                   const PopupMenuItem(
                     value: 'delete',
                     child: ListTile(

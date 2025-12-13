@@ -8,6 +8,7 @@ import '../../providers/catalogs_provider.dart';
 import '../../router/routes.dart';
 import 'widgets/add_catalog_dialog.dart';
 import 'widgets/catalog_card.dart';
+import 'widgets/nextcloud_folder_picker_dialog.dart';
 
 /// The catalogs screen for browsing OPDS catalogs and online book sources.
 ///
@@ -96,6 +97,40 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
               success
                   ? 'Removed "${catalog.name}"'
                   : 'Failed to remove catalog',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _changeFolder(Catalog catalog) async {
+    final newPath = await NextcloudFolderPickerDialog.showForExistingCatalog(
+      context: context,
+      catalog: catalog,
+    );
+
+    if (newPath != null && mounted) {
+      // Skip update if same folder selected
+      if (newPath == catalog.booksFolder ||
+          (newPath == '/' &&
+              (catalog.booksFolder == null || catalog.booksFolder!.isEmpty))) {
+        return;
+      }
+
+      final updated = catalog.copyWith(
+        booksFolder: newPath == '/' ? '' : newPath,
+      );
+      final provider = sl<CatalogsProvider>();
+      final result = await provider.updateCatalog(updated);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result != null
+                  ? 'Updated starting folder to "${newPath == '/' ? 'Home' : newPath}"'
+                  : 'Failed to update starting folder',
             ),
           ),
         );
@@ -230,6 +265,9 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
             catalog: catalog,
             onTap: () => _openCatalog(catalog),
             onDelete: () => _confirmDeleteCatalog(catalog),
+            onChangeFolder: catalog.isNextcloud
+                ? () => _changeFolder(catalog)
+                : null,
           );
         },
       ),

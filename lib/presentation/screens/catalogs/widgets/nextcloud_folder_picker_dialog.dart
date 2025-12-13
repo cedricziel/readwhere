@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 
+import '../../../../domain/entities/catalog.dart';
+
 /// Dialog for browsing and selecting a folder on Nextcloud
 ///
 /// Used during catalog setup to let users pick a starting folder
-/// before the catalog is saved.
+/// before the catalog is saved, or to change the folder for existing catalogs.
 class NextcloudFolderPickerDialog extends StatefulWidget {
   /// Nextcloud server URL
   final String serverUrl;
@@ -30,6 +32,41 @@ class NextcloudFolderPickerDialog extends StatefulWidget {
     required this.appPassword,
     this.initialPath = '/',
   });
+
+  /// Show folder picker for an existing catalog using stored credentials
+  ///
+  /// Returns the selected path, or null if cancelled or credentials missing.
+  static Future<String?> showForExistingCatalog({
+    required BuildContext context,
+    required Catalog catalog,
+  }) async {
+    final storage = GetIt.I<NextcloudCredentialStorage>();
+    final appPassword = await storage.getAppPassword(catalog.id);
+
+    if (appPassword == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Credentials not found. Please re-add the server.'),
+          ),
+        );
+      }
+      return null;
+    }
+
+    if (!context.mounted) return null;
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) => NextcloudFolderPickerDialog(
+        serverUrl: catalog.url,
+        userId: catalog.userId ?? catalog.username ?? '',
+        username: catalog.username ?? '',
+        appPassword: appPassword,
+        initialPath: catalog.booksFolder ?? '/',
+      ),
+    );
+  }
 
   @override
   State<NextcloudFolderPickerDialog> createState() =>
