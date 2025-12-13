@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.0](https://github.com/cedricziel/readwhere/compare/v0.4.0...v0.5.0) (2025-12-13)
+
+
+### Features
+
+* **nextcloud:** add folder creation in folder picker dialog ([9a28ba3](https://github.com/cedricziel/readwhere/commit/9a28ba321538986c8637e9627cf4a4658f7623b4))
+* **nextcloud:** add visual folder picker for starting folder selection ([1c5e090](https://github.com/cedricziel/readwhere/commit/1c5e090b3cc93d38bf437e808c7cacec000779ea))
+* **nextcloud:** allow changing starting folder on existing catalogs ([d7b1e6f](https://github.com/cedricziel/readwhere/commit/d7b1e6f2183d4a00d5f36690475010a6b753a345))
+* **nextcloud:** make starting folder configurable ([2b45ccc](https://github.com/cedricziel/readwhere/commit/2b45ccc21b6cdbaa76203697d077e2b702c0ac73))
+* **pdf:** add PDF reading support with pdfrx library ([31fe6da](https://github.com/cedricziel/readwhere/commit/31fe6da4448c392835140da6223b9824d57135c1))
+* **ui:** add facet filter UI for catalog and library screens ([66a5c0f](https://github.com/cedricziel/readwhere/commit/66a5c0feddc70deee83f76e378908c6dacca3b23))
+* **widgetbook:** add component library for widget preview ([55351fb](https://github.com/cedricziel/readwhere/commit/55351fbf0acff13ae5f12963f2606e28a6253a54))
+
+
+### Bug Fixes
+
+* **ci:** add libsecret-1-dev for flutter_secure_storage_linux ([2799ccd](https://github.com/cedricziel/readwhere/commit/2799ccdb9876478f71099429777c09ecf5ba7a58))
+* **ci:** exclude widgetbook from main app analysis ([4f90ba6](https://github.com/cedricziel/readwhere/commit/4f90ba63c8a962e4c95bcac9c78b7834859988d3))
+* **ci:** install Linux build dependencies for widgetbook ([08d33f0](https://github.com/cedricziel/readwhere/commit/08d33f0be745359adfade88e53c919b29e72e64a))
+* **nextcloud:** fix back button and breadcrumb navigation issues ([c8839d1](https://github.com/cedricziel/readwhere/commit/c8839d1cec41f60a3070cab2638fa90d1986e7fa))
+* **nextcloud:** prevent TextEditingController disposed error in folder picker ([f22fbc2](https://github.com/cedricziel/readwhere/commit/f22fbc2ee7eee633ac0646d0e1b21b9ecec3d6d7))
+
 ## [0.4.0](https://github.com/cedricziel/readwhere/compare/v0.3.0...v0.4.0) (2025-12-13)
 
 
