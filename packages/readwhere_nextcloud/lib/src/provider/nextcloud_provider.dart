@@ -78,9 +78,22 @@ class NextcloudProvider extends ChangeNotifier {
 
   /// Navigate to a path
   Future<void> navigateTo(String path) async {
+    // Save state for rollback on error
+    final previousPath = _currentPath;
+    final previousStackLength = _pathStack.length;
+
     _pathStack.add(path);
     _currentPath = path;
+
     await _loadDirectory();
+
+    // Rollback on error to prevent "stuck in imaginary folder"
+    if (_error != null) {
+      _pathStack.removeRange(previousStackLength, _pathStack.length);
+      _currentPath = previousPath;
+      // Keep error message but restore path state
+      notifyListeners();
+    }
   }
 
   /// Navigate back
@@ -90,6 +103,21 @@ class NextcloudProvider extends ChangeNotifier {
     _pathStack.removeLast();
     _currentPath = _pathStack.last;
     await _loadDirectory();
+    return true;
+  }
+
+  /// Navigate back without making a network request.
+  ///
+  /// Use this when in error state to allow escaping without requiring network.
+  /// Returns false if at root level (caller should exit browser).
+  bool navigateBackWithoutLoad() {
+    if (_pathStack.length <= 1) return false;
+
+    _pathStack.removeLast();
+    _currentPath = _pathStack.last;
+    _error = null;
+    _files = []; // Clear files since we don't have cached data
+    notifyListeners();
     return true;
   }
 

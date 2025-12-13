@@ -193,7 +193,14 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
-                  if (provider.breadcrumbs.length > 1) {
+                  if (provider.error != null) {
+                    // In error state: navigate back without reload
+                    final canGoBack = provider.navigateBackWithoutLoad();
+                    if (!canGoBack) {
+                      provider.closeBrowser();
+                      Navigator.of(context).pop();
+                    }
+                  } else if (provider.breadcrumbs.length > 1) {
                     provider.navigateBack();
                   } else {
                     provider.closeBrowser();
@@ -336,6 +343,15 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
               onPressed: _refresh,
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () {
+                sl<NextcloudProvider>().closeBrowser();
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.list),
+              label: const Text('Back to Catalogs'),
             ),
           ],
         ),
