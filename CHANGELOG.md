@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.6.0](https://github.com/cedricziel/readwhere/compare/v0.5.0...v0.6.0) (2025-12-14)
+
+
+### Features
+
+* **adaptive:** add custom adaptive widgets and Widgetbook use cases ([0980106](https://github.com/cedricziel/readwhere/commit/09801064de60bc26bfa28aa1e2c4b4b8f8b11379))
+* **adaptive:** add platform-adaptive widgets for cross-platform UX ([ee01c79](https://github.com/cedricziel/readwhere/commit/ee01c799579a38a8a2b4431717385af92f922102))
+* **mobile:** improve smartphone UX with responsive layouts and accessibility ([e8f7ad5](https://github.com/cedricziel/readwhere/commit/e8f7ad5dac2c41754966f9c00b96cd0c8c6156d9))
+* **sync:** add background sync infrastructure ([cdedda6](https://github.com/cedricziel/readwhere/commit/cdedda68be23b8524d5a45c5c8cc3c2d33a0ddf2))
+* **sync:** add native platform configurations for background sync ([a166268](https://github.com/cedricziel/readwhere/commit/a166268f57024585e6fc9d353cac3c7fdfcaa41f))
+* **sync:** initialize sync services at app startup ([f28b3ca](https://github.com/cedricziel/readwhere/commit/f28b3ca3f057a52b8cd008d210816adce3da1911))
+* **ux:** Phase 2 mobile UX enhancements ([bbb6cde](https://github.com/cedricziel/readwhere/commit/bbb6cde0063ab751ecaf291ef0af62285a6d1e08))
+* **ux:** Phase 3 responsive infrastructure ([c3a6251](https://github.com/cedricziel/readwhere/commit/c3a625156892d258670f3c5efcfac84eabb63e94))
+* **ux:** Phase 4 landscape layouts for all screens ([0ef7a0d](https://github.com/cedricziel/readwhere/commit/0ef7a0d5afe843b7adc663759ddb6c1e00ad16ab))
+
+
+### Bug Fixes
+
+* **ci:** rename claude command file for Windows compatibility ([5888a68](https://github.com/cedricziel/readwhere/commit/5888a6809159aac181785d351dc0419f10a32e80))
+* **test:** resolve 23 failing tests after sync settings addition ([3820e43](https://github.com/cedricziel/readwhere/commit/3820e43fd38678720b314f96a669cd982fdeded3))
+* **ui:** add explicit duration to snackbars with actions ([c72c097](https://github.com/cedricziel/readwhere/commit/c72c0976ffadeb271991008af08df970498e22ab))
+
 ## [0.5.0](https://github.com/cedricziel/readwhere/compare/v0.4.0...v0.5.0) (2025-12-13)
 
 
