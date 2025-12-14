@@ -10,6 +10,7 @@ import 'app.dart';
 import 'core/di/service_locator.dart';
 import 'core/utils/logger.dart';
 import 'data/services/background_sync_manager.dart';
+import 'presentation/providers/annotation_provider.dart';
 import 'presentation/providers/audio_provider.dart';
 import 'presentation/providers/catalogs_provider.dart';
 import 'presentation/providers/library_provider.dart';
@@ -41,6 +42,7 @@ Future<void> main() async {
   final libraryProvider = sl<LibraryProvider>();
   final readerProvider = sl<ReaderProvider>();
   final audioProvider = sl<AudioProvider>();
+  final annotationProvider = sl<AnnotationProvider>();
   final catalogsProvider = sl<CatalogsProvider>();
   final opdsProvider = sl<OpdsProvider>();
   final kavitaProvider = sl<KavitaProvider>();
@@ -69,6 +71,9 @@ Future<void> main() async {
         ChangeNotifierProvider<LibraryProvider>.value(value: libraryProvider),
         ChangeNotifierProvider<ReaderProvider>.value(value: readerProvider),
         ChangeNotifierProvider<AudioProvider>.value(value: audioProvider),
+        ChangeNotifierProvider<AnnotationProvider>.value(
+          value: annotationProvider,
+        ),
         ChangeNotifierProvider<CatalogsProvider>.value(value: catalogsProvider),
         ChangeNotifierProvider<OpdsProvider>.value(value: opdsProvider),
         ChangeNotifierProvider<KavitaProvider>.value(value: kavitaProvider),
