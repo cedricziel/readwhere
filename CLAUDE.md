@@ -79,14 +79,14 @@ The app uses a two-tier plugin architecture:
 
 **Format packages** (pure Dart, no Flutter dependencies):
 
-- `readwhere_epub`, `readwhere_cbz`, `readwhere_cbr`, `readwhere_rar` - Format parsing
-- `readwhere_opds`, `readwhere_kavita`, `readwhere_nextcloud` - Catalog protocols
+- `readwhere_epub`, `readwhere_cbz`, `readwhere_cbr`, `readwhere_rar`, `readwhere_pdf` - Format parsing
+- `readwhere_opds`, `readwhere_kavita`, `readwhere_nextcloud`, `readwhere_synology`, `readwhere_webdav` - Catalog/storage protocols
 - `readwhere_rss`, `readwhere_fanfictionde` - Content sources
 
 **Plugins** (bridge packages to app via `readwhere_plugin` interfaces):
 
-- Reader plugins: `readwhere_epub_plugin`, `readwhere_cbz_plugin`, `readwhere_cbr_plugin`
-- Catalog plugins: `readwhere_opds_plugin`, `readwhere_kavita_plugin`, `readwhere_rss_plugin`, `readwhere_fanfictionde_plugin`
+- Reader plugins: `readwhere_epub_plugin`, `readwhere_cbz_plugin`, `readwhere_cbr_plugin`, `readwhere_pdf_plugin`
+- Catalog plugins: `readwhere_opds_plugin`, `readwhere_kavita_plugin`, `readwhere_rss_plugin`, `readwhere_fanfictionde_plugin`, `readwhere_synology_plugin`
 
 Key interfaces:
 
@@ -122,7 +122,9 @@ This is a Dart workspace with multiple packages under `packages/`:
 - `readwhere_opds` - OPDS catalog protocol
 - `readwhere_kavita` - Kavita server API
 - `readwhere_nextcloud`, `readwhere_webdav` - Nextcloud/WebDAV
+- `readwhere_synology` - Synology Drive API
 - `readwhere_rss`, `readwhere_opml` - RSS feeds
+- `readwhere_pdf` - PDF rendering
 - `readwhere_fanfictionde` - Fanfiction.de scraper
 
 **Plugins** (bridge libraries to app):
@@ -196,6 +198,25 @@ cd widgetbook && flutter run -d chrome
 - `use_cases/library/` - Library screen widgets (BookCard, EncryptionBadge)
 - `use_cases/catalog/` - Catalog browsing widgets (OpdsEntryCard, DownloadButton)
 
+## Adaptive Widgets
+
+The app uses adaptive widgets for cross-platform UI consistency:
+
+- Use `AlertDialog.adaptive()`, `Switch.adaptive()`, `RefreshIndicator.adaptive()`
+- Custom adaptive widgets in `lib/presentation/widgets/adaptive/`:
+  - `AdaptiveTextField`, `AdaptiveSearchField` - Platform-native text inputs
+  - `AdaptiveActionSheet` - iOS action sheets / Material bottom sheets
+  - `AdaptiveButton` variants - Platform-appropriate buttons
+- **Important**: When using `AlertDialog.adaptive()` with Material widgets (InkWell, ListTile, SegmentedButton), wrap content in `Material(type: MaterialType.transparency)` to provide the required ancestor on Apple platforms
+
+## Test-Driven Development
+
+When fixing bugs, write a failing test first that reproduces the issue, then fix it. This prevents regressions.
+
 ## Commit Guidelines
 
 Use semantic commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`
+
+## External Documentation
+
+Use context7 MCP server to look up accurate documentation for Flutter, Dart, and other libraries used in this project.
