@@ -8,6 +8,7 @@ import '../../../../domain/entities/catalog.dart';
 import '../../../providers/library_provider.dart';
 import '../../../providers/unified_catalog_browsing_provider.dart';
 import '../../../router/routes.dart';
+import '../../../widgets/adaptive/adaptive_text_field.dart';
 import '../../../widgets/facets/facet_filter_bar.dart';
 import '../../../widgets/facets/facet_selection_sheet.dart';
 import 'widgets/mosaic_preview_card.dart';
@@ -192,21 +193,15 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
             )
           : null,
       title: isSearching
-          ? TextField(
+          ? AdaptiveSearchField(
               controller: _searchController,
               autofocus: true,
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                border: InputBorder.none,
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    _searchController.clear();
-                    _provider.clearSearch();
-                  },
-                ),
-              ),
+              placeholder: 'Search...',
               onSubmitted: _onSearch,
+              onClear: () {
+                _searchController.clear();
+                _provider.clearSearch();
+              },
             )
           : Text(_provider.currentResult?.title ?? widget.catalog.name),
       actions: [

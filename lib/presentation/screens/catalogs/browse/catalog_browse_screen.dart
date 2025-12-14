@@ -5,6 +5,7 @@ import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../widgets/adaptive/adaptive_text_field.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../providers/library_provider.dart';
 import '../../../router/routes.dart';
@@ -434,28 +435,11 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
                 if (_showSearch)
                   Padding(
                     padding: const EdgeInsets.all(8),
-                    child: TextField(
+                    child: AdaptiveSearchField(
                       controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search...',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  provider.clearSearch();
-                                },
-                              )
-                            : null,
-                        border: const OutlineInputBorder(),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      textInputAction: TextInputAction.search,
+                      placeholder: 'Search...',
                       onSubmitted: (_) => _handleSearch(provider),
+                      onClear: () => provider.clearSearch(),
                     ),
                   ),
 

@@ -6,11 +6,19 @@ import 'package:readwhere/presentation/providers/library_provider.dart';
 import 'package:readwhere/presentation/screens/library/library_screen.dart';
 import 'package:readwhere/presentation/screens/library/widgets/book_card.dart';
 import 'package:readwhere/presentation/screens/library/widgets/book_list_tile.dart';
+import 'package:readwhere/presentation/widgets/adaptive/adaptive_text_field.dart';
 import 'package:readwhere/presentation/widgets/common/empty_state.dart';
 import 'package:readwhere/presentation/widgets/common/loading_indicator.dart';
 
 import '../../../helpers/test_helpers.dart';
 import '../../../mocks/mock_repositories.mocks.dart';
+
+/// Finder for search input fields that works with both Material and Cupertino.
+/// AdaptiveSearchField renders differently on different platforms, so we find
+/// the EditableText widget which is the common underlying widget.
+Finder findSearchInput() {
+  return find.byType(EditableText);
+}
 
 void main() {
   late MockLibraryProvider mockLibraryProvider;
@@ -197,9 +205,9 @@ void main() {
         await tester.tap(find.byIcon(Icons.search));
         await tester.pump();
 
-        // Should show close icon and text field
+        // Should show close icon and search field
         expect(find.byIcon(Icons.close), findsOneWidget);
-        expect(find.byType(TextField), findsOneWidget);
+        expect(find.byType(AdaptiveSearchField), findsOneWidget);
       });
 
       testWidgets('view toggle changes icon based on mode', (tester) async {
@@ -282,7 +290,7 @@ void main() {
         await tester.tap(find.byIcon(Icons.search));
         await tester.pump();
 
-        expect(find.byType(TextField), findsOneWidget);
+        expect(find.byType(AdaptiveSearchField), findsOneWidget);
         expect(find.text('Search books...'), findsOneWidget);
       });
 
@@ -294,7 +302,7 @@ void main() {
         await tester.pump();
 
         // Enter search query
-        await tester.enterText(find.byType(TextField), 'gatsby');
+        await tester.enterText(findSearchInput(), 'gatsby');
         await tester.pump();
 
         verify(mockLibraryProvider.search('gatsby')).called(1);

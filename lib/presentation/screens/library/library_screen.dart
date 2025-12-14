@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/library_facet.dart';
 import '../../providers/library_provider.dart';
+import '../../widgets/adaptive/adaptive_text_field.dart';
 import '../../widgets/adaptive/responsive_layout.dart';
 import '../../widgets/common/app_logo.dart';
 import '../../widgets/common/empty_state.dart';
@@ -116,19 +117,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
               child: AppLogo(size: 40),
             ),
       title: _isSearching
-          ? TextField(
+          ? AdaptiveSearchField(
               controller: _searchController,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'Search books...',
-                border: InputBorder.none,
-              ),
+              placeholder: 'Search books...',
               onChanged: (query) {
                 final libraryProvider = Provider.of<LibraryProvider>(
                   context,
                   listen: false,
                 );
                 libraryProvider.search(query);
+              },
+              onClear: () {
+                final libraryProvider = Provider.of<LibraryProvider>(
+                  context,
+                  listen: false,
+                );
+                libraryProvider.clearSearch();
               },
             )
           : const Text('Library'),
