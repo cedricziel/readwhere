@@ -2,12 +2,18 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../domain/entities/annotation.dart';
+import '../../../providers/annotation_provider.dart';
 import '../../../providers/audio_provider.dart';
 import '../../../providers/reader_provider.dart';
+import '../../../themes/colors.dart';
 import '../../../themes/reading_themes.dart';
+import 'annotation_context_menu.dart';
+import 'note_editor_dialog.dart';
 
 /// Widget for displaying book content with HTML rendering
 ///
@@ -19,12 +25,16 @@ class ReaderContentWidget extends StatefulWidget {
   final VoidCallback? onNextChapter;
   final VoidCallback? onPreviousChapter;
 
+  /// Whether annotation features are enabled (EPUB only).
+  final bool annotationsEnabled;
+
   const ReaderContentWidget({
     super.key,
     required this.scrollController,
     this.onToggleControls,
     this.onNextChapter,
     this.onPreviousChapter,
+    this.annotationsEnabled = true,
   });
 
   @override
@@ -184,6 +194,15 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
               // complete rebuild and avoid Flutter framework bug with
               // stale selection indices (flutter/flutter#123456).
               key: _selectionAreaKey,
+              contextMenuBuilder: widget.annotationsEnabled
+                  ? (context, selectableRegionState) {
+                      return _buildAnnotationContextMenu(
+                        context,
+                        selectableRegionState,
+                        readerProvider.currentChapterIndex,
+                      );
+                    }
+                  : null,
               child: SingleChildScrollView(
                 controller: widget.scrollController,
                 padding: EdgeInsets.symmetric(
@@ -448,6 +467,122 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
         );
       },
     );
+  }
+
+  /// Builds the annotation context menu when text is selected.
+  Widget _buildAnnotationContextMenu(
+    BuildContext context,
+    SelectableRegionState selectableRegionState,
+    int chapterIndex,
+  ) {
+    final selectedText =
+        selectableRegionState.getSelectedContent()?.plainText ?? '';
+
+    if (selectedText.trim().isEmpty) {
+      // Return default context menu if no text selected
+      return AdaptiveTextSelectionToolbar.selectableRegion(
+        selectableRegionState: selectableRegionState,
+      );
+    }
+
+    return Positioned(
+      top: selectableRegionState.contextMenuAnchors.primaryAnchor.dy,
+      left: selectableRegionState.contextMenuAnchors.primaryAnchor.dx,
+      child: AnnotationContextMenu(
+        selectedText: selectedText,
+        onHighlight: (color) async {
+          // Clear selection first
+          selectableRegionState.hideToolbar();
+          selectableRegionState.selectAll(SelectionChangedCause.tap);
+          selectableRegionState.clearSelection();
+
+          // Create annotation via provider
+          final annotationProvider = context.read<AnnotationProvider>();
+          annotationProvider.setSelection(
+            selectedText: selectedText,
+            chapterIndex: chapterIndex,
+          );
+          await annotationProvider.createAnnotationFromSelection(color: color);
+        },
+        onAddNote: () async {
+          // Hide selection toolbar
+          selectableRegionState.hideToolbar();
+
+          // Show note editor dialog
+          final result = await NoteEditorDialog.show(
+            context: context,
+            selectedText: selectedText,
+          );
+
+          if (result != null) {
+            // Create annotation with note
+            final annotationProvider = context.read<AnnotationProvider>();
+            annotationProvider.setSelection(
+              selectedText: selectedText,
+              chapterIndex: chapterIndex,
+            );
+            await annotationProvider.createAnnotationFromSelection(
+              color: result.color,
+              note: result.note.isNotEmpty ? result.note : null,
+            );
+          }
+
+          // Clear selection
+          selectableRegionState.clearSelection();
+        },
+        onCopy: () {
+          // Copy text to clipboard
+          Clipboard.setData(ClipboardData(text: selectedText));
+          selectableRegionState.hideToolbar();
+          selectableRegionState.clearSelection();
+
+          // Show snackbar feedback
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Copied to clipboard'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Injects CSS for annotation highlights into the HTML content.
+  String _injectAnnotationHighlightsCss(
+    String html,
+    List<Annotation> annotations,
+  ) {
+    if (annotations.isEmpty) return html;
+
+    final cssBuffer = StringBuffer('<style type="text/css">\n');
+
+    for (final annotation in annotations) {
+      final color = AnnotationColorHelper.getColor(annotation.color);
+      final r = color.red;
+      final g = color.green;
+      final b = color.blue;
+
+      cssBuffer.writeln('''
+.annotation-${annotation.id} {
+  background-color: rgba($r, $g, $b, 0.4);
+  border-radius: 2px;
+  cursor: pointer;
+}
+''');
+    }
+
+    cssBuffer.writeln('</style>');
+    final styleTag = cssBuffer.toString();
+
+    // Inject styles into HTML
+    if (html.contains('<head>')) {
+      return html.replaceFirst('<head>', '<head>$styleTag');
+    } else if (html.contains('<body>')) {
+      return html.replaceFirst('<body>', '<body>$styleTag');
+    } else {
+      return styleTag + html;
+    }
   }
 
   /// Generate placeholder HTML content for testing

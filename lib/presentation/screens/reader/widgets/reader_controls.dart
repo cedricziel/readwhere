@@ -16,6 +16,8 @@ class ReaderControls extends StatelessWidget {
   final VoidCallback onSettings;
   final VoidCallback onTableOfContents;
   final VoidCallback? onAudio;
+  final VoidCallback? onAnnotations;
+  final bool annotationPanelVisible;
   final ValueChanged<double> onProgressChanged;
   final VoidCallback onPreviousChapter;
   final VoidCallback onNextChapter;
@@ -47,6 +49,8 @@ class ReaderControls extends StatelessWidget {
     required this.onSettings,
     required this.onTableOfContents,
     this.onAudio,
+    this.onAnnotations,
+    this.annotationPanelVisible = false,
     required this.onProgressChanged,
     required this.onPreviousChapter,
     required this.onNextChapter,
@@ -74,6 +78,8 @@ class ReaderControls extends StatelessWidget {
             onBookmark: onBookmark,
             onSettings: onSettings,
             onAudio: onAudio,
+            onAnnotations: onAnnotations,
+            annotationPanelVisible: annotationPanelVisible,
             isComic: isComic,
             panelModeEnabled: panelModeEnabled,
             readingDirection: readingDirection,
@@ -111,6 +117,8 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onBookmark;
   final VoidCallback onSettings;
   final VoidCallback? onAudio;
+  final VoidCallback? onAnnotations;
+  final bool annotationPanelVisible;
   final bool isComic;
   final bool panelModeEnabled;
   final ReadingDirection readingDirection;
@@ -123,6 +131,8 @@ class _TopBar extends StatelessWidget {
     required this.onBookmark,
     required this.onSettings,
     this.onAudio,
+    this.onAnnotations,
+    this.annotationPanelVisible = false,
     this.isComic = false,
     this.panelModeEnabled = false,
     this.readingDirection = ReadingDirection.leftToRight,
@@ -210,6 +220,21 @@ class _TopBar extends StatelessWidget {
                       : 'Manga (RTL)',
                 ),
               ],
+
+              // Annotations button (EPUB only, not for comics)
+              if (!isComic && onAnnotations != null)
+                IconButton(
+                  icon: Icon(
+                    annotationPanelVisible
+                        ? Icons.highlight
+                        : Icons.highlight_outlined,
+                    color: annotationPanelVisible ? Colors.amber : Colors.white,
+                  ),
+                  onPressed: onAnnotations,
+                  tooltip: annotationPanelVisible
+                      ? 'Hide annotations'
+                      : 'Show annotations',
+                ),
 
               IconButton(
                 icon: const Icon(Icons.bookmark_border, color: Colors.white),

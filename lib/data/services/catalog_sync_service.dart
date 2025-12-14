@@ -174,6 +174,7 @@ class CatalogSyncService implements CatalogSyncProtocol {
       case CatalogType.nextcloud:
       case CatalogType.rss:
       case CatalogType.fanfiction:
+      case CatalogType.synology:
         return false;
     }
   }

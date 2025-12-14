@@ -165,6 +165,21 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
             _nameController.text = 'Fanfiction.de';
           }
         });
+      } else if (_catalogType == CatalogType.synology) {
+        // Validate Synology connection
+        await provider.validateSynology(
+          _urlController.text.trim(),
+          _usernameController.text.trim(),
+          _passwordController.text.trim(),
+        );
+
+        setState(() {
+          _isValidated = true;
+          // Auto-fill name if empty
+          if (_nameController.text.isEmpty) {
+            _nameController.text = 'Synology NAS';
+          }
+        });
       } else {
         // Validate OPDS connection
         final feed = await provider.validateOpdsCatalog(
@@ -346,6 +361,14 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
         catalog = await provider.addFanfictionCatalog(
           name: _nameController.text.trim(),
         );
+      } else if (_catalogType == CatalogType.synology) {
+        catalog = await provider.addSynologyCatalog(
+          name: _nameController.text.trim(),
+          url: _urlController.text.trim(),
+          username: _usernameController.text.trim(),
+          password: _passwordController.text.trim(),
+          booksFolder: '/mydrive',
+        );
       } else {
         catalog = await provider.addOpdsCatalog(
           name: _nameController.text.trim(),
@@ -419,6 +442,11 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                       icon: Icon(Icons.cloud),
                     ),
                     ButtonSegment(
+                      value: CatalogType.synology,
+                      label: Text('Synology'),
+                      icon: Icon(Icons.storage),
+                    ),
+                    ButtonSegment(
                       value: CatalogType.opds,
                       label: Text('OPDS'),
                       icon: Icon(Icons.public),
@@ -460,6 +488,8 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                       ? 'https://your-kavita-server.com'
                       : _catalogType == CatalogType.nextcloud
                       ? 'https://your-nextcloud.com'
+                      : _catalogType == CatalogType.synology
+                      ? 'https://your-synology-nas:5001'
                       : 'https://catalog.example.com/opds',
                   prefixIcon: Icons.link,
                   keyboardType: TextInputType.url,
@@ -483,6 +513,57 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                         _validatedFeed = null;
                         _nextcloudServerInfo = null;
                         _validatedRssFeed = null;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Synology credentials
+              if (_catalogType == CatalogType.synology) ...[
+                AdaptiveTextField(
+                  controller: _usernameController,
+                  focusNode: _usernameFocusNode,
+                  label: 'Username',
+                  placeholder: 'Your Synology username',
+                  prefixIcon: Icons.person,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.none,
+                  validator: (value) {
+                    if (_catalogType == CatalogType.synology &&
+                        (value == null || value.trim().isEmpty)) {
+                      return 'Username is required';
+                    }
+                    return null;
+                  },
+                  onChanged: (_) {
+                    if (_isValidated) {
+                      setState(() {
+                        _isValidated = false;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                AdaptiveTextField(
+                  controller: _passwordController,
+                  focusNode: _passwordFocusNode,
+                  label: 'Password',
+                  placeholder: 'Your Synology password',
+                  prefixIcon: Icons.lock,
+                  obscureText: true,
+                  validator: (value) {
+                    if (_catalogType == CatalogType.synology &&
+                        (value == null || value.trim().isEmpty)) {
+                      return 'Password is required';
+                    }
+                    return null;
+                  },
+                  onChanged: (_) {
+                    if (_isValidated) {
+                      setState(() {
+                        _isValidated = false;
                       });
                     }
                   },
@@ -887,6 +968,36 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                       Expanded(
                         child: Text(
                           'Connected to Fanfiction.de',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              // Synology validation success
+              if (_isValidated && _catalogType == CatalogType.synology) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Connected to Synology Drive',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onPrimaryContainer,
                             fontWeight: FontWeight.w600,

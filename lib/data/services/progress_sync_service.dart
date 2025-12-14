@@ -199,6 +199,8 @@ class ProgressSyncService implements ProgressSyncProtocol {
         return plugin.id.contains('kavita');
       case CatalogType.nextcloud:
         return plugin.id.contains('nextcloud');
+      case CatalogType.synology:
+        return plugin.id.contains('synology');
       case CatalogType.opds:
       case CatalogType.rss:
       case CatalogType.fanfiction:

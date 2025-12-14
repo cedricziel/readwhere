@@ -30,6 +30,8 @@ workspace:
   - packages/readwhere_fanfictionde_plugin
   - packages/readwhere_pdf
   - packages/readwhere_pdf_plugin
+  - packages/readwhere_synology
+  - packages/readwhere_synology_plugin
   - widgetbook
 
 dependencies:
@@ -131,6 +133,12 @@ dependencies:
     path: packages/readwhere_pdf
   readwhere_pdf_plugin:
     path: packages/readwhere_pdf_plugin
+
+  # Synology Drive Integration
+  readwhere_synology:
+    path: packages/readwhere_synology
+  readwhere_synology_plugin:
+    path: packages/readwhere_synology_plugin
 
   # Networking
   http: ^1.6.0

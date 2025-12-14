@@ -4,6 +4,7 @@ import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 import 'package:readwhere_rss/readwhere_rss.dart';
+import 'package:readwhere_synology/readwhere_synology.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../data/adapters/catalog_info_adapter.dart';
@@ -21,12 +22,14 @@ import '../../domain/repositories/catalog_repository.dart';
 /// - [OpdsProvider] for OPDS catalogs
 /// - [KavitaProvider] for Kavita servers
 /// - [NextcloudProvider] for Nextcloud servers
+/// - [SynologyProvider] for Synology NAS
 class CatalogsProvider extends ChangeNotifier {
   final CatalogRepository _catalogRepository;
   final OpdsClient _opdsClient;
   final KavitaApiClient _kavitaApiClient;
   final RssClient _rssClient;
   final NextcloudProvider? _nextcloudProvider;
+  final SynologyProvider? _synologyProvider;
   final NextcloudCredentialStorage? _credentialStorage;
   final UnifiedPluginRegistry? _pluginRegistry;
 
@@ -36,6 +39,7 @@ class CatalogsProvider extends ChangeNotifier {
     required KavitaApiClient kavitaApiClient,
     required RssClient rssClient,
     NextcloudProvider? nextcloudProvider,
+    SynologyProvider? synologyProvider,
     NextcloudCredentialStorage? credentialStorage,
     UnifiedPluginRegistry? pluginRegistry,
   }) : _catalogRepository = catalogRepository,
@@ -43,6 +47,7 @@ class CatalogsProvider extends ChangeNotifier {
        _kavitaApiClient = kavitaApiClient,
        _rssClient = rssClient,
        _nextcloudProvider = nextcloudProvider,
+       _synologyProvider = synologyProvider,
        _credentialStorage = credentialStorage,
        _pluginRegistry = pluginRegistry;
 
@@ -198,6 +203,64 @@ class CatalogsProvider extends ChangeNotifier {
     }
   }
 
+  /// Add a new Synology Drive catalog
+  Future<Catalog?> addSynologyCatalog({
+    required String name,
+    required String url,
+    required String username,
+    required String password,
+    String? booksFolder,
+  }) async {
+    debugPrint('addSynologyCatalog: name=$name, url=$url, username=$username');
+
+    if (_synologyProvider == null) {
+      debugPrint('addSynologyCatalog: Synology provider is null!');
+      _error = 'Synology service not available';
+      notifyListeners();
+      return null;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final id = const Uuid().v4();
+      debugPrint('addSynologyCatalog: Generated ID: $id');
+
+      // Store credentials securely via provider
+      await _synologyProvider.storeCredentials(id, username, password);
+      debugPrint('addSynologyCatalog: Stored credentials');
+
+      final catalog = Catalog(
+        id: id,
+        name: name,
+        url: url,
+        type: CatalogType.synology,
+        addedAt: DateTime.now(),
+        username: username,
+        booksFolder: booksFolder ?? '/mydrive',
+      );
+
+      debugPrint('addSynologyCatalog: Inserting catalog into repository...');
+      await _catalogRepository.insert(catalog);
+      _catalogs = await _catalogRepository.getAll();
+      debugPrint(
+        'addSynologyCatalog: Success! Total catalogs: ${_catalogs.length}',
+      );
+
+      return catalog;
+    } catch (e, stackTrace) {
+      debugPrint('addSynologyCatalog ERROR: $e');
+      debugPrint('Stack trace: $stackTrace');
+      _error = 'Failed to add Synology catalog: $e';
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   /// Generic add catalog (internal)
   Future<Catalog?> _addCatalog({
     required String name,
@@ -275,6 +338,11 @@ class CatalogsProvider extends ChangeNotifier {
       // Delete associated credentials for Nextcloud
       if (catalog.type == CatalogType.nextcloud && _credentialStorage != null) {
         await _credentialStorage.deleteCredentials(id);
+      }
+
+      // Delete associated credentials for Synology
+      if (catalog.type == CatalogType.synology && _synologyProvider != null) {
+        await _synologyProvider.clearCredentials(id);
       }
 
       final success = await _catalogRepository.delete(id);
@@ -367,6 +435,35 @@ class CatalogsProvider extends ChangeNotifier {
         serverUrl,
         username,
         appPassword,
+      );
+    } catch (e) {
+      _error = 'Validation failed: $e';
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Validate Synology Drive server credentials
+  Future<void> validateSynology(
+    String serverUrl,
+    String username,
+    String password,
+  ) async {
+    if (_synologyProvider == null) {
+      throw SynologyException('Synology service not available');
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _synologyProvider.validateCredentials(
+        serverUrl,
+        username,
+        password,
       );
     } catch (e) {
       _error = 'Validation failed: $e';
@@ -480,6 +577,19 @@ class CatalogsProvider extends ChangeNotifier {
           return ValidationResult.failure(
             error: 'Fanfiction.de plugin not available',
             errorCode: 'plugin_not_available',
+          );
+
+        case CatalogType.synology:
+          if (_synologyProvider == null || catalog.username == null) {
+            return ValidationResult.failure(
+              error: 'Synology service or credentials not available',
+              errorCode: 'missing_credentials',
+            );
+          }
+          // Synology validation requires password from secure storage
+          return ValidationResult.failure(
+            error: 'Use validateSynology() for Synology catalogs',
+            errorCode: 'use_legacy_method',
           );
       }
     } catch (e) {
