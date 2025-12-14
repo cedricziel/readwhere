@@ -1,6 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:readwhere/domain/entities/book.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
+
+export 'platform_test_helpers.dart';
 
 /// Creates a MaterialApp wrapper for widget testing
 ///
@@ -123,11 +127,16 @@ Book createTestDrmBook({
 
 /// Standard screen sizes for responsive testing
 class TestScreenSizes {
+  TestScreenSizes._();
+
   /// Mobile phone screen (iPhone SE size)
   static const Size mobile = Size(375, 667);
 
-  /// Mobile phone screen (larger)
-  static const Size mobileLarge = Size(414, 896);
+  /// Mobile phone screen (larger, iPhone 13/14 size)
+  static const Size mobileLarge = Size(390, 844);
+
+  /// Mobile phone screen (iPhone 13/14 Pro Max)
+  static const Size mobileXLarge = Size(414, 896);
 
   /// Tablet screen (iPad)
   static const Size tablet = Size(768, 1024);
@@ -149,4 +158,56 @@ class TestScreenSizes {
 
   /// Breakpoint just at desktop threshold (>= 1200)
   static const Size atDesktop = Size(1200, 800);
+
+  /// Default test size - iPhone 13 dimensions
+  static const Size defaultTest = Size(375, 812);
+}
+
+/// Sets a consistent test screen size for the duration of the test.
+///
+/// This helps avoid layout issues that occur due to different default
+/// screen sizes on different CI platforms (e.g., Linux vs macOS).
+///
+/// Example:
+/// ```dart
+/// testWidgets('context menu fits on screen', (tester) async {
+///   await setTestScreenSize(tester);
+///   // test code...
+/// });
+/// ```
+Future<void> setTestScreenSize(
+  WidgetTester tester, {
+  Size size = TestScreenSizes.defaultTest,
+}) async {
+  await tester.binding.setSurfaceSize(size);
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+}
+
+/// Sets up both platform and screen size for a test.
+///
+/// Convenience method that combines platform override with screen size setup.
+///
+/// Example:
+/// ```dart
+/// testWidgets('shows iOS layout on phone', (tester) async {
+///   await setupTestEnvironment(
+///     tester,
+///     platform: TargetPlatform.iOS,
+///     screenSize: TestScreenSizes.mobile,
+///   );
+///   // test code...
+/// });
+/// ```
+Future<void> setupTestEnvironment(
+  WidgetTester tester, {
+  TargetPlatform? platform,
+  Size? screenSize,
+}) async {
+  if (platform != null) {
+    debugDefaultTargetPlatformOverride = platform;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+  }
+  if (screenSize != null) {
+    await setTestScreenSize(tester, size: screenSize);
+  }
 }
