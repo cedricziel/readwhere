@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 
 import '../../../../domain/entities/catalog.dart';
+import '../../../widgets/adaptive/adaptive_button.dart';
 
 /// Dialog for browsing and selecting a folder on Nextcloud
 ///
@@ -214,11 +215,11 @@ class _NextcloudFolderPickerDialogState
           ),
         ),
         actions: [
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancel'),
           ),
-          FilledButton(
+          AdaptiveFilledButton(
             onPressed: () {
               if (formKey.currentState?.validate() ?? false) {
                 Navigator.of(context).pop(controller.text.trim());
@@ -314,11 +315,11 @@ class _NextcloudFolderPickerDialogState
         ),
       ),
       actions: [
-        TextButton(
+        AdaptiveTextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(
+        AdaptiveFilledButton(
           onPressed: () => Navigator.of(context).pop(_currentPath),
           child: const Text('Select This Folder'),
         ),
@@ -489,16 +490,28 @@ class _NextcloudFolderPickerDialogState
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (_pathStack.length > 1)
-                  OutlinedButton.icon(
+                  AdaptiveOutlinedButton(
                     onPressed: _navigateBack,
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Go Back'),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.arrow_back),
+                        SizedBox(width: 8),
+                        Text('Go Back'),
+                      ],
+                    ),
                   ),
                 if (_pathStack.length > 1) const SizedBox(width: 8),
-                FilledButton.icon(
+                AdaptiveFilledButton(
                   onPressed: _loadDirectory,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.refresh),
+                      SizedBox(width: 8),
+                      Text('Retry'),
+                    ],
+                  ),
                 ),
               ],
             ),

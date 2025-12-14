@@ -7,6 +7,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/catalog.dart';
 import '../../providers/catalogs_provider.dart';
 import '../../router/routes.dart';
+import '../../widgets/adaptive/adaptive_button.dart';
 import '../../widgets/adaptive/responsive_layout.dart';
 import 'widgets/add_catalog_dialog.dart';
 import 'widgets/catalog_card.dart';
@@ -78,13 +79,13 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
           'Books you\'ve downloaded will remain in your library.',
         ),
         actions: [
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            isDestructive: true,
             child: const Text('Remove'),
           ),
         ],

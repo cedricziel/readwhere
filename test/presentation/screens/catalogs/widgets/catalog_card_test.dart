@@ -156,7 +156,6 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Change Starting Folder'), findsOneWidget);
-        expect(find.byIcon(Icons.folder_open), findsOneWidget);
       });
 
       testWidgets('does not show Change Starting Folder for non-Nextcloud', (

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../domain/entities/catalog.dart';
+import '../../../widgets/adaptive/adaptive_action_sheet.dart';
+import '../../../widgets/adaptive/adaptive_button.dart';
 
 /// A card widget displaying a catalog (server) entry
 class CatalogCard extends StatelessWidget {
@@ -112,42 +114,37 @@ class CatalogCard extends StatelessWidget {
                 ),
               ),
               // Menu button
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
-                  switch (value) {
-                    case 'change_folder':
-                      onChangeFolder?.call();
-                      break;
-                    case 'delete':
-                      onDelete();
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  if (catalog.isNextcloud && onChangeFolder != null)
-                    const PopupMenuItem(
-                      value: 'change_folder',
-                      child: ListTile(
-                        leading: Icon(Icons.folder_open),
-                        title: Text('Change Starting Folder'),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: ListTile(
-                      leading: Icon(Icons.delete_outline, color: Colors.red),
-                      title: Text('Remove'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ],
+              AdaptiveIconButton(
+                icon: Icons.more_vert,
+                tooltip: 'Server options',
+                onPressed: () => _showContextMenu(context),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  /// Shows a context menu for server actions
+  void _showContextMenu(BuildContext context) {
+    AdaptiveActionSheet.show(
+      context: context,
+      title: catalog.name,
+      actions: [
+        if (catalog.isNextcloud && onChangeFolder != null)
+          AdaptiveActionSheetAction(
+            label: 'Change Starting Folder',
+            icon: Icons.folder_open,
+            onPressed: () => onChangeFolder!(),
+          ),
+        AdaptiveActionSheetAction(
+          label: 'Remove',
+          icon: Icons.delete_outline,
+          isDestructive: true,
+          onPressed: onDelete,
+        ),
+      ],
     );
   }
 

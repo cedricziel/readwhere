@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../domain/entities/catalog.dart';
 import '../../../providers/catalogs_provider.dart';
+import '../../../widgets/adaptive/adaptive_button.dart';
 import 'nextcloud_folder_picker_dialog.dart';
 
 /// Dialog for adding a new catalog (server) connection
@@ -933,17 +934,17 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        AdaptiveTextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(
+        AdaptiveFilledButton(
           onPressed: _isValidated && !_isValidating ? _save : null,
           child: _isValidating && _isValidated
               ? const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                 )
               : Text(
                   _catalogType == CatalogType.rss ? 'Subscribe' : 'Add Server',
