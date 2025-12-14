@@ -157,77 +157,87 @@ class _NextcloudCatalogSettingsDialogState
 
     return AlertDialog.adaptive(
       title: Text(_catalog.name),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Starting folder section
-            Text('Starting Folder', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: _openFolderPicker,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: theme.colorScheme.outline),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.folder, color: theme.colorScheme.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _catalog.booksFolder?.isNotEmpty == true
-                            ? _catalog.booksFolder!
-                            : '/ (Home)',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: theme.colorScheme.outline),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // News sync section
-            Text('RSS Feeds from News App', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
-            _buildNewsSyncSection(theme),
-
-            // Error message
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      color: theme.colorScheme.onErrorContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _error!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onErrorContainer,
+      content: Material(
+        // Material wrapper needed for InkWell inside CupertinoAlertDialog
+        type: MaterialType.transparency,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Starting folder section
+              Text('Starting Folder', style: theme.textTheme.labelLarge),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: _openFolderPicker,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: theme.colorScheme.outline),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.folder, color: theme.colorScheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _catalog.booksFolder?.isNotEmpty == true
+                              ? _catalog.booksFolder!
+                              : '/ (Home)',
+                          style: theme.textTheme.bodyMedium,
                         ),
                       ),
-                    ),
-                  ],
+                      Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.outline,
+                      ),
+                    ],
+                  ),
                 ),
               ),
+
+              const SizedBox(height: 24),
+
+              // News sync section
+              Text(
+                'RSS Feeds from News App',
+                style: theme.textTheme.labelLarge,
+              ),
+              const SizedBox(height: 8),
+              _buildNewsSyncSection(theme),
+
+              // Error message
+              if (_error != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: theme.colorScheme.onErrorContainer,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _error!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
       actions: [

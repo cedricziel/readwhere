@@ -301,17 +301,21 @@ class _NextcloudFolderPickerDialogState
     return AlertDialog.adaptive(
       title: const Text('Select Starting Folder'),
       contentPadding: EdgeInsets.zero,
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 400,
-        child: Column(
-          children: [
-            // Breadcrumbs
-            _buildBreadcrumbs(theme),
-            const Divider(height: 1),
-            // Content
-            Expanded(child: _buildContent(theme)),
-          ],
+      content: Material(
+        // Material wrapper needed for InkWell/ListTile inside CupertinoAlertDialog
+        type: MaterialType.transparency,
+        child: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: Column(
+            children: [
+              // Breadcrumbs
+              _buildBreadcrumbs(theme),
+              const Divider(height: 1),
+              // Content
+              Expanded(child: _buildContent(theme)),
+            ],
+          ),
         ),
       ),
       actions: [

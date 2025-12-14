@@ -437,660 +437,666 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
 
     return AlertDialog.adaptive(
       title: Text(dialogTitle),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Server type selection (hidden when called from FeedsScreen)
-              if (widget.showTypeSelector) ...[
-                Text('Server Type', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                SegmentedButton<CatalogType>(
-                  segments: const [
-                    ButtonSegment(
-                      value: CatalogType.rss,
-                      label: Text('RSS'),
-                      icon: Icon(Icons.rss_feed),
-                    ),
-                    ButtonSegment(
-                      value: CatalogType.kavita,
-                      label: Text('Kavita'),
-                      icon: Icon(Icons.menu_book),
-                    ),
-                    ButtonSegment(
-                      value: CatalogType.nextcloud,
-                      label: Text('Nextcloud'),
-                      icon: Icon(Icons.cloud),
-                    ),
-                    ButtonSegment(
-                      value: CatalogType.synology,
-                      label: Text('Synology'),
-                      icon: Icon(Icons.storage),
-                    ),
-                    ButtonSegment(
-                      value: CatalogType.opds,
-                      label: Text('OPDS'),
-                      icon: Icon(Icons.public),
-                    ),
-                    ButtonSegment(
-                      value: CatalogType.fanfiction,
-                      label: Text('Fanfiction'),
-                      icon: Icon(Icons.auto_stories),
-                    ),
-                  ],
-                  selected: {_catalogType},
-                  onSelectionChanged: (selected) {
-                    _cancelOAuth();
-                    setState(() {
-                      _catalogType = selected.first;
-                      _isValidated = false;
-                      _validatedFeed = null;
-                      _nextcloudServerInfo = null;
-                      _validatedRssFeed = null;
-                      _validationError = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Server URL (not shown for fanfiction.de which has a fixed URL)
-              if (_catalogType != CatalogType.fanfiction) ...[
-                AdaptiveTextField(
-                  controller: _urlController,
-                  focusNode: _urlFocusNode,
-                  autofocus: true,
-                  label: _catalogType == CatalogType.rss
-                      ? 'Feed URL'
-                      : 'Server URL',
-                  placeholder: _catalogType == CatalogType.rss
-                      ? 'https://example.com/feed.xml'
-                      : _catalogType == CatalogType.kavita
-                      ? 'https://your-kavita-server.com'
-                      : _catalogType == CatalogType.nextcloud
-                      ? 'https://your-nextcloud.com'
-                      : _catalogType == CatalogType.synology
-                      ? 'https://your-synology-nas:5001'
-                      : 'https://catalog.example.com/opds',
-                  prefixIcon: Icons.link,
-                  keyboardType: TextInputType.url,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return _catalogType == CatalogType.rss
-                          ? 'Feed URL is required'
-                          : 'Server URL is required';
-                    }
-                    if (!value.startsWith('http://') &&
-                        !value.startsWith('https://')) {
-                      return 'URL must start with http:// or https://';
-                    }
-                    return null;
-                  },
-                  onChanged: (_) {
-                    if (_isValidated) {
+      content: Material(
+        // Material wrapper for SegmentedButton and other Material widgets
+        type: MaterialType.transparency,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Server type selection (hidden when called from FeedsScreen)
+                if (widget.showTypeSelector) ...[
+                  Text('Server Type', style: theme.textTheme.labelLarge),
+                  const SizedBox(height: 8),
+                  SegmentedButton<CatalogType>(
+                    segments: const [
+                      ButtonSegment(
+                        value: CatalogType.rss,
+                        label: Text('RSS'),
+                        icon: Icon(Icons.rss_feed),
+                      ),
+                      ButtonSegment(
+                        value: CatalogType.kavita,
+                        label: Text('Kavita'),
+                        icon: Icon(Icons.menu_book),
+                      ),
+                      ButtonSegment(
+                        value: CatalogType.nextcloud,
+                        label: Text('Nextcloud'),
+                        icon: Icon(Icons.cloud),
+                      ),
+                      ButtonSegment(
+                        value: CatalogType.synology,
+                        label: Text('Synology'),
+                        icon: Icon(Icons.storage),
+                      ),
+                      ButtonSegment(
+                        value: CatalogType.opds,
+                        label: Text('OPDS'),
+                        icon: Icon(Icons.public),
+                      ),
+                      ButtonSegment(
+                        value: CatalogType.fanfiction,
+                        label: Text('Fanfiction'),
+                        icon: Icon(Icons.auto_stories),
+                      ),
+                    ],
+                    selected: {_catalogType},
+                    onSelectionChanged: (selected) {
+                      _cancelOAuth();
                       setState(() {
+                        _catalogType = selected.first;
                         _isValidated = false;
                         _validatedFeed = null;
                         _nextcloudServerInfo = null;
                         _validatedRssFeed = null;
+                        _validationError = null;
                       });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Synology credentials
-              if (_catalogType == CatalogType.synology) ...[
-                AdaptiveTextField(
-                  controller: _usernameController,
-                  focusNode: _usernameFocusNode,
-                  label: 'Username',
-                  placeholder: 'Your Synology username',
-                  prefixIcon: Icons.person,
-                  textInputAction: TextInputAction.next,
-                  textCapitalization: TextCapitalization.none,
-                  validator: (value) {
-                    if (_catalogType == CatalogType.synology &&
-                        (value == null || value.trim().isEmpty)) {
-                      return 'Username is required';
-                    }
-                    return null;
-                  },
-                  onChanged: (_) {
-                    if (_isValidated) {
-                      setState(() {
-                        _isValidated = false;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                AdaptiveTextField(
-                  controller: _passwordController,
-                  focusNode: _passwordFocusNode,
-                  label: 'Password',
-                  placeholder: 'Your Synology password',
-                  prefixIcon: Icons.lock,
-                  obscureText: true,
-                  validator: (value) {
-                    if (_catalogType == CatalogType.synology &&
-                        (value == null || value.trim().isEmpty)) {
-                      return 'Password is required';
-                    }
-                    return null;
-                  },
-                  onChanged: (_) {
-                    if (_isValidated) {
-                      setState(() {
-                        _isValidated = false;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Nextcloud credentials
-              if (_catalogType == CatalogType.nextcloud) ...[
-                // OAuth login button
-                if (!_isOAuthPolling && !_isValidated) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _isValidating ? null : _startOAuthFlow,
-                      icon: const Icon(Icons.open_in_browser),
-                      label: const Text('Login with Browser'),
-                    ),
+                    },
                   ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: Text(
-                      'or enter credentials manually',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.outline,
+                  const SizedBox(height: 16),
+                ],
+
+                // Server URL (not shown for fanfiction.de which has a fixed URL)
+                if (_catalogType != CatalogType.fanfiction) ...[
+                  AdaptiveTextField(
+                    controller: _urlController,
+                    focusNode: _urlFocusNode,
+                    autofocus: true,
+                    label: _catalogType == CatalogType.rss
+                        ? 'Feed URL'
+                        : 'Server URL',
+                    placeholder: _catalogType == CatalogType.rss
+                        ? 'https://example.com/feed.xml'
+                        : _catalogType == CatalogType.kavita
+                        ? 'https://your-kavita-server.com'
+                        : _catalogType == CatalogType.nextcloud
+                        ? 'https://your-nextcloud.com'
+                        : _catalogType == CatalogType.synology
+                        ? 'https://your-synology-nas:5001'
+                        : 'https://catalog.example.com/opds',
+                    prefixIcon: Icons.link,
+                    keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return _catalogType == CatalogType.rss
+                            ? 'Feed URL is required'
+                            : 'Server URL is required';
+                      }
+                      if (!value.startsWith('http://') &&
+                          !value.startsWith('https://')) {
+                        return 'URL must start with http:// or https://';
+                      }
+                      return null;
+                    },
+                    onChanged: (_) {
+                      if (_isValidated) {
+                        setState(() {
+                          _isValidated = false;
+                          _validatedFeed = null;
+                          _nextcloudServerInfo = null;
+                          _validatedRssFeed = null;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Synology credentials
+                if (_catalogType == CatalogType.synology) ...[
+                  AdaptiveTextField(
+                    controller: _usernameController,
+                    focusNode: _usernameFocusNode,
+                    label: 'Username',
+                    placeholder: 'Your Synology username',
+                    prefixIcon: Icons.person,
+                    textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.none,
+                    validator: (value) {
+                      if (_catalogType == CatalogType.synology &&
+                          (value == null || value.trim().isEmpty)) {
+                        return 'Username is required';
+                      }
+                      return null;
+                    },
+                    onChanged: (_) {
+                      if (_isValidated) {
+                        setState(() {
+                          _isValidated = false;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  AdaptiveTextField(
+                    controller: _passwordController,
+                    focusNode: _passwordFocusNode,
+                    label: 'Password',
+                    placeholder: 'Your Synology password',
+                    prefixIcon: Icons.lock,
+                    obscureText: true,
+                    validator: (value) {
+                      if (_catalogType == CatalogType.synology &&
+                          (value == null || value.trim().isEmpty)) {
+                        return 'Password is required';
+                      }
+                      return null;
+                    },
+                    onChanged: (_) {
+                      if (_isValidated) {
+                        setState(() {
+                          _isValidated = false;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Nextcloud credentials
+                if (_catalogType == CatalogType.nextcloud) ...[
+                  // OAuth login button
+                  if (!_isOAuthPolling && !_isValidated) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _isValidating ? null : _startOAuthFlow,
+                        icon: const Icon(Icons.open_in_browser),
+                        label: const Text('Login with Browser'),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Text(
+                        'or enter credentials manually',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  // OAuth polling indicator
+                  if (_isOAuthPolling) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Waiting for browser login...',
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: _cancelOAuth,
+                            child: const Text('Cancel'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Username field
+                  AdaptiveTextField(
+                    controller: _usernameController,
+                    focusNode: _usernameFocusNode,
+                    label: 'Username',
+                    placeholder: 'Your Nextcloud username',
+                    prefixIcon: Icons.person,
+                    textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.none,
+                    enabled: !_isOAuthPolling,
+                    validator: (value) {
+                      if (_catalogType == CatalogType.nextcloud &&
+                          (value == null || value.trim().isEmpty)) {
+                        return 'Username is required';
+                      }
+                      return null;
+                    },
+                    onChanged: (_) {
+                      if (_isValidated) {
+                        setState(() {
+                          _isValidated = false;
+                          _nextcloudServerInfo = null;
+                        });
+                      }
+                    },
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
+                  // App password field
+                  AdaptiveTextField(
+                    controller: _passwordController,
+                    focusNode: _passwordFocusNode,
+                    label: 'App Password',
+                    placeholder: 'Generate in Nextcloud settings',
+                    prefixIcon: Icons.key,
+                    helperText: 'Settings > Security > App passwords',
+                    obscureText: true,
+                    enabled: !_isOAuthPolling,
+                    validator: (value) {
+                      if (_catalogType == CatalogType.nextcloud &&
+                          (value == null || value.trim().isEmpty)) {
+                        return 'App password is required';
+                      }
+                      return null;
+                    },
+                    onChanged: (_) {
+                      if (_isValidated) {
+                        setState(() {
+                          _isValidated = false;
+                          _nextcloudServerInfo = null;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
                 ],
-                // OAuth polling indicator
-                if (_isOAuthPolling) ...[
+
+                // API Key (for Kavita)
+                if (_catalogType == CatalogType.kavita) ...[
+                  AdaptiveTextField(
+                    controller: _apiKeyController,
+                    focusNode: _apiKeyFocusNode,
+                    label: 'OPDS API Key',
+                    placeholder: 'Your Kavita OPDS API key',
+                    prefixIcon: Icons.key,
+                    helperText:
+                        'Find this in Kavita: Settings > API Key > OPDS',
+                    obscureText: true,
+                    validator: (value) {
+                      if (_catalogType == CatalogType.kavita &&
+                          (value == null || value.trim().isEmpty)) {
+                        return 'API key is required for Kavita';
+                      }
+                      return null;
+                    },
+                    onChanged: (_) {
+                      if (_isValidated) {
+                        setState(() {
+                          _isValidated = false;
+                          _validatedFeed = null;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Validation button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _isValidating ? null : _validateConnection,
+                    icon: _isValidating
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(
+                            _isValidated ? Icons.check_circle : Icons.wifi_find,
+                          ),
+                    label: Text(
+                      _isValidating
+                          ? 'Connecting...'
+                          : _isValidated
+                          ? 'Connection Verified'
+                          : 'Test Connection',
+                    ),
+                  ),
+                ),
+
+                // Validation result
+                if (_validationError != null) ...[
+                  const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
+                      color: theme.colorScheme.errorContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                        Icon(
+                          Icons.error_outline,
+                          color: theme.colorScheme.onErrorContainer,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Waiting for browser login...',
-                            style: theme.textTheme.bodySmall,
+                            _validationError!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
                           ),
-                        ),
-                        TextButton(
-                          onPressed: _cancelOAuth,
-                          child: const Text('Cancel'),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
                 ],
-                // Username field
-                AdaptiveTextField(
-                  controller: _usernameController,
-                  focusNode: _usernameFocusNode,
-                  label: 'Username',
-                  placeholder: 'Your Nextcloud username',
-                  prefixIcon: Icons.person,
-                  textInputAction: TextInputAction.next,
-                  textCapitalization: TextCapitalization.none,
-                  enabled: !_isOAuthPolling,
-                  validator: (value) {
-                    if (_catalogType == CatalogType.nextcloud &&
-                        (value == null || value.trim().isEmpty)) {
-                      return 'Username is required';
-                    }
-                    return null;
-                  },
-                  onChanged: (_) {
-                    if (_isValidated) {
-                      setState(() {
-                        _isValidated = false;
-                        _nextcloudServerInfo = null;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                // App password field
-                AdaptiveTextField(
-                  controller: _passwordController,
-                  focusNode: _passwordFocusNode,
-                  label: 'App Password',
-                  placeholder: 'Generate in Nextcloud settings',
-                  prefixIcon: Icons.key,
-                  helperText: 'Settings > Security > App passwords',
-                  obscureText: true,
-                  enabled: !_isOAuthPolling,
-                  validator: (value) {
-                    if (_catalogType == CatalogType.nextcloud &&
-                        (value == null || value.trim().isEmpty)) {
-                      return 'App password is required';
-                    }
-                    return null;
-                  },
-                  onChanged: (_) {
-                    if (_isValidated) {
-                      setState(() {
-                        _isValidated = false;
-                        _nextcloudServerInfo = null;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
 
-              // API Key (for Kavita)
-              if (_catalogType == CatalogType.kavita) ...[
-                AdaptiveTextField(
-                  controller: _apiKeyController,
-                  focusNode: _apiKeyFocusNode,
-                  label: 'OPDS API Key',
-                  placeholder: 'Your Kavita OPDS API key',
-                  prefixIcon: Icons.key,
-                  helperText: 'Find this in Kavita: Settings > API Key > OPDS',
-                  obscureText: true,
-                  validator: (value) {
-                    if (_catalogType == CatalogType.kavita &&
-                        (value == null || value.trim().isEmpty)) {
-                      return 'API key is required for Kavita';
-                    }
-                    return null;
-                  },
-                  onChanged: (_) {
-                    if (_isValidated) {
-                      setState(() {
-                        _isValidated = false;
-                        _validatedFeed = null;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Validation button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _isValidating ? null : _validateConnection,
-                  icon: _isValidating
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          _isValidated ? Icons.check_circle : Icons.wifi_find,
-                        ),
-                  label: Text(
-                    _isValidating
-                        ? 'Connecting...'
-                        : _isValidated
-                        ? 'Connection Verified'
-                        : 'Test Connection',
-                  ),
-                ),
-              ),
-
-              // Validation result
-              if (_validationError != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: theme.colorScheme.onErrorContainer,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _validationError!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onErrorContainer,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              // OPDS/Kavita validation success
-              if (_isValidated && _validatedFeed != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Connected to: ${_validatedFeed!.title}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.w600,
+                // OPDS/Kavita validation success
+                if (_isValidated && _validatedFeed != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Connected to: ${_validatedFeed!.title}',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
+                            ),
+                          ],
+                        ),
+                        if (_validatedFeed!.subtitle != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            _validatedFeed!.subtitle!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
                         ],
-                      ),
-                      if (_validatedFeed!.subtitle != null) ...[
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Nextcloud validation success
+                if (_isValidated && _nextcloudServerInfo != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Connected to: ${_nextcloudServerInfo!.serverName}',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 4),
                         Text(
-                          _validatedFeed!.subtitle!,
+                          'User: ${_nextcloudServerInfo!.displayName}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                        Text(
+                          'Version: ${_nextcloudServerInfo!.version}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
 
-              // Nextcloud validation success
-              if (_isValidated && _nextcloudServerInfo != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
+                // Books folder field for Nextcloud (shown after validation)
+                if (_isValidated && _catalogType == CatalogType.nextcloud) ...[
+                  const SizedBox(height: 16),
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Connected to: ${_nextcloudServerInfo!.serverName}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'User: ${_nextcloudServerInfo!.displayName}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer,
+                      Expanded(
+                        child: AdaptiveTextField(
+                          controller: _booksFolderController,
+                          readOnly: true,
+                          label: 'Starting Folder',
+                          placeholder: '/',
+                          prefixIcon: Icons.folder,
+                          helperText: 'Browse to select a folder',
+                          suffix: _booksFolderController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    setState(() {
+                                      _booksFolderController.clear();
+                                    });
+                                  },
+                                  tooltip: 'Reset to root',
+                                )
+                              : null,
+                          onTap: _openFolderPicker,
                         ),
                       ),
-                      Text(
-                        'Version: ${_nextcloudServerInfo!.version}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer,
+                      const SizedBox(width: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: IconButton.filled(
+                          icon: const Icon(Icons.folder_open),
+                          tooltip: 'Browse folders',
+                          onPressed: _openFolderPicker,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
 
-              // Books folder field for Nextcloud (shown after validation)
-              if (_isValidated && _catalogType == CatalogType.nextcloud) ...[
-                const SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: AdaptiveTextField(
-                        controller: _booksFolderController,
-                        readOnly: true,
-                        label: 'Starting Folder',
-                        placeholder: '/',
-                        prefixIcon: Icons.folder,
-                        helperText: 'Browse to select a folder',
-                        suffix: _booksFolderController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  setState(() {
-                                    _booksFolderController.clear();
-                                  });
-                                },
-                                tooltip: 'Reset to root',
-                              )
-                            : null,
-                        onTap: _openFolderPicker,
-                      ),
+                // RSS validation success
+                if (_isValidated && _validatedRssFeed != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: IconButton.filled(
-                        icon: const Icon(Icons.folder_open),
-                        tooltip: 'Browse folders',
-                        onPressed: _openFolderPicker,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-
-              // RSS validation success
-              if (_isValidated && _validatedRssFeed != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Connected to: ${_validatedRssFeed!.title}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.w600,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Connected to: ${_validatedRssFeed!.title}',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
+                          ],
+                        ),
+                        if (_validatedRssFeed!.description != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            _validatedRssFeed!.description!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
-                      ),
-                      if (_validatedRssFeed!.description != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          _validatedRssFeed!.description!,
+                          '${_validatedRssFeed!.items.length} items',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onPrimaryContainer,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_validatedRssFeed!.items.length} items',
-                        style: theme.textTheme.bodySmall?.copyWith(
+                    ),
+                  ),
+                ],
+
+                // Fanfiction validation success
+                if (_isValidated && _catalogType == CatalogType.fanfiction) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle,
                           color: theme.colorScheme.onPrimaryContainer,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Connected to Fanfiction.de',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
 
-              // Fanfiction validation success
-              if (_isValidated && _catalogType == CatalogType.fanfiction) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
+                // Synology validation success
+                if (_isValidated && _catalogType == CatalogType.synology) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Connected to Synology Drive',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Row(
+                  // Folder picker for Synology
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: theme.colorScheme.onPrimaryContainer,
+                      Expanded(
+                        child: AdaptiveTextField(
+                          controller: _booksFolderController,
+                          readOnly: true,
+                          label: 'Starting Folder',
+                          placeholder: '/mydrive',
+                          prefixIcon: Icons.folder,
+                          helperText: 'Browse to select a folder',
+                          suffix:
+                              _booksFolderController.text.isNotEmpty &&
+                                  _booksFolderController.text != '/mydrive'
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    setState(() {
+                                      _booksFolderController.clear();
+                                    });
+                                  },
+                                  tooltip: 'Reset to My Drive',
+                                )
+                              : null,
+                          onTap: _openSynologyFolderPicker,
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Connected to Fanfiction.de',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: IconButton.filled(
+                          icon: const Icon(Icons.folder_open),
+                          tooltip: 'Browse folders',
+                          onPressed: _openSynologyFolderPicker,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
 
-              // Synology validation success
-              if (_isValidated && _catalogType == CatalogType.synology) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
+                // Server name
+                if (_isValidated) ...[
+                  const SizedBox(height: 16),
+                  AdaptiveTextField(
+                    controller: _nameController,
+                    focusNode: _nameFocusNode,
+                    label: 'Display Name',
+                    placeholder: 'My Kavita Server',
+                    prefixIcon: Icons.label_outline,
+                    textInputAction: TextInputAction.done,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Display name is required';
+                      }
+                      return null;
+                    },
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Connected to Synology Drive',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Folder picker for Synology
-                const SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: AdaptiveTextField(
-                        controller: _booksFolderController,
-                        readOnly: true,
-                        label: 'Starting Folder',
-                        placeholder: '/mydrive',
-                        prefixIcon: Icons.folder,
-                        helperText: 'Browse to select a folder',
-                        suffix: _booksFolderController.text.isNotEmpty &&
-                                _booksFolderController.text != '/mydrive'
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  setState(() {
-                                    _booksFolderController.clear();
-                                  });
-                                },
-                                tooltip: 'Reset to My Drive',
-                              )
-                            : null,
-                        onTap: _openSynologyFolderPicker,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: IconButton.filled(
-                        icon: const Icon(Icons.folder_open),
-                        tooltip: 'Browse folders',
-                        onPressed: _openSynologyFolderPicker,
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ],
-
-              // Server name
-              if (_isValidated) ...[
-                const SizedBox(height: 16),
-                AdaptiveTextField(
-                  controller: _nameController,
-                  focusNode: _nameFocusNode,
-                  label: 'Display Name',
-                  placeholder: 'My Kavita Server',
-                  prefixIcon: Icons.label_outline,
-                  textInputAction: TextInputAction.done,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Display name is required';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),

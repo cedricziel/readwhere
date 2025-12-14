@@ -86,8 +86,7 @@ class _SynologyFolderPickerDialogState
   @override
   void initState() {
     super.initState();
-    _currentPath =
-        widget.initialPath.isEmpty ? '/mydrive' : widget.initialPath;
+    _currentPath = widget.initialPath.isEmpty ? '/mydrive' : widget.initialPath;
     _pathStack = _buildPathStack(_currentPath);
     _authenticateAndLoad();
   }
@@ -158,8 +157,7 @@ class _SynologyFolderPickerDialogState
       if (!mounted) return;
 
       // Filter to only show directories
-      final folders =
-          result.items.where((f) => f.isDirectory).toList();
+      final folders = result.items.where((f) => f.isDirectory).toList();
 
       // Sort alphabetically
       folders.sort(
@@ -318,17 +316,21 @@ class _SynologyFolderPickerDialogState
     return AlertDialog.adaptive(
       title: const Text('Select Starting Folder'),
       contentPadding: EdgeInsets.zero,
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 400,
-        child: Column(
-          children: [
-            // Breadcrumbs
-            _buildBreadcrumbs(theme),
-            const Divider(height: 1),
-            // Content
-            Expanded(child: _buildContent(theme)),
-          ],
+      content: Material(
+        // Material wrapper needed for InkWell/ListTile inside CupertinoAlertDialog
+        type: MaterialType.transparency,
+        child: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: Column(
+            children: [
+              // Breadcrumbs
+              _buildBreadcrumbs(theme),
+              const Divider(height: 1),
+              // Content
+              Expanded(child: _buildContent(theme)),
+            ],
+          ),
         ),
       ),
       actions: [
