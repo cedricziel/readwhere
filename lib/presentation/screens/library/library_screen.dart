@@ -504,7 +504,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   /// Builds the books view based on the current view mode
   Widget _buildBooksView(LibraryProvider libraryProvider) {
-    return RefreshIndicator(
+    return RefreshIndicator.adaptive(
       onRefresh: () => _onPullToRefresh(libraryProvider),
       child: libraryProvider.viewMode == LibraryViewMode.grid
           ? _buildGridView(libraryProvider)

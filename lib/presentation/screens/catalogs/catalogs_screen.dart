@@ -263,7 +263,7 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
     final useGrid = context.isPhoneLandscape;
     final padding = context.spacingM;
 
-    return RefreshIndicator(
+    return RefreshIndicator.adaptive(
       onRefresh: () => provider.loadCatalogs(),
       child: useGrid
           ? GridView.builder(

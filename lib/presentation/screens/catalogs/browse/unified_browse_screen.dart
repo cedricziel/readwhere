@@ -279,7 +279,7 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
 
         // Content
         Expanded(
-          child: RefreshIndicator(
+          child: RefreshIndicator.adaptive(
             onRefresh: _onRefresh,
             child: ListView.builder(
               controller: _scrollController,

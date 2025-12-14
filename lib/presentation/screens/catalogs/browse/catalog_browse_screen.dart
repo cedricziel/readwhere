@@ -487,7 +487,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
       return _buildEmptyState();
     }
 
-    return RefreshIndicator(
+    return RefreshIndicator.adaptive(
       onRefresh: _refreshFeed,
       child: _isGridView
           ? _buildGridView(provider, feed.entries)

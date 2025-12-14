@@ -220,7 +220,7 @@ class _FeedsScreenState extends State<FeedsScreen> {
   }
 
   Widget _buildFeedList(CatalogsProvider provider, List<Catalog> feeds) {
-    return RefreshIndicator(
+    return RefreshIndicator.adaptive(
       onRefresh: () => provider.loadCatalogs(),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),

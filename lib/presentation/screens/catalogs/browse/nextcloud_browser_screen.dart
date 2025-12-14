@@ -271,7 +271,7 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
       return _buildEmptyState();
     }
 
-    return RefreshIndicator(
+    return RefreshIndicator.adaptive(
       onRefresh: _refresh,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
