@@ -233,9 +233,6 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
                       _currentSelection = selectedContent?.plainText;
                       _selectionChapterIndex =
                           readerProvider.currentChapterIndex;
-                      debugPrint(
-                        'Selection stored: ${_currentSelection?.length ?? 0} chars',
-                      );
                     }
                   : null,
               child: SingleChildScrollView(
@@ -571,8 +568,6 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
     String selectedText,
     int chapterIndex,
   ) {
-    debugPrint('_showAnnotationMenu called with: $selectedText');
-
     showModalBottomSheet(
       context: context,
       builder: (sheetContext) {
@@ -648,10 +643,7 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
     AnnotationProvider annotationProvider,
   ) {
     final annotation = annotationProvider.getAnnotation(annotationId);
-    if (annotation == null) {
-      debugPrint('Annotation not found: $annotationId');
-      return;
-    }
+    if (annotation == null) return;
 
     showModalBottomSheet(
       context: context,
@@ -970,10 +962,6 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
       if (regex.hasMatch(result)) {
         // Only replace the first occurrence to avoid highlighting duplicates
         result = result.replaceFirst(regex, '$markStart$text$markEnd');
-        debugPrint(
-          'Injected highlight for annotation ${annotation.id}: '
-          '"${text.length > 30 ? '${text.substring(0, 30)}...' : text}"',
-        );
       } else {
         // Try case-insensitive match as fallback
         final regexInsensitive = RegExp(escapedText, caseSensitive: false);
@@ -985,15 +973,7 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
               regexInsensitive,
               '$markStart$matchedText$markEnd',
             );
-            debugPrint(
-              'Injected highlight (case-insensitive) for ${annotation.id}',
-            );
           }
-        } else {
-          debugPrint(
-            'Could not find text for annotation ${annotation.id}: '
-            '"${text.length > 30 ? '${text.substring(0, 30)}...' : text}"',
-          );
         }
       }
     }
