@@ -828,9 +828,11 @@ class _AnnotationContextMenuBuilderState
     final selectedText = _selectedText!;
     final anchors = widget.selectableRegionState.contextMenuAnchors;
 
-    return Positioned(
-      top: anchors.primaryAnchor.dy,
-      left: anchors.primaryAnchor.dx,
+    // Use CustomSingleChildLayout to position the menu at the selection
+    return CustomSingleChildLayout(
+      delegate: _ContextMenuPositionDelegate(
+        anchor: anchors.primaryAnchor,
+      ),
       child: AnnotationContextMenu(
         selectedText: selectedText,
         onHighlight: (color) => _createHighlight(color, selectedText),
@@ -908,5 +910,46 @@ class _AnnotationContextMenuBuilderState
         duration: Duration(seconds: 1),
       ),
     );
+  }
+}
+
+/// Delegate for positioning the annotation context menu.
+///
+/// Positions the menu above the selection anchor point, centered horizontally.
+/// If there's not enough space above, it will position below.
+class _ContextMenuPositionDelegate extends SingleChildLayoutDelegate {
+  final Offset anchor;
+
+  _ContextMenuPositionDelegate({required this.anchor});
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    // Allow the menu to size itself
+    return BoxConstraints.loose(constraints.biggest);
+  }
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    // Position menu above the anchor, centered
+    double x = anchor.dx - (childSize.width / 2);
+    double y = anchor.dy - childSize.height - 8; // 8px gap above selection
+
+    // Keep menu within screen bounds
+    x = x.clamp(8.0, size.width - childSize.width - 8);
+
+    // If not enough space above, position below
+    if (y < 8) {
+      y = anchor.dy + 8;
+    }
+
+    // Ensure y is within bounds
+    y = y.clamp(8.0, size.height - childSize.height - 8);
+
+    return Offset(x, y);
+  }
+
+  @override
+  bool shouldRelayout(_ContextMenuPositionDelegate oldDelegate) {
+    return anchor != oldDelegate.anchor;
   }
 }
