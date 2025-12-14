@@ -10,6 +10,7 @@ class CatalogCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDelete;
   final VoidCallback? onChangeFolder;
+  final VoidCallback? onSettings;
 
   const CatalogCard({
     super.key,
@@ -17,6 +18,7 @@ class CatalogCard extends StatelessWidget {
     required this.onTap,
     required this.onDelete,
     this.onChangeFolder,
+    this.onSettings,
   });
 
   @override
@@ -132,7 +134,13 @@ class CatalogCard extends StatelessWidget {
       context: context,
       title: catalog.name,
       actions: [
-        if (catalog.isNextcloud && onChangeFolder != null)
+        if (catalog.isNextcloud && onSettings != null)
+          AdaptiveActionSheetAction(
+            label: 'Settings',
+            icon: Icons.settings,
+            onPressed: () => onSettings!(),
+          ),
+        if (catalog.isNextcloud && onChangeFolder != null && onSettings == null)
           AdaptiveActionSheetAction(
             label: 'Change Starting Folder',
             icon: Icons.folder_open,

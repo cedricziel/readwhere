@@ -11,7 +11,7 @@ import '../../widgets/adaptive/adaptive_button.dart';
 import '../../widgets/adaptive/responsive_layout.dart';
 import 'widgets/add_catalog_dialog.dart';
 import 'widgets/catalog_card.dart';
-import 'widgets/nextcloud_folder_picker_dialog.dart';
+import 'widgets/nextcloud_catalog_settings_dialog.dart';
 
 /// The catalogs screen for browsing OPDS catalogs and online book sources.
 ///
@@ -109,37 +109,19 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
     }
   }
 
-  Future<void> _changeFolder(Catalog catalog) async {
-    final newPath = await NextcloudFolderPickerDialog.showForExistingCatalog(
+  Future<void> _openSettings(Catalog catalog) async {
+    final result = await NextcloudCatalogSettingsDialog.show(
       context: context,
       catalog: catalog,
     );
 
-    if (newPath != null && mounted) {
-      // Skip update if same folder selected
-      if (newPath == catalog.booksFolder ||
-          (newPath == '/' &&
-              (catalog.booksFolder == null || catalog.booksFolder!.isEmpty))) {
-        return;
-      }
-
-      final updated = catalog.copyWith(
-        booksFolder: newPath == '/' ? '' : newPath,
+    if (result != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Settings updated for "${result.name}"'),
+          duration: const Duration(seconds: 2),
+        ),
       );
-      final provider = sl<CatalogsProvider>();
-      final result = await provider.updateCatalog(updated);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result != null
-                  ? 'Updated starting folder to "${newPath == '/' ? 'Home' : newPath}"'
-                  : 'Failed to update starting folder',
-            ),
-          ),
-        );
-      }
     }
   }
 
@@ -281,8 +263,8 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
                   catalog: catalog,
                   onTap: () => _openCatalog(catalog),
                   onDelete: () => _confirmDeleteCatalog(catalog),
-                  onChangeFolder: catalog.isNextcloud
-                      ? () => _changeFolder(catalog)
+                  onSettings: catalog.isNextcloud
+                      ? () => _openSettings(catalog)
                       : null,
                 );
               },
@@ -296,8 +278,8 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
                   catalog: catalog,
                   onTap: () => _openCatalog(catalog),
                   onDelete: () => _confirmDeleteCatalog(catalog),
-                  onChangeFolder: catalog.isNextcloud
-                      ? () => _changeFolder(catalog)
+                  onSettings: catalog.isNextcloud
+                      ? () => _openSettings(catalog)
                       : null,
                 );
               },
