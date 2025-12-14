@@ -167,6 +167,19 @@ class SyncQueueService {
     );
   }
 
+  /// Enqueue a Nextcloud News sync job
+  ///
+  /// Syncs RSS feeds and article state from Nextcloud News app.
+  /// Has low priority as it's not user-initiated.
+  Future<SyncJob> enqueueNextcloudNewsSync({required String catalogId}) async {
+    return enqueue(
+      type: SyncJobType.nextcloudNews,
+      targetId: catalogId,
+      payload: {'catalogId': catalogId},
+      priority: SyncJobPriority.low,
+    );
+  }
+
   /// Check if there are any pending jobs
   Future<bool> hasPendingJobs() async {
     final stats = await getStats();

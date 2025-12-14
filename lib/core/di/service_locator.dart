@@ -14,6 +14,8 @@ import 'package:readwhere_rss/readwhere_rss.dart';
 import 'package:readwhere_kavita_plugin/readwhere_kavita_plugin.dart';
 import 'package:readwhere_opds_plugin/readwhere_opds_plugin.dart';
 import 'package:readwhere_rss_plugin/readwhere_rss_plugin.dart';
+import 'package:readwhere_synology/readwhere_synology.dart';
+import 'package:readwhere_synology_plugin/readwhere_synology_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../background/background_executor.dart';
@@ -28,12 +30,14 @@ import '../../data/repositories/catalog_repository_impl.dart';
 import '../../data/repositories/opds_cache_repository_impl.dart';
 import '../../data/repositories/reading_progress_repository_impl.dart';
 import '../../data/repositories/sync_job_repository_impl.dart';
+import '../../data/repositories/nextcloud_news_mapping_repository_impl.dart';
 import '../../data/services/background_sync_manager.dart';
 import '../../data/services/book_import_service.dart';
 import '../../data/services/article_scraper_service.dart';
 import '../../data/services/catalog_sync_service.dart';
 import '../../data/services/connectivity_service_impl.dart';
 import '../../data/services/feed_sync_service.dart';
+import '../../data/services/nextcloud_news_sync_service.dart';
 import '../../data/services/opds_cache_service.dart';
 import '../../data/services/progress_sync_service.dart';
 import '../../data/services/sync_queue_service.dart';
@@ -41,6 +45,7 @@ import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/annotation_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
+import '../../domain/repositories/nextcloud_news_mapping_repository.dart';
 import '../../domain/repositories/opds_cache_repository.dart';
 import '../../domain/repositories/feed_item_repository.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
@@ -170,6 +175,11 @@ Future<void> setupServiceLocator() async {
       storageFactory: storageFactory,
       contextFactory: contextFactory,
     );
+    await registry.register(
+      SynologyPlugin(),
+      storageFactory: storageFactory,
+      contextFactory: contextFactory,
+    );
 
     return registry;
   });
@@ -275,6 +285,7 @@ Future<void> setupServiceLocator() async {
   );
 
   // Background Sync Manager (depends on all sync services)
+  // Note: NextcloudNewsSyncService is registered later, so we get it lazily
   sl.registerLazySingletonAsync<BackgroundSyncManager>(() async {
     final manager = BackgroundSyncManager(
       connectivityService: sl<ConnectivityService>(),
@@ -284,6 +295,10 @@ Future<void> setupServiceLocator() async {
       catalogSyncService: sl<CatalogSyncService>(),
       feedSyncService: sl<FeedSyncService>(),
       backgroundExecutor: sl<BackgroundExecutor>(),
+      // NextcloudNewsSyncService will be registered later, get it if available
+      nextcloudNewsSyncService: sl.isRegistered<NextcloudNewsSyncService>()
+          ? sl<NextcloudNewsSyncService>()
+          : null,
     );
     await manager.initialize();
     return manager;
@@ -305,6 +320,40 @@ Future<void> setupServiceLocator() async {
 
   sl.registerLazySingleton<NextcloudProvider>(
     () => NextcloudProvider(sl<NextcloudClient>()),
+  );
+
+  // Nextcloud News API Service
+  sl.registerLazySingleton<NextcloudNewsService>(
+    () => NextcloudNewsService(http.Client()),
+  );
+
+  // Nextcloud News Mapping Repository
+  sl.registerLazySingleton<NextcloudNewsMappingRepository>(
+    () => NextcloudNewsMappingRepositoryImpl(sl<DatabaseHelper>()),
+  );
+
+  // Nextcloud News Sync Service
+  sl.registerLazySingleton<NextcloudNewsSyncService>(
+    () => NextcloudNewsSyncService(
+      newsService: sl<NextcloudNewsService>(),
+      credentialStorage: sl<NextcloudCredentialStorage>(),
+      catalogRepository: sl<CatalogRepository>(),
+      feedItemRepository: sl<FeedItemRepository>(),
+      mappingRepository: sl<NextcloudNewsMappingRepository>(),
+    ),
+  );
+
+  // Synology services (from readwhere_synology package)
+  sl.registerLazySingleton<SynologySessionStorage>(
+    () => SecureSynologySessionStorage(),
+  );
+
+  sl.registerLazySingleton<SynologyClient>(
+    () => SynologyClient.create(storage: sl<SynologySessionStorage>()),
+  );
+
+  sl.registerLazySingleton<SynologyProvider>(
+    () => SynologyProvider(sl<SynologyClient>()),
   );
 
   // OPDS Provider (state management for OPDS browsing)
@@ -359,6 +408,7 @@ Future<void> setupServiceLocator() async {
       kavitaApiClient: sl(),
       rssClient: sl(),
       nextcloudProvider: sl(),
+      synologyProvider: sl(),
       credentialStorage: sl(),
       pluginRegistry: sl(),
     ),

@@ -8,6 +8,7 @@ import '../../domain/services/connectivity_service.dart';
 import '../../presentation/providers/sync_settings_provider.dart';
 import 'catalog_sync_service.dart';
 import 'feed_sync_service.dart';
+import 'nextcloud_news_sync_service.dart';
 import 'progress_sync_service.dart';
 import 'sync_queue_service.dart';
 
@@ -34,6 +35,7 @@ class BackgroundSyncManager {
   final ProgressSyncService _progressSyncService;
   final CatalogSyncService _catalogSyncService;
   final FeedSyncService _feedSyncService;
+  final NextcloudNewsSyncService? _nextcloudNewsSyncService;
   final BackgroundExecutor _backgroundExecutor;
 
   StreamSubscription<ConnectionStatus>? _connectivitySubscription;
@@ -72,6 +74,7 @@ class BackgroundSyncManager {
     required ProgressSyncService progressSyncService,
     required CatalogSyncService catalogSyncService,
     required FeedSyncService feedSyncService,
+    NextcloudNewsSyncService? nextcloudNewsSyncService,
     required BackgroundExecutor backgroundExecutor,
   }) : _connectivityService = connectivityService,
        _settingsProvider = settingsProvider,
@@ -79,6 +82,7 @@ class BackgroundSyncManager {
        _progressSyncService = progressSyncService,
        _catalogSyncService = catalogSyncService,
        _feedSyncService = feedSyncService,
+       _nextcloudNewsSyncService = nextcloudNewsSyncService,
        _backgroundExecutor = backgroundExecutor;
 
   /// Initialize the sync manager.
@@ -251,6 +255,8 @@ class BackgroundSyncManager {
           await _processCatalogJob(job);
         case SyncJobType.feed:
           await _processFeedJob(job);
+        case SyncJobType.nextcloudNews:
+          await _processNextcloudNewsJob(job);
       }
 
       // Mark job as completed
@@ -298,6 +304,19 @@ class BackgroundSyncManager {
     if (feedUrl == null) return;
 
     await _feedSyncService.syncFeed(feedId: feedId, feedUrl: feedUrl);
+  }
+
+  /// Process a Nextcloud News sync job.
+  Future<void> _processNextcloudNewsJob(SyncJob job) async {
+    // Check if the service is available
+    final syncService = _nextcloudNewsSyncService;
+    if (syncService == null) return;
+
+    // Use feed sync enabled setting for Nextcloud News as well
+    if (!_settingsProvider.feedSyncEnabled) return;
+
+    final catalogId = job.targetId;
+    await syncService.syncFromCatalog(catalogId);
   }
 
   /// Schedule a progress sync for a book.
@@ -364,6 +383,18 @@ class BackgroundSyncManager {
     if (!_settingsProvider.feedSyncEnabled) return;
 
     await _queueService.enqueueFeedSync(feedId: feedId, feedUrl: feedUrl);
+  }
+
+  /// Schedule a Nextcloud News sync.
+  ///
+  /// Syncs RSS feeds and article state from a Nextcloud catalog's News app.
+  /// [catalogId] - The ID of the Nextcloud catalog with News sync enabled
+  Future<void> scheduleNextcloudNewsSync({required String catalogId}) async {
+    if (!_settingsProvider.syncEnabled) return;
+    if (!_settingsProvider.feedSyncEnabled) return;
+    if (_nextcloudNewsSyncService == null) return;
+
+    await _queueService.enqueueNextcloudNewsSync(catalogId: catalogId);
   }
 
   /// Clear the last error.

@@ -10,6 +10,9 @@ enum SyncJobType {
 
   /// Refresh RSS feed from remote server
   feed,
+
+  /// Sync RSS feeds from Nextcloud News app
+  nextcloudNews,
 }
 
 /// Status of a sync job

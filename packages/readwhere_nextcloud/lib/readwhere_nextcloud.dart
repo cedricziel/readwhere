@@ -30,6 +30,11 @@ export 'src/api/nextcloud_client.dart';
 export 'src/api/ocs_api_service.dart';
 export 'src/api/models/server_info.dart';
 
+// Nextcloud News API
+export 'src/api/nextcloud_news_service.dart';
+export 'src/api/models/nextcloud_news_feed.dart';
+export 'src/api/models/nextcloud_news_item.dart';
+
 // Auth
 export 'src/auth/models/login_flow_init.dart';
 export 'src/auth/models/login_flow_result.dart';

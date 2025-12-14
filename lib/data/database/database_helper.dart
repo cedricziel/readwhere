@@ -12,6 +12,7 @@ import 'tables/cached_opds_links_table.dart';
 import 'tables/plugin_cache_table.dart';
 import 'tables/feed_items_table.dart';
 import 'tables/sync_jobs_table.dart';
+import 'tables/nextcloud_news_mappings_table.dart';
 
 /// SQLite database helper for the readwhere e-reader app
 ///
@@ -43,7 +44,11 @@ class DatabaseHelper {
   ///             (feed_id, id) instead of just id
   /// Version 11: Re-run V10 migration with correct drop order for FK constraints
   /// Version 12: Added sync_jobs table for background sync queue
-  static const int _databaseVersion = 12;
+  /// Version 13: Added Nextcloud News sync support
+  ///             - news_sync_enabled, news_app_available columns to catalogs
+  ///             - nextcloud_news_feed_mappings table
+  ///             - nextcloud_news_item_mappings table
+  static const int _databaseVersion = 13;
 
   /// Database filename
   static const String _databaseName = 'readwhere.db';
@@ -94,6 +99,9 @@ class DatabaseHelper {
     await db.execute(FeedItemsTable.createTableQuery());
     // Sync jobs table for background sync queue
     await db.execute(SyncJobsTable.createTableQuery());
+    // Nextcloud News mapping tables
+    await db.execute(NextcloudNewsFeedMappingsTable.createTableQuery());
+    await db.execute(NextcloudNewsItemMappingsTable.createTableQuery());
 
     // Create indices for better query performance
     await _createIndices(db);
@@ -114,6 +122,8 @@ class DatabaseHelper {
       ...PluginCacheTable.createIndices(),
       ...FeedItemsTable.createIndices(),
       ...SyncJobsTable.createIndices(),
+      ...NextcloudNewsFeedMappingsTable.createIndices(),
+      ...NextcloudNewsItemMappingsTable.createIndices(),
     ];
 
     for (final index in indices) {
@@ -207,6 +217,21 @@ class DatabaseHelper {
     // Version 12: Add sync_jobs table for background sync queue
     if (oldVersion < 12) {
       for (final query in SyncJobsTable.migrationV12()) {
+        await db.execute(query);
+      }
+    }
+    // Version 13: Add Nextcloud News sync support
+    if (oldVersion < 13) {
+      // Add columns to catalogs table
+      for (final query in CatalogsTable.migrateToV13()) {
+        await db.execute(query);
+      }
+      // Create feed mappings table
+      for (final query in NextcloudNewsFeedMappingsTable.migrationV13()) {
+        await db.execute(query);
+      }
+      // Create item mappings table
+      for (final query in NextcloudNewsItemMappingsTable.migrationV13()) {
         await db.execute(query);
       }
     }

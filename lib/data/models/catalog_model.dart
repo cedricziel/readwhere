@@ -16,6 +16,8 @@ class CatalogModel extends Catalog {
     super.username,
     super.booksFolder,
     super.userId,
+    super.newsSyncEnabled,
+    super.newsAppAvailable,
   });
 
   /// Create a CatalogModel from a Map (SQLite row)
@@ -39,6 +41,10 @@ class CatalogModel extends Catalog {
       username: map[CatalogsTable.columnUsername] as String?,
       booksFolder: map[CatalogsTable.columnBooksFolder] as String?,
       userId: map[CatalogsTable.columnUserId] as String?,
+      newsSyncEnabled: (map[CatalogsTable.columnNewsSyncEnabled] as int?) == 1,
+      newsAppAvailable: map[CatalogsTable.columnNewsAppAvailable] != null
+          ? (map[CatalogsTable.columnNewsAppAvailable] as int) == 1
+          : null,
     );
   }
 
@@ -53,6 +59,8 @@ class CatalogModel extends Catalog {
         return CatalogType.rss;
       case 'fanfiction':
         return CatalogType.fanfiction;
+      case 'synology':
+        return CatalogType.synology;
       case 'opds':
       default:
         return CatalogType.opds;
@@ -74,6 +82,8 @@ class CatalogModel extends Catalog {
       username: catalog.username,
       booksFolder: catalog.booksFolder,
       userId: catalog.userId,
+      newsSyncEnabled: catalog.newsSyncEnabled,
+      newsAppAvailable: catalog.newsAppAvailable,
     );
   }
 
@@ -93,6 +103,10 @@ class CatalogModel extends Catalog {
       CatalogsTable.columnUsername: username,
       CatalogsTable.columnBooksFolder: booksFolder,
       CatalogsTable.columnUserId: userId,
+      CatalogsTable.columnNewsSyncEnabled: newsSyncEnabled ? 1 : 0,
+      CatalogsTable.columnNewsAppAvailable: newsAppAvailable != null
+          ? (newsAppAvailable! ? 1 : 0)
+          : null,
     };
   }
 
@@ -111,6 +125,8 @@ class CatalogModel extends Catalog {
       username: username,
       booksFolder: booksFolder,
       userId: userId,
+      newsSyncEnabled: newsSyncEnabled,
+      newsAppAvailable: newsAppAvailable,
     );
   }
 }

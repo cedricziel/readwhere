@@ -18,6 +18,10 @@ class CatalogsTable {
   static const String columnBooksFolder = 'books_folder';
   static const String columnUserId = 'user_id';
 
+  // Nextcloud News sync columns
+  static const String columnNewsSyncEnabled = 'news_sync_enabled';
+  static const String columnNewsAppAvailable = 'news_app_available';
+
   /// Map of column names for easy reference
   static const Map<String, String> columns = {
     'id': columnId,
@@ -32,6 +36,8 @@ class CatalogsTable {
     'username': columnUsername,
     'booksFolder': columnBooksFolder,
     'userId': columnUserId,
+    'newsSyncEnabled': columnNewsSyncEnabled,
+    'newsAppAvailable': columnNewsAppAvailable,
   };
 
   /// Returns the SQL query to create the catalogs table
@@ -50,6 +56,8 @@ class CatalogsTable {
         $columnUsername TEXT,
         $columnBooksFolder TEXT DEFAULT '/Books',
         $columnUserId TEXT,
+        $columnNewsSyncEnabled INTEGER DEFAULT 0,
+        $columnNewsAppAvailable INTEGER,
         UNIQUE($columnUrl)
       )
     ''';
@@ -78,6 +86,14 @@ class CatalogsTable {
       'ALTER TABLE $tableName ADD COLUMN $columnUsername TEXT',
       "ALTER TABLE $tableName ADD COLUMN $columnBooksFolder TEXT DEFAULT '/Books'",
       'ALTER TABLE $tableName ADD COLUMN $columnUserId TEXT',
+    ];
+  }
+
+  /// Returns SQL statements for migrating to v13 (Nextcloud News sync)
+  static List<String> migrateToV13() {
+    return [
+      'ALTER TABLE $tableName ADD COLUMN $columnNewsSyncEnabled INTEGER DEFAULT 0',
+      'ALTER TABLE $tableName ADD COLUMN $columnNewsAppAvailable INTEGER',
     ];
   }
 }

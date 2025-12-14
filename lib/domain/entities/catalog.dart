@@ -16,6 +16,9 @@ enum CatalogType {
 
   /// Fanfiction.de catalog
   fanfiction,
+
+  /// Synology Drive NAS
+  synology,
 }
 
 /// Represents an OPDS catalog source
@@ -47,6 +50,15 @@ class Catalog extends Equatable {
   /// Nextcloud user ID (from OCS API)
   final String? userId;
 
+  // Nextcloud News sync fields
+
+  /// Whether to sync RSS feeds from Nextcloud News app
+  final bool newsSyncEnabled;
+
+  /// Whether the Nextcloud News app is available on the server
+  /// null = not checked, true = available, false = not installed
+  final bool? newsAppAvailable;
+
   const Catalog({
     required this.id,
     required this.name,
@@ -60,6 +72,8 @@ class Catalog extends Equatable {
     this.username,
     this.booksFolder,
     this.userId,
+    this.newsSyncEnabled = false,
+    this.newsAppAvailable,
   });
 
   /// Whether this catalog requires authentication
@@ -76,6 +90,9 @@ class Catalog extends Equatable {
 
   /// Whether this is a Fanfiction.de catalog
   bool get isFanfiction => type == CatalogType.fanfiction;
+
+  /// Whether this is a Synology Drive NAS
+  bool get isSynology => type == CatalogType.synology;
 
   /// Get the WebDAV URL for Nextcloud file access
   String get webdavUrl {
@@ -113,6 +130,8 @@ class Catalog extends Equatable {
     String? username,
     String? booksFolder,
     String? userId,
+    bool? newsSyncEnabled,
+    bool? newsAppAvailable,
   }) {
     return Catalog(
       id: id ?? this.id,
@@ -127,6 +146,8 @@ class Catalog extends Equatable {
       username: username ?? this.username,
       booksFolder: booksFolder ?? this.booksFolder,
       userId: userId ?? this.userId,
+      newsSyncEnabled: newsSyncEnabled ?? this.newsSyncEnabled,
+      newsAppAvailable: newsAppAvailable ?? this.newsAppAvailable,
     );
   }
 
@@ -144,6 +165,8 @@ class Catalog extends Equatable {
     username,
     booksFolder,
     userId,
+    newsSyncEnabled,
+    newsAppAvailable,
   ];
 
   @override
