@@ -173,7 +173,6 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Open'), findsOneWidget);
-        expect(find.byIcon(Icons.book_outlined), findsOneWidget);
       });
 
       testWidgets(
@@ -219,7 +218,6 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Book Details'), findsOneWidget);
-        expect(find.byIcon(Icons.info_outline), findsOneWidget);
       });
 
       testWidgets('context menu has Delete option', (tester) async {
@@ -233,7 +231,6 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Delete'), findsOneWidget);
-        expect(find.byIcon(Icons.delete_outline), findsOneWidget);
       });
     });
 

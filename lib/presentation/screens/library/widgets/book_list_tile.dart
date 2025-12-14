@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../domain/entities/book.dart';
 import '../../../providers/library_provider.dart';
+import '../../../widgets/adaptive/adaptive_action_sheet.dart';
+import '../../../widgets/adaptive/adaptive_button.dart';
 import '../../../widgets/adaptive/responsive_layout.dart';
 import 'encryption_badge.dart';
 
@@ -223,99 +225,68 @@ class BookListTile extends StatelessWidget {
       context,
       listen: false,
     );
-    // Capture the parent context's messenger before showing the bottom sheet
-    // The bottom sheet's context becomes invalid after it's popped
+    // Capture the parent context's messenger before showing the action sheet
+    // The action sheet's context becomes invalid after it's dismissed
     final parentMessenger = ScaffoldMessenger.of(context);
     // Also capture the parent context for showing dialogs
     final parentContext = context;
 
-    showModalBottomSheet(
+    AdaptiveActionSheet.show(
       context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.book_outlined),
-              title: const Text('Open'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                onTap();
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                book.isFavorite ? Icons.favorite : Icons.favorite_border,
-              ),
-              title: Text(
-                book.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                libraryProvider.toggleFavorite(book.id);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('Book Details'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _showBookDetails(parentContext);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.refresh),
-              title: const Text('Refresh Metadata'),
-              subtitle: const Text('Re-extract title, author, and other info'),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                parentMessenger.showSnackBar(
-                  SnackBar(
-                    content: Text('Refreshing metadata for "${book.title}"...'),
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-                final success = await libraryProvider.refreshBookMetadata(
-                  book.id,
-                );
-                if (parentContext.mounted) {
-                  parentMessenger.showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? 'Metadata refreshed successfully'
-                            : 'Failed to refresh metadata',
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: Icon(
-                Icons.delete_outline,
-                color: Theme.of(sheetContext).colorScheme.error,
-              ),
-              title: Text(
-                'Delete',
-                style: TextStyle(
-                  color: Theme.of(sheetContext).colorScheme.error,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _confirmDeleteWithMessenger(
-                  parentContext,
-                  libraryProvider,
-                  parentMessenger,
-                );
-              },
-            ),
-          ],
+      title: book.title,
+      message: book.author,
+      actions: [
+        AdaptiveActionSheetAction(
+          label: 'Open',
+          icon: Icons.book_outlined,
+          onPressed: () => onTap(),
         ),
-      ),
+        AdaptiveActionSheetAction(
+          label: book.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+          icon: book.isFavorite ? Icons.favorite : Icons.favorite_border,
+          onPressed: () => libraryProvider.toggleFavorite(book.id),
+        ),
+        AdaptiveActionSheetAction(
+          label: 'Book Details',
+          icon: Icons.info_outline,
+          onPressed: () => _showBookDetails(parentContext),
+        ),
+        AdaptiveActionSheetAction(
+          label: 'Refresh Metadata',
+          icon: Icons.refresh,
+          onPressed: () async {
+            parentMessenger.showSnackBar(
+              SnackBar(
+                content: Text('Refreshing metadata for "${book.title}"...'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+            final success = await libraryProvider.refreshBookMetadata(book.id);
+            if (parentContext.mounted) {
+              parentMessenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    success
+                        ? 'Metadata refreshed successfully'
+                        : 'Failed to refresh metadata',
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        ),
+        AdaptiveActionSheetAction(
+          label: 'Delete',
+          icon: Icons.delete_outline,
+          isDestructive: true,
+          onPressed: () => _confirmDeleteWithMessenger(
+            parentContext,
+            libraryProvider,
+            parentMessenger,
+          ),
+        ),
+      ],
     );
   }
 
@@ -349,14 +320,11 @@ class BookListTile extends StatelessWidget {
           'Are you sure you want to delete "$bookTitle"? This action cannot be undone.',
         ),
         actions: [
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-            ),
+          AdaptiveFilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
               libraryProvider.deleteBook(book.id);
@@ -440,17 +408,13 @@ class _BookListTileDetailsDialogState
                 style: theme.textTheme.bodyMedium,
               ),
               if (book.description!.length > 150)
-                TextButton(
+                AdaptiveTextButton(
                   onPressed: () {
                     setState(() {
                       _isDescriptionExpanded = !_isDescriptionExpanded;
                     });
                   },
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(0, 32),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
+                  padding: EdgeInsets.zero,
                   child: Text(
                     _isDescriptionExpanded ? 'Show less' : 'Show more',
                   ),
@@ -491,7 +455,7 @@ class _BookListTileDetailsDialogState
         ),
       ),
       actions: [
-        TextButton(
+        AdaptiveTextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Close'),
         ),
