@@ -12,6 +12,7 @@ import '../../../providers/catalogs_provider.dart';
 import '../../../widgets/adaptive/adaptive_button.dart';
 import '../../../widgets/adaptive/adaptive_text_field.dart';
 import 'nextcloud_folder_picker_dialog.dart';
+import 'synology_folder_picker_dialog.dart';
 
 /// Dialog for adding a new catalog (server) connection
 class AddCatalogDialog extends StatefulWidget {
@@ -320,6 +321,27 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
     }
   }
 
+  /// Open folder picker dialog for Synology
+  Future<void> _openSynologyFolderPicker() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => SynologyFolderPickerDialog(
+        serverUrl: _urlController.text.trim(),
+        username: _usernameController.text.trim(),
+        password: _passwordController.text.trim(),
+        initialPath: _booksFolderController.text.isEmpty
+            ? '/mydrive'
+            : _booksFolderController.text,
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _booksFolderController.text = result;
+      });
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -367,7 +389,9 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
           url: _urlController.text.trim(),
           username: _usernameController.text.trim(),
           password: _passwordController.text.trim(),
-          booksFolder: '/mydrive',
+          booksFolder: _booksFolderController.text.trim().isEmpty
+              ? '/mydrive'
+              : _booksFolderController.text.trim(),
         );
       } else {
         catalog = await provider.addOpdsCatalog(
@@ -1006,6 +1030,45 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                       ),
                     ],
                   ),
+                ),
+                // Folder picker for Synology
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: AdaptiveTextField(
+                        controller: _booksFolderController,
+                        readOnly: true,
+                        label: 'Starting Folder',
+                        placeholder: '/mydrive',
+                        prefixIcon: Icons.folder,
+                        helperText: 'Browse to select a folder',
+                        suffix: _booksFolderController.text.isNotEmpty &&
+                                _booksFolderController.text != '/mydrive'
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  setState(() {
+                                    _booksFolderController.clear();
+                                  });
+                                },
+                                tooltip: 'Reset to My Drive',
+                              )
+                            : null,
+                        onTap: _openSynologyFolderPicker,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: IconButton.filled(
+                        icon: const Icon(Icons.folder_open),
+                        tooltip: 'Browse folders',
+                        onPressed: _openSynologyFolderPicker,
+                      ),
+                    ),
+                  ],
                 ),
               ],
 
