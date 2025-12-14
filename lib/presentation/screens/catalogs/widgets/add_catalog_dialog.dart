@@ -10,6 +10,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../domain/entities/catalog.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../widgets/adaptive/adaptive_button.dart';
+import '../../../widgets/adaptive/adaptive_text_field.dart';
 import 'nextcloud_folder_picker_dialog.dart';
 
 /// Dialog for adding a new catalog (server) connection
@@ -446,23 +447,21 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
 
               // Server URL (not shown for fanfiction.de which has a fixed URL)
               if (_catalogType != CatalogType.fanfiction) ...[
-                TextFormField(
+                AdaptiveTextField(
                   controller: _urlController,
                   focusNode: _urlFocusNode,
                   autofocus: true,
-                  decoration: InputDecoration(
-                    labelText: _catalogType == CatalogType.rss
-                        ? 'Feed URL'
-                        : 'Server URL',
-                    hintText: _catalogType == CatalogType.rss
-                        ? 'https://example.com/feed.xml'
-                        : _catalogType == CatalogType.kavita
-                        ? 'https://your-kavita-server.com'
-                        : _catalogType == CatalogType.nextcloud
-                        ? 'https://your-nextcloud.com'
-                        : 'https://catalog.example.com/opds',
-                    prefixIcon: const Icon(Icons.link),
-                  ),
+                  label: _catalogType == CatalogType.rss
+                      ? 'Feed URL'
+                      : 'Server URL',
+                  placeholder: _catalogType == CatalogType.rss
+                      ? 'https://example.com/feed.xml'
+                      : _catalogType == CatalogType.kavita
+                      ? 'https://your-kavita-server.com'
+                      : _catalogType == CatalogType.nextcloud
+                      ? 'https://your-nextcloud.com'
+                      : 'https://catalog.example.com/opds',
+                  prefixIcon: Icons.link,
                   keyboardType: TextInputType.url,
                   textInputAction: TextInputAction.next,
                   validator: (value) {
@@ -546,15 +545,14 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                   const SizedBox(height: 16),
                 ],
                 // Username field
-                TextFormField(
+                AdaptiveTextField(
                   controller: _usernameController,
                   focusNode: _usernameFocusNode,
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    hintText: 'Your Nextcloud username',
-                    prefixIcon: Icon(Icons.person),
-                  ),
+                  label: 'Username',
+                  placeholder: 'Your Nextcloud username',
+                  prefixIcon: Icons.person,
                   textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.none,
                   enabled: !_isOAuthPolling,
                   validator: (value) {
                     if (_catalogType == CatalogType.nextcloud &&
@@ -574,16 +572,13 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                 ),
                 const SizedBox(height: 16),
                 // App password field
-                TextFormField(
+                AdaptiveTextField(
                   controller: _passwordController,
                   focusNode: _passwordFocusNode,
-                  decoration: const InputDecoration(
-                    labelText: 'App Password',
-                    hintText: 'Generate in Nextcloud settings',
-                    prefixIcon: Icon(Icons.key),
-                    helperText: 'Settings > Security > App passwords',
-                    helperMaxLines: 2,
-                  ),
+                  label: 'App Password',
+                  placeholder: 'Generate in Nextcloud settings',
+                  prefixIcon: Icons.key,
+                  helperText: 'Settings > Security > App passwords',
                   obscureText: true,
                   enabled: !_isOAuthPolling,
                   validator: (value) {
@@ -607,17 +602,13 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
 
               // API Key (for Kavita)
               if (_catalogType == CatalogType.kavita) ...[
-                TextFormField(
+                AdaptiveTextField(
                   controller: _apiKeyController,
                   focusNode: _apiKeyFocusNode,
-                  decoration: const InputDecoration(
-                    labelText: 'OPDS API Key',
-                    hintText: 'Your Kavita OPDS API key',
-                    prefixIcon: Icon(Icons.key),
-                    helperText:
-                        'Find this in Kavita: Settings > API Key > OPDS',
-                    helperMaxLines: 2,
-                  ),
+                  label: 'OPDS API Key',
+                  placeholder: 'Your Kavita OPDS API key',
+                  prefixIcon: Icons.key,
+                  helperText: 'Find this in Kavita: Settings > API Key > OPDS',
                   obscureText: true,
                   validator: (value) {
                     if (_catalogType == CatalogType.kavita &&
@@ -790,26 +781,24 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: TextFormField(
+                      child: AdaptiveTextField(
                         controller: _booksFolderController,
                         readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: 'Starting Folder',
-                          hintText: '/',
-                          prefixIcon: const Icon(Icons.folder),
-                          helperText: 'Browse to select a folder',
-                          suffixIcon: _booksFolderController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    setState(() {
-                                      _booksFolderController.clear();
-                                    });
-                                  },
-                                  tooltip: 'Reset to root',
-                                )
-                              : null,
-                        ),
+                        label: 'Starting Folder',
+                        placeholder: '/',
+                        prefixIcon: Icons.folder,
+                        helperText: 'Browse to select a folder',
+                        suffix: _booksFolderController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  setState(() {
+                                    _booksFolderController.clear();
+                                  });
+                                },
+                                tooltip: 'Reset to root',
+                              )
+                            : null,
                         onTap: _openFolderPicker,
                       ),
                     ),
@@ -912,14 +901,12 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
               // Server name
               if (_isValidated) ...[
                 const SizedBox(height: 16),
-                TextFormField(
+                AdaptiveTextField(
                   controller: _nameController,
                   focusNode: _nameFocusNode,
-                  decoration: const InputDecoration(
-                    labelText: 'Display Name',
-                    hintText: 'My Kavita Server',
-                    prefixIcon: Icon(Icons.label_outline),
-                  ),
+                  label: 'Display Name',
+                  placeholder: 'My Kavita Server',
+                  prefixIcon: Icons.label_outline,
                   textInputAction: TextInputAction.done,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {

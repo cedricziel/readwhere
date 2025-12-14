@@ -78,6 +78,18 @@ class AdaptiveTextField extends StatelessWidget {
   /// Custom decoration (Material only, overrides platform styling).
   final InputDecoration? decoration;
 
+  /// Whether the text field is read-only.
+  final bool readOnly;
+
+  /// Custom suffix widget (overrides suffixIcon).
+  final Widget? suffix;
+
+  /// Helper text displayed below the field (Material only).
+  final String? helperText;
+
+  /// Callback when the field is tapped.
+  final VoidCallback? onTap;
+
   const AdaptiveTextField({
     super.key,
     this.controller,
@@ -100,6 +112,10 @@ class AdaptiveTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.autocorrect = true,
     this.decoration,
+    this.readOnly = false,
+    this.suffix,
+    this.helperText,
+    this.onTap,
   });
 
   @override
@@ -122,9 +138,18 @@ class AdaptiveTextField extends StatelessWidget {
     final brightness = cupertinoTheme.brightness ?? Brightness.light;
     final isDark = brightness == Brightness.dark;
 
+    // Build suffix widget
+    Widget? suffixWidget = suffix;
+    if (suffixWidget == null && suffixIcon != null) {
+      suffixWidget = Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: Icon(suffixIcon, color: CupertinoColors.systemGrey),
+      );
+    }
+
     // Use validator wrapper if validator is provided
     if (validator != null) {
-      return CupertinoTextFormFieldRow(
+      final field = CupertinoTextFormFieldRow(
         controller: controller,
         focusNode: focusNode,
         placeholder: placeholder ?? label,
@@ -145,10 +170,16 @@ class AdaptiveTextField extends StatelessWidget {
         textCapitalization: textCapitalization,
         autocorrect: autocorrect,
         padding: EdgeInsets.zero,
+        readOnly: readOnly,
       );
+      // Wrap with GestureDetector if onTap is provided
+      if (onTap != null) {
+        return GestureDetector(onTap: onTap, child: field);
+      }
+      return field;
     }
 
-    return CupertinoTextField(
+    final field = CupertinoTextField(
       controller: controller,
       focusNode: focusNode,
       placeholder: placeholder ?? label,
@@ -158,12 +189,7 @@ class AdaptiveTextField extends StatelessWidget {
               child: Icon(prefixIcon, color: CupertinoColors.systemGrey),
             )
           : null,
-      suffix: suffixIcon != null
-          ? Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Icon(suffixIcon, color: CupertinoColors.systemGrey),
-            )
-          : null,
+      suffix: suffixWidget,
       obscureText: obscureText,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
@@ -176,6 +202,7 @@ class AdaptiveTextField extends StatelessWidget {
       onSubmitted: onSubmitted,
       textCapitalization: textCapitalization,
       autocorrect: autocorrect,
+      readOnly: readOnly,
       decoration: BoxDecoration(
         color: isDark
             ? CupertinoColors.systemGrey6.darkColor
@@ -196,17 +223,29 @@ class AdaptiveTextField extends StatelessWidget {
         color: CupertinoColors.placeholderText.resolveFrom(context),
       ),
     );
+    // Wrap with GestureDetector if onTap is provided
+    if (onTap != null) {
+      return GestureDetector(onTap: onTap, child: field);
+    }
+    return field;
   }
 
   /// Builds a Material text field.
   Widget _buildMaterialTextField(BuildContext context) {
+    // Build suffix widget - custom suffix takes precedence over suffixIcon
+    Widget? effectiveSuffix = suffix;
+    if (effectiveSuffix == null && suffixIcon != null) {
+      effectiveSuffix = Icon(suffixIcon);
+    }
+
     final effectiveDecoration =
         decoration ??
         InputDecoration(
           labelText: label,
           hintText: placeholder,
+          helperText: helperText,
           prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-          suffixIcon: suffixIcon != null ? Icon(suffixIcon) : null,
+          suffixIcon: effectiveSuffix,
         );
 
     // Use validator wrapper if validator is provided
@@ -228,6 +267,8 @@ class AdaptiveTextField extends StatelessWidget {
         validator: validator,
         textCapitalization: textCapitalization,
         autocorrect: autocorrect,
+        readOnly: readOnly,
+        onTap: onTap,
       );
     }
 
@@ -247,6 +288,8 @@ class AdaptiveTextField extends StatelessWidget {
       onSubmitted: onSubmitted,
       textCapitalization: textCapitalization,
       autocorrect: autocorrect,
+      readOnly: readOnly,
+      onTap: onTap,
     );
   }
 }

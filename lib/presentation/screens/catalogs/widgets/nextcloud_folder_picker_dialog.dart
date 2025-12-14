@@ -4,6 +4,7 @@ import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 
 import '../../../../domain/entities/catalog.dart';
 import '../../../widgets/adaptive/adaptive_button.dart';
+import '../../../widgets/adaptive/adaptive_text_field.dart';
 
 /// Dialog for browsing and selecting a folder on Nextcloud
 ///
@@ -191,13 +192,12 @@ class _NextcloudFolderPickerDialogState
         title: const Text('New Folder'),
         content: Form(
           key: formKey,
-          child: TextFormField(
+          child: AdaptiveTextField(
             controller: controller,
             autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Folder name',
-              hintText: 'Enter folder name',
-            ),
+            label: 'Folder name',
+            placeholder: 'Enter folder name',
+            textCapitalization: TextCapitalization.words,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return 'Please enter a folder name';
@@ -207,7 +207,7 @@ class _NextcloudFolderPickerDialogState
               }
               return null;
             },
-            onFieldSubmitted: (_) {
+            onSubmitted: (_) {
               if (formKey.currentState?.validate() ?? false) {
                 Navigator.of(context).pop(controller.text.trim());
               }

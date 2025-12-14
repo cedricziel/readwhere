@@ -6,9 +6,17 @@ import 'package:get_it/get_it.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readwhere/presentation/screens/catalogs/widgets/nextcloud_folder_picker_dialog.dart';
+import 'package:readwhere/presentation/widgets/adaptive/adaptive_text_field.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 
 import 'nextcloud_folder_picker_dialog_test.mocks.dart';
+
+/// Finder for text input fields that works with both Material and Cupertino.
+/// AdaptiveTextField renders differently on different platforms, so we find
+/// the EditableText widget which is the common underlying widget.
+Finder findTextInput() {
+  return find.byType(EditableText);
+}
 
 @GenerateMocks([NextcloudClient, NextcloudCredentialStorage])
 void main() {
@@ -232,7 +240,9 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('New Folder'), findsOneWidget);
-        expect(find.text('Folder name'), findsOneWidget);
+        // AdaptiveTextField shows label as placeholder on Cupertino, so check for
+        // the widget itself rather than label text
+        expect(find.byType(AdaptiveTextField), findsOneWidget);
         expect(find.text('Create'), findsOneWidget);
       });
 
@@ -274,7 +284,7 @@ void main() {
         await tester.tap(find.byIcon(Icons.create_new_folder_outlined));
         await tester.pumpAndSettle();
 
-        await tester.enterText(find.byType(TextFormField), 'folder/name');
+        await tester.enterText(findTextInput(), 'folder/name');
         await tester.tap(find.text('Create'));
         await tester.pumpAndSettle();
 
@@ -324,7 +334,7 @@ void main() {
 
           // Enter folder name
           await tester.runAsync(() async {
-            await tester.enterText(find.byType(TextFormField), 'TestFolder');
+            await tester.enterText(findTextInput(), 'TestFolder');
           });
           await tester.pump();
 
@@ -400,7 +410,7 @@ void main() {
 
         // Use runAsync for text entry to avoid caret scheduling issues
         await tester.runAsync(() async {
-          await tester.enterText(find.byType(TextFormField), 'MyNewFolder');
+          await tester.enterText(findTextInput(), 'MyNewFolder');
         });
         await tester.pump();
 
