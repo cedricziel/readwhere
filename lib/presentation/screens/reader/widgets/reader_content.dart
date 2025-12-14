@@ -48,6 +48,15 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
   int? _lastChapterIndex;
   Key _selectionAreaKey = UniqueKey();
 
+  // Track current text selection for annotation
+  String? _currentSelection;
+  int? _selectionChapterIndex;
+
+  void _clearSelection() {
+    _currentSelection = null;
+    _selectionChapterIndex = null;
+  }
+
   // Threshold for tap detection
   static const double _tapMaxDistance = 20.0; // Max movement in pixels
   static const Duration _tapMaxDuration = Duration(
@@ -104,6 +113,19 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
   }
 
   void _handleTap(Offset position) {
+    // If there's an active selection, show annotation menu instead of normal tap behavior
+    if (_currentSelection != null &&
+        _currentSelection!.trim().isNotEmpty &&
+        _selectionChapterIndex != null) {
+      // Show annotation menu (don't clear selection yet - clear after action)
+      _showAnnotationMenu(
+        context,
+        _currentSelection!,
+        _selectionChapterIndex!,
+      );
+      return;
+    }
+
     final screenWidth = MediaQuery.of(context).size.width;
     final tapX = position.dx;
 
@@ -192,13 +214,14 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
               // complete rebuild and avoid Flutter framework bug with
               // stale selection indices (flutter/flutter#123456).
               key: _selectionAreaKey,
-              contextMenuBuilder: widget.annotationsEnabled
-                  ? (context, selectableRegionState) {
-                      return _buildAnnotationContextMenu(
-                        context,
-                        selectableRegionState,
-                        readerProvider.currentChapterIndex,
-                      );
+              onSelectionChanged: widget.annotationsEnabled
+                  ? (selectedContent) {
+                      // Store selection - don't show menu immediately
+                      // User will tap on selection to show menu
+                      // Don't use setState to avoid rebuild that clears selection
+                      _currentSelection = selectedContent?.plainText;
+                      _selectionChapterIndex = readerProvider.currentChapterIndex;
+                      debugPrint('Selection stored: ${_currentSelection?.length ?? 0} chars');
                     }
                   : null,
               child: SingleChildScrollView(
@@ -465,6 +488,146 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
         );
       },
     );
+  }
+
+  /// Shows the annotation menu as a modal bottom sheet.
+  ///
+  /// This is an alternative to contextMenuBuilder which doesn't work on macOS.
+  void _showAnnotationMenu(
+    BuildContext context,
+    String selectedText,
+    int chapterIndex,
+  ) {
+    debugPrint('_showAnnotationMenu called with: $selectedText');
+
+    showModalBottomSheet(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Highlight: "${selectedText.length > 50 ? '${selectedText.substring(0, 50)}...' : selectedText}"',
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 16),
+                const Text('Choose highlight color:'),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: AnnotationColor.values.map((color) {
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _clearSelection();
+                        _createAnnotation(selectedText, chapterIndex, color);
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: _getAnnotationColor(color),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black26),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(Icons.note_add),
+                  title: const Text('Add Note'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _clearSelection();
+                    _showNoteDialogForSelection(selectedText, chapterIndex);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.copy),
+                  title: const Text('Copy'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _clearSelection();
+                    Clipboard.setData(ClipboardData(text: selectedText));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Copied to clipboard')),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Color _getAnnotationColor(AnnotationColor color) {
+    switch (color) {
+      case AnnotationColor.yellow:
+        return const Color(0xFFFFEB3B);
+      case AnnotationColor.green:
+        return const Color(0xFF4CAF50);
+      case AnnotationColor.blue:
+        return const Color(0xFF2196F3);
+      case AnnotationColor.pink:
+        return const Color(0xFFE91E63);
+      case AnnotationColor.purple:
+        return const Color(0xFF9C27B0);
+      case AnnotationColor.orange:
+        return const Color(0xFFFF9800);
+    }
+  }
+
+  Future<void> _createAnnotation(
+    String selectedText,
+    int chapterIndex,
+    AnnotationColor color,
+  ) async {
+    final annotationProvider = context.read<AnnotationProvider>();
+    annotationProvider.setSelection(
+      selectedText: selectedText,
+      chapterIndex: chapterIndex,
+    );
+    await annotationProvider.createAnnotationFromSelection(color: color);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Highlight created')),
+      );
+    }
+  }
+
+  Future<void> _showNoteDialogForSelection(
+    String selectedText,
+    int chapterIndex,
+  ) async {
+    final result = await NoteEditorDialog.show(
+      context: context,
+      selectedText: selectedText,
+    );
+
+    if (result != null && mounted) {
+      final annotationProvider = context.read<AnnotationProvider>();
+      annotationProvider.setSelection(
+        selectedText: selectedText,
+        chapterIndex: chapterIndex,
+      );
+      await annotationProvider.createAnnotationFromSelection(
+        color: result.color,
+        note: result.note.isNotEmpty ? result.note : null,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Annotation created')),
+        );
+      }
+    }
   }
 
   /// Builds the annotation context menu when text is selected.
@@ -818,26 +981,18 @@ class _AnnotationContextMenuBuilderState
 
   @override
   Widget build(BuildContext context) {
-    // Show loading or fall back to default menu while getting text
-    if (_isLoading || _selectedText == null || _selectedText!.trim().isEmpty) {
-      return AdaptiveTextSelectionToolbar.selectableRegion(
-        selectableRegionState: widget.selectableRegionState,
-      );
-    }
+    debugPrint('_AnnotationContextMenuBuilder.build called');
 
-    final selectedText = _selectedText!;
-    final anchors = widget.selectableRegionState.contextMenuAnchors;
-
-    // Use CustomSingleChildLayout to position the menu at the selection
-    return CustomSingleChildLayout(
-      delegate: _ContextMenuPositionDelegate(
-        anchor: anchors.primaryAnchor,
-      ),
-      child: AnnotationContextMenu(
-        selectedText: selectedText,
-        onHighlight: (color) => _createHighlight(color, selectedText),
-        onAddNote: () => _showNoteDialog(selectedText),
-        onCopy: () => _copyToClipboard(selectedText),
+    // DEBUG: Return a bright red box that should be impossible to miss
+    return Container(
+      width: 200,
+      height: 100,
+      color: Colors.red,
+      child: const Center(
+        child: Text(
+          'SELECTION MENU TEST',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
       ),
     );
   }
