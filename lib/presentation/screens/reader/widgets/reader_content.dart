@@ -118,11 +118,7 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
         _currentSelection!.trim().isNotEmpty &&
         _selectionChapterIndex != null) {
       // Show annotation menu (don't clear selection yet - clear after action)
-      _showAnnotationMenu(
-        context,
-        _currentSelection!,
-        _selectionChapterIndex!,
-      );
+      _showAnnotationMenu(context, _currentSelection!, _selectionChapterIndex!);
       return;
     }
 
@@ -145,8 +141,8 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
   Widget build(BuildContext context) {
     final readingTheme = context.readingTheme;
 
-    return Consumer2<ReaderProvider, AudioProvider>(
-      builder: (context, readerProvider, audioProvider, child) {
+    return Consumer3<ReaderProvider, AudioProvider, AnnotationProvider>(
+      builder: (context, readerProvider, audioProvider, annotationProvider, child) {
         // Placeholder content when no book is open or loading
         if (!readerProvider.hasOpenBook || readerProvider.isLoading) {
           return Center(
@@ -196,6 +192,21 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
           );
         }
 
+        // Inject annotation highlights for current chapter
+        if (widget.annotationsEnabled) {
+          final currentChapterId =
+              'chapter-${readerProvider.currentChapterIndex}';
+          final chapterAnnotations = annotationProvider.annotations
+              .where((a) => a.chapterId == currentChapterId)
+              .toList();
+          if (chapterAnnotations.isNotEmpty) {
+            htmlContent = _injectAnnotationHighlights(
+              htmlContent,
+              chapterAnnotations,
+            );
+          }
+        }
+
         // Update selection area key when chapter changes to prevent
         // Flutter framework bug with stale selection indices
         _updateSelectionAreaKeyIfNeeded(readerProvider.currentChapterIndex);
@@ -220,8 +231,11 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
                       // User will tap on selection to show menu
                       // Don't use setState to avoid rebuild that clears selection
                       _currentSelection = selectedContent?.plainText;
-                      _selectionChapterIndex = readerProvider.currentChapterIndex;
-                      debugPrint('Selection stored: ${_currentSelection?.length ?? 0} chars');
+                      _selectionChapterIndex =
+                          readerProvider.currentChapterIndex;
+                      debugPrint(
+                        'Selection stored: ${_currentSelection?.length ?? 0} chars',
+                      );
                     }
                   : null,
               child: SingleChildScrollView(
@@ -478,6 +492,65 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
                             return const SizedBox.shrink();
                           },
                         ),
+                        // Handle annotation highlights (mark tags)
+                        TagExtension(
+                          tagsToExtend: {'mark'},
+                          builder: (extensionContext) {
+                            final annotationId = extensionContext
+                                .attributes['data-annotation-id'];
+                            final style = extensionContext.attributes['style'];
+
+                            // Parse background color from inline style
+                            Color? bgColor;
+                            if (style != null) {
+                              final bgMatch = RegExp(
+                                r'background-color:\s*rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)',
+                              ).firstMatch(style);
+                              if (bgMatch != null) {
+                                bgColor = Color.fromRGBO(
+                                  int.parse(bgMatch.group(1)!),
+                                  int.parse(bgMatch.group(2)!),
+                                  int.parse(bgMatch.group(3)!),
+                                  double.parse(bgMatch.group(4)!),
+                                );
+                              }
+                            }
+
+                            // Get the text content from the element
+                            final textContent =
+                                extensionContext.element?.text ?? '';
+
+                            return GestureDetector(
+                              onTap: annotationId != null
+                                  ? () => _showAnnotationDetails(
+                                      context,
+                                      annotationId,
+                                      annotationProvider,
+                                    )
+                                  : null,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      bgColor ??
+                                      Colors.yellow.withValues(alpha: 0.4),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                                child: Text(
+                                  textContent,
+                                  style: TextStyle(
+                                    fontSize: readingTheme.fontSize,
+                                    fontFamily: readingTheme.fontFamily,
+                                    height: readingTheme.lineHeight,
+                                    color: readingTheme.textColor,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -568,6 +641,226 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
     );
   }
 
+  /// Shows annotation details when a highlight is tapped.
+  void _showAnnotationDetails(
+    BuildContext context,
+    String annotationId,
+    AnnotationProvider annotationProvider,
+  ) {
+    final annotation = annotationProvider.getAnnotation(annotationId);
+    if (annotation == null) {
+      debugPrint('Annotation not found: $annotationId');
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with color indicator
+                Row(
+                  children: [
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: _getAnnotationColor(annotation.color),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Highlight',
+                      style: Theme.of(sheetContext).textTheme.titleMedium,
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () async {
+                        Navigator.pop(sheetContext);
+                        final deleted = await annotationProvider
+                            .deleteAnnotation(annotationId);
+                        if (deleted && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Highlight deleted')),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Highlighted text
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _getAnnotationColor(
+                      annotation.color,
+                    ).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '"${annotation.text}"',
+                    style: Theme.of(sheetContext).textTheme.bodyMedium
+                        ?.copyWith(fontStyle: FontStyle.italic),
+                  ),
+                ),
+
+                // Note if present
+                if (annotation.note != null && annotation.note!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Note:',
+                    style: Theme.of(sheetContext).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(annotation.note!),
+                ],
+
+                const SizedBox(height: 16),
+
+                // Actions row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Change color
+                    TextButton.icon(
+                      icon: const Icon(Icons.palette),
+                      label: const Text('Color'),
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        _showColorPicker(
+                          context,
+                          annotation,
+                          annotationProvider,
+                        );
+                      },
+                    ),
+                    // Edit note
+                    TextButton.icon(
+                      icon: const Icon(Icons.edit_note),
+                      label: Text(
+                        annotation.note?.isNotEmpty == true
+                            ? 'Edit Note'
+                            : 'Add Note',
+                      ),
+                      onPressed: () async {
+                        Navigator.pop(sheetContext);
+                        final result = await NoteEditorDialog.show(
+                          context: context,
+                          selectedText: annotation.text,
+                          initialNote: annotation.note,
+                          initialColor: annotation.color,
+                        );
+                        if (result != null) {
+                          await annotationProvider.updateNote(
+                            annotationId,
+                            result.note.isNotEmpty ? result.note : null,
+                          );
+                          if (result.color != annotation.color) {
+                            await annotationProvider.updateColor(
+                              annotationId,
+                              result.color,
+                            );
+                          }
+                        }
+                      },
+                    ),
+                    // Copy
+                    TextButton.icon(
+                      icon: const Icon(Icons.copy),
+                      label: const Text('Copy'),
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        Clipboard.setData(ClipboardData(text: annotation.text));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Copied to clipboard')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Shows a color picker for changing annotation color.
+  void _showColorPicker(
+    BuildContext context,
+    Annotation annotation,
+    AnnotationProvider annotationProvider,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Choose highlight color',
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: AnnotationColor.values.map((color) {
+                    final isSelected = color == annotation.color;
+                    return GestureDetector(
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        if (color != annotation.color) {
+                          await annotationProvider.updateColor(
+                            annotation.id,
+                            color,
+                          );
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Color updated')),
+                            );
+                          }
+                        }
+                      },
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: _getAnnotationColor(color),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? Colors.black : Colors.black26,
+                            width: isSelected ? 3 : 1,
+                          ),
+                        ),
+                        child: isSelected
+                            ? const Icon(Icons.check, size: 24)
+                            : null,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Color _getAnnotationColor(AnnotationColor color) {
     switch (color) {
       case AnnotationColor.yellow:
@@ -597,9 +890,9 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
     );
     await annotationProvider.createAnnotationFromSelection(color: color);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Highlight created')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Highlight created')));
     }
   }
 
@@ -623,26 +916,89 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
         note: result.note.isNotEmpty ? result.note : null,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Annotation created')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Annotation created')));
       }
     }
   }
 
-  /// Builds the annotation context menu when text is selected.
+  /// Injects annotation highlights into the HTML content.
   ///
-  /// Uses clipboard to reliably get selected text across Flutter versions.
-  Widget _buildAnnotationContextMenu(
-    BuildContext context,
-    SelectableRegionState selectableRegionState,
-    int chapterIndex,
+  /// This method finds the annotated text in the HTML and wraps it with
+  /// a `<mark>` tag that has the appropriate background color.
+  /// Annotations are processed from longest to shortest text to avoid
+  /// nested replacement issues.
+  String _injectAnnotationHighlights(
+    String html,
+    List<Annotation> annotations,
   ) {
-    // Build a custom context menu with annotation actions
-    return _AnnotationContextMenuBuilder(
-      selectableRegionState: selectableRegionState,
-      chapterIndex: chapterIndex,
-    );
+    if (annotations.isEmpty) return html;
+
+    // Sort annotations by text length (longest first) to avoid
+    // shorter texts matching within longer highlights
+    final sortedAnnotations = List<Annotation>.from(annotations)
+      ..sort((a, b) => b.text.length.compareTo(a.text.length));
+
+    var result = html;
+
+    for (final annotation in sortedAnnotations) {
+      final text = annotation.text.trim();
+      if (text.isEmpty) continue;
+
+      // Get the highlight color with semi-transparent alpha
+      final color = AnnotationColorHelper.getColor(annotation.color);
+      final r = (color.r * 255.0).round().clamp(0, 255);
+      final g = (color.g * 255.0).round().clamp(0, 255);
+      final b = (color.b * 255.0).round().clamp(0, 255);
+
+      // Build the mark tag with inline style
+      final markStart =
+          '<mark class="rw-annotation" data-annotation-id="${annotation.id}" '
+          'style="background-color: rgba($r, $g, $b, 0.4); '
+          'border-radius: 2px; padding: 0 2px;">';
+      const markEnd = '</mark>';
+
+      // Escape special regex characters in the text
+      final escapedText = RegExp.escape(text);
+
+      // Try to find and replace the exact text
+      // We use a regex that matches the text while preserving HTML structure
+      // This simple approach works when text doesn't span multiple elements
+      final regex = RegExp(escapedText, caseSensitive: true);
+
+      if (regex.hasMatch(result)) {
+        // Only replace the first occurrence to avoid highlighting duplicates
+        result = result.replaceFirst(regex, '$markStart$text$markEnd');
+        debugPrint(
+          'Injected highlight for annotation ${annotation.id}: '
+          '"${text.length > 30 ? '${text.substring(0, 30)}...' : text}"',
+        );
+      } else {
+        // Try case-insensitive match as fallback
+        final regexInsensitive = RegExp(escapedText, caseSensitive: false);
+        if (regexInsensitive.hasMatch(result)) {
+          final match = regexInsensitive.firstMatch(result);
+          if (match != null) {
+            final matchedText = match.group(0)!;
+            result = result.replaceFirst(
+              regexInsensitive,
+              '$markStart$matchedText$markEnd',
+            );
+            debugPrint(
+              'Injected highlight (case-insensitive) for ${annotation.id}',
+            );
+          }
+        } else {
+          debugPrint(
+            'Could not find text for annotation ${annotation.id}: '
+            '"${text.length > 30 ? '${text.substring(0, 30)}...' : text}"',
+          );
+        }
+      }
+    }
+
+    return result;
   }
 
   /// Injects CSS for annotation highlights into the HTML content.
@@ -930,181 +1286,5 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
     } else {
       return highlightCss + html;
     }
-  }
-}
-
-/// A stateful widget that builds the annotation context menu.
-///
-/// Uses a clipboard-based approach to reliably get selected text
-/// across different Flutter versions.
-class _AnnotationContextMenuBuilder extends StatefulWidget {
-  final SelectableRegionState selectableRegionState;
-  final int chapterIndex;
-
-  const _AnnotationContextMenuBuilder({
-    required this.selectableRegionState,
-    required this.chapterIndex,
-  });
-
-  @override
-  State<_AnnotationContextMenuBuilder> createState() =>
-      _AnnotationContextMenuBuilderState();
-}
-
-class _AnnotationContextMenuBuilderState
-    extends State<_AnnotationContextMenuBuilder> {
-  String? _selectedText;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _captureSelectedText();
-  }
-
-  Future<void> _captureSelectedText() async {
-    // Copy selection to clipboard to get the text
-    widget.selectableRegionState.copySelection(SelectionChangedCause.toolbar);
-
-    // Small delay to ensure clipboard is updated
-    await Future.delayed(const Duration(milliseconds: 50));
-
-    // Read from clipboard
-    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-    if (mounted) {
-      setState(() {
-        _selectedText = clipboardData?.text;
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    debugPrint('_AnnotationContextMenuBuilder.build called');
-
-    // DEBUG: Return a bright red box that should be impossible to miss
-    return Container(
-      width: 200,
-      height: 100,
-      color: Colors.red,
-      child: const Center(
-        child: Text(
-          'SELECTION MENU TEST',
-          style: TextStyle(color: Colors.white, fontSize: 16),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _createHighlight(
-    AnnotationColor color,
-    String selectedText,
-  ) async {
-    // Clear selection
-    widget.selectableRegionState.hideToolbar();
-    widget.selectableRegionState.clearSelection();
-
-    // Create annotation via provider
-    final annotationProvider = context.read<AnnotationProvider>();
-    annotationProvider.setSelection(
-      selectedText: selectedText,
-      chapterIndex: widget.chapterIndex,
-    );
-    await annotationProvider.createAnnotationFromSelection(color: color);
-  }
-
-  Future<void> _showNoteDialog(String selectedText) async {
-    // Hide selection toolbar
-    widget.selectableRegionState.hideToolbar();
-
-    // Capture context before async gap
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final annotationProvider = context.read<AnnotationProvider>();
-
-    // Show note editor dialog
-    final result = await NoteEditorDialog.show(
-      context: context,
-      selectedText: selectedText,
-    );
-
-    if (result != null) {
-      // Create annotation with note
-      annotationProvider.setSelection(
-        selectedText: selectedText,
-        chapterIndex: widget.chapterIndex,
-      );
-      final annotation = await annotationProvider.createAnnotationFromSelection(
-        color: result.color,
-        note: result.note.isNotEmpty ? result.note : null,
-      );
-
-      if (annotation != null) {
-        scaffoldMessenger.showSnackBar(
-          const SnackBar(
-            content: Text('Annotation created'),
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
-    }
-
-    // Clear selection
-    widget.selectableRegionState.clearSelection();
-  }
-
-  void _copyToClipboard(String selectedText) {
-    // Text is already in clipboard from our capture
-    widget.selectableRegionState.hideToolbar();
-    widget.selectableRegionState.clearSelection();
-
-    // Show snackbar feedback
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Copied to clipboard'),
-        duration: Duration(seconds: 1),
-      ),
-    );
-  }
-}
-
-/// Delegate for positioning the annotation context menu.
-///
-/// Positions the menu above the selection anchor point, centered horizontally.
-/// If there's not enough space above, it will position below.
-class _ContextMenuPositionDelegate extends SingleChildLayoutDelegate {
-  final Offset anchor;
-
-  _ContextMenuPositionDelegate({required this.anchor});
-
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    // Allow the menu to size itself
-    return BoxConstraints.loose(constraints.biggest);
-  }
-
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    // Position menu above the anchor, centered
-    double x = anchor.dx - (childSize.width / 2);
-    double y = anchor.dy - childSize.height - 8; // 8px gap above selection
-
-    // Keep menu within screen bounds
-    x = x.clamp(8.0, size.width - childSize.width - 8);
-
-    // If not enough space above, position below
-    if (y < 8) {
-      y = anchor.dy + 8;
-    }
-
-    // Ensure y is within bounds
-    y = y.clamp(8.0, size.height - childSize.height - 8);
-
-    return Offset(x, y);
-  }
-
-  @override
-  bool shouldRelayout(_ContextMenuPositionDelegate oldDelegate) {
-    return anchor != oldDelegate.anchor;
   }
 }
