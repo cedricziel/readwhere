@@ -1,5 +1,6 @@
 import 'package:mockito/annotations.dart';
 import 'package:readwhere/domain/repositories/book_repository.dart';
+import 'package:readwhere/domain/repositories/annotation_repository.dart';
 import 'package:readwhere/domain/repositories/bookmark_repository.dart';
 import 'package:readwhere/domain/repositories/reading_progress_repository.dart';
 import 'package:readwhere/domain/repositories/catalog_repository.dart';
@@ -21,6 +22,7 @@ import 'package:readwhere/presentation/providers/settings_provider.dart';
 import 'package:readwhere/presentation/providers/catalogs_provider.dart';
 import 'package:readwhere/presentation/providers/feed_reader_provider.dart';
 import 'package:readwhere/presentation/providers/update_provider.dart';
+import 'package:readwhere/presentation/providers/annotation_provider.dart';
 import 'package:readwhere/presentation/providers/reader_provider.dart';
 import 'package:readwhere/presentation/providers/audio_provider.dart';
 import 'package:readwhere/presentation/providers/sync_settings_provider.dart';
@@ -33,6 +35,7 @@ import 'package:sqflite/sqflite.dart';
 @GenerateMocks([
   // Repositories
   BookRepository,
+  AnnotationRepository,
   BookmarkRepository,
   ReadingProgressRepository,
   CatalogRepository,
@@ -67,6 +70,7 @@ import 'package:sqflite/sqflite.dart';
   UpdateProvider,
   FeedReaderProvider,
   ReaderProvider,
+  AnnotationProvider,
   AudioProvider,
   SyncSettingsProvider,
 ])

@@ -22,6 +22,7 @@ import '../../data/database/database_helper.dart';
 import 'plugin_context_factory.dart';
 import 'plugin_storage_impl.dart';
 import '../../data/repositories/book_repository_impl.dart';
+import '../../data/repositories/annotation_repository_impl.dart';
 import '../../data/repositories/bookmark_repository_impl.dart';
 import '../../data/repositories/catalog_repository_impl.dart';
 import '../../data/repositories/opds_cache_repository_impl.dart';
@@ -37,6 +38,7 @@ import '../../data/services/opds_cache_service.dart';
 import '../../data/services/progress_sync_service.dart';
 import '../../data/services/sync_queue_service.dart';
 import '../../domain/repositories/book_repository.dart';
+import '../../domain/repositories/annotation_repository.dart';
 import '../../domain/repositories/bookmark_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
 import '../../domain/repositories/opds_cache_repository.dart';
@@ -45,6 +47,7 @@ import '../../domain/repositories/reading_progress_repository.dart';
 import '../../domain/repositories/sync_job_repository.dart';
 import '../../domain/services/connectivity_service.dart';
 import '../../data/repositories/feed_item_repository_impl.dart';
+import '../../presentation/providers/annotation_provider.dart';
 import '../../presentation/providers/audio_provider.dart';
 import '../../presentation/providers/feed_reader_provider.dart';
 import '../../presentation/providers/catalogs_provider.dart';
@@ -181,6 +184,10 @@ Future<void> setupServiceLocator() async {
 
   sl.registerLazySingleton<BookmarkRepository>(
     () => BookmarkRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton<AnnotationRepository>(
+    () => AnnotationRepositoryImpl(sl()),
   );
 
   sl.registerLazySingleton<CatalogRepository>(
@@ -364,6 +371,10 @@ Future<void> setupServiceLocator() async {
       pluginRegistry: sl<UnifiedPluginRegistry>(),
       kavitaProvider: sl(),
     ),
+  );
+
+  sl.registerLazySingleton<AnnotationProvider>(
+    () => AnnotationProvider(annotationRepository: sl()),
   );
 
   sl.registerLazySingleton<FeedReaderProvider>(
