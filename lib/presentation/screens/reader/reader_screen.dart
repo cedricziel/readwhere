@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../providers/annotation_provider.dart';
 import '../../providers/audio_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/reader_provider.dart';
@@ -9,6 +10,7 @@ import '../../themes/reading_themes.dart';
 import 'package:readwhere_cbr_plugin/readwhere_cbr_plugin.dart';
 import 'package:readwhere_cbz_plugin/readwhere_cbz_plugin.dart';
 import 'package:readwhere_epub_plugin/readwhere_epub_plugin.dart';
+import 'widgets/annotation_side_panel.dart';
 import 'widgets/audio_controls.dart';
 import 'widgets/reader_content.dart';
 import 'widgets/reader_controls.dart';
@@ -54,6 +56,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Future<void> _loadAndOpenBook() async {
     final libraryProvider = context.read<LibraryProvider>();
     final readerProvider = context.read<ReaderProvider>();
+    final annotationProvider = context.read<AnnotationProvider>();
 
     // Find the book in the library
     final book = libraryProvider.books.firstWhere(
@@ -62,6 +65,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
 
     await readerProvider.openBook(book);
+
+    // Load annotations for EPUB books
+    final controller = readerProvider.readerController;
+    final isEpub = controller is ReadwhereEpubController;
+    if (isEpub && mounted) {
+      await annotationProvider.loadAnnotationsForBook(widget.bookId);
+    }
 
     // Initialize audio for the current chapter if available
     if (mounted) {
@@ -138,9 +148,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
     final navigator = Navigator.of(context);
     final readerProvider = context.read<ReaderProvider>();
     final audioProvider = context.read<AudioProvider>();
+    final annotationProvider = context.read<AnnotationProvider>();
     await audioProvider.reset();
     await readerProvider.saveProgress();
     await readerProvider.closeBook();
+    annotationProvider.clearAnnotations();
     if (mounted) {
       navigator.pop();
     }
@@ -247,11 +259,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
       return FixedLayoutReader(onToggleControls: _toggleControls);
     }
 
+    // Annotations enabled only for EPUBs
+    final isEpub = controller is ReadwhereEpubController;
+
     // Default to reflowable reader for text-based content
     // Pass callbacks for tap zone navigation (left/center/right)
     return ReaderContentWidget(
       scrollController: _scrollController,
       onToggleControls: _toggleControls,
+      annotationsEnabled: isEpub,
       onNextChapter: () {
         readerProvider.nextChapter();
         if (_scrollController.hasClients) {
@@ -368,69 +384,81 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     ),
 
                     // Overlay controls (top and bottom bars)
-                    Consumer<SettingsProvider>(
-                      builder: (context, settingsProvider, _) {
-                        final controller = readerProvider.readerController;
-                        final isComic =
-                            controller is CbrReaderController ||
-                            controller is CbzReaderController;
+                    Consumer2<SettingsProvider, AnnotationProvider>(
+                      builder:
+                          (context, settingsProvider, annotationProvider, _) {
+                            final controller = readerProvider.readerController;
+                            final isComic =
+                                controller is CbrReaderController ||
+                                controller is CbzReaderController;
+                            final isEpub =
+                                controller is ReadwhereEpubController;
 
-                        return ReaderControls(
-                          visible: _showControls,
-                          bookTitle:
-                              readerProvider.currentBook?.title ?? 'Unknown',
-                          currentChapter: readerProvider.currentChapterIndex,
-                          totalChapters: readerProvider.tableOfContents.length,
-                          progress: readerProvider.progressPercentage,
-                          isComic: isComic,
-                          panelModeEnabled:
-                              settingsProvider.comicPanelModeEnabled,
-                          readingDirection:
-                              settingsProvider.comicReadingDirection,
-                          onTogglePanelMode: isComic
-                              ? () => settingsProvider.toggleComicPanelMode()
-                              : null,
-                          onToggleReadingDirection: isComic
-                              ? () => settingsProvider
-                                    .toggleComicReadingDirection()
-                              : null,
-                          onClose: _closeReader,
-                          onBookmark: _handleBookmark,
-                          onSettings: _showReadingSettings,
-                          onTableOfContents: _showTableOfContents,
-                          onAudio: _toggleAudioControls,
-                          onProgressChanged: (value) {
-                            // Update progress slider
-                            final totalChapters =
-                                readerProvider.tableOfContents.length;
-                            if (totalChapters > 0) {
-                              final targetChapter =
-                                  (value / 100 * totalChapters).floor();
-                              if (targetChapter !=
-                                  readerProvider.currentChapterIndex) {
-                                readerProvider.goToChapter(
-                                  targetChapter.clamp(0, totalChapters - 1),
-                                );
+                            return ReaderControls(
+                              visible: _showControls,
+                              bookTitle:
+                                  readerProvider.currentBook?.title ??
+                                  'Unknown',
+                              currentChapter:
+                                  readerProvider.currentChapterIndex,
+                              totalChapters:
+                                  readerProvider.tableOfContents.length,
+                              progress: readerProvider.progressPercentage,
+                              isComic: isComic,
+                              panelModeEnabled:
+                                  settingsProvider.comicPanelModeEnabled,
+                              readingDirection:
+                                  settingsProvider.comicReadingDirection,
+                              annotationPanelVisible:
+                                  annotationProvider.sidePanelVisible,
+                              onTogglePanelMode: isComic
+                                  ? () =>
+                                        settingsProvider.toggleComicPanelMode()
+                                  : null,
+                              onToggleReadingDirection: isComic
+                                  ? () => settingsProvider
+                                        .toggleComicReadingDirection()
+                                  : null,
+                              onAnnotations: isEpub
+                                  ? () => annotationProvider.toggleSidePanel()
+                                  : null,
+                              onClose: _closeReader,
+                              onBookmark: _handleBookmark,
+                              onSettings: _showReadingSettings,
+                              onTableOfContents: _showTableOfContents,
+                              onAudio: _toggleAudioControls,
+                              onProgressChanged: (value) {
+                                // Update progress slider
+                                final totalChapters =
+                                    readerProvider.tableOfContents.length;
+                                if (totalChapters > 0) {
+                                  final targetChapter =
+                                      (value / 100 * totalChapters).floor();
+                                  if (targetChapter !=
+                                      readerProvider.currentChapterIndex) {
+                                    readerProvider.goToChapter(
+                                      targetChapter.clamp(0, totalChapters - 1),
+                                    );
+                                    if (_scrollController.hasClients) {
+                                      _scrollController.jumpTo(0);
+                                    }
+                                  }
+                                }
+                              },
+                              onPreviousChapter: () {
+                                readerProvider.previousChapter();
                                 if (_scrollController.hasClients) {
                                   _scrollController.jumpTo(0);
                                 }
-                              }
-                            }
+                              },
+                              onNextChapter: () {
+                                readerProvider.nextChapter();
+                                if (_scrollController.hasClients) {
+                                  _scrollController.jumpTo(0);
+                                }
+                              },
+                            );
                           },
-                          onPreviousChapter: () {
-                            readerProvider.previousChapter();
-                            if (_scrollController.hasClients) {
-                              _scrollController.jumpTo(0);
-                            }
-                          },
-                          onNextChapter: () {
-                            readerProvider.nextChapter();
-                            if (_scrollController.hasClients) {
-                              _scrollController.jumpTo(0);
-                            }
-                          },
-                        );
-                      },
                     ),
 
                     // Audio controls (floating bottom bar)
@@ -446,6 +474,47 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           });
                         },
                       ),
+                    ),
+
+                    // Annotation side panel (EPUB only)
+                    Consumer<AnnotationProvider>(
+                      builder: (context, annotationProvider, _) {
+                        final controller = readerProvider.readerController;
+                        final isEpub = controller is ReadwhereEpubController;
+                        if (!isEpub) return const SizedBox.shrink();
+
+                        // Build chapter titles map for display
+                        final toc = readerProvider.tableOfContents;
+                        final chapterTitles = <String, String>{};
+                        for (var i = 0; i < toc.length; i++) {
+                          chapterTitles['chapter-$i'] = toc[i].title;
+                        }
+
+                        return AnnotationSidePanel(
+                          visible: annotationProvider.sidePanelVisible,
+                          chapterTitles: chapterTitles,
+                          onClose: () => annotationProvider.hideSidePanel(),
+                          onAnnotationTap: (annotation) {
+                            // Navigate to annotation location
+                            // Extract chapter index from chapterId
+                            final chapterId = annotation.chapterId;
+                            if (chapterId != null &&
+                                chapterId.startsWith('chapter-')) {
+                              final chapterIndex = int.tryParse(
+                                chapterId.substring('chapter-'.length),
+                              );
+                              if (chapterIndex != null) {
+                                readerProvider.goToChapter(chapterIndex);
+                                if (_scrollController.hasClients) {
+                                  _scrollController.jumpTo(0);
+                                }
+                              }
+                            }
+                            // Close side panel after navigation
+                            annotationProvider.hideSidePanel();
+                          },
+                        );
+                      },
                     ),
                   ],
                 ),

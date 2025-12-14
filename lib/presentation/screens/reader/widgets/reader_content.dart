@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +9,6 @@ import '../../../../domain/entities/annotation.dart';
 import '../../../providers/annotation_provider.dart';
 import '../../../providers/audio_provider.dart';
 import '../../../providers/reader_provider.dart';
-import '../../../themes/colors.dart';
 import '../../../themes/reading_themes.dart';
 import 'annotation_context_menu.dart';
 import 'note_editor_dialog.dart';
@@ -470,85 +468,26 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
   }
 
   /// Builds the annotation context menu when text is selected.
+  ///
+  /// Uses clipboard to reliably get selected text across Flutter versions.
   Widget _buildAnnotationContextMenu(
     BuildContext context,
     SelectableRegionState selectableRegionState,
     int chapterIndex,
   ) {
-    final selectedText =
-        selectableRegionState.getSelectedContent()?.plainText ?? '';
-
-    if (selectedText.trim().isEmpty) {
-      // Return default context menu if no text selected
-      return AdaptiveTextSelectionToolbar.selectableRegion(
-        selectableRegionState: selectableRegionState,
-      );
-    }
-
-    return Positioned(
-      top: selectableRegionState.contextMenuAnchors.primaryAnchor.dy,
-      left: selectableRegionState.contextMenuAnchors.primaryAnchor.dx,
-      child: AnnotationContextMenu(
-        selectedText: selectedText,
-        onHighlight: (color) async {
-          // Clear selection first
-          selectableRegionState.hideToolbar();
-          selectableRegionState.selectAll(SelectionChangedCause.tap);
-          selectableRegionState.clearSelection();
-
-          // Create annotation via provider
-          final annotationProvider = context.read<AnnotationProvider>();
-          annotationProvider.setSelection(
-            selectedText: selectedText,
-            chapterIndex: chapterIndex,
-          );
-          await annotationProvider.createAnnotationFromSelection(color: color);
-        },
-        onAddNote: () async {
-          // Hide selection toolbar
-          selectableRegionState.hideToolbar();
-
-          // Show note editor dialog
-          final result = await NoteEditorDialog.show(
-            context: context,
-            selectedText: selectedText,
-          );
-
-          if (result != null) {
-            // Create annotation with note
-            final annotationProvider = context.read<AnnotationProvider>();
-            annotationProvider.setSelection(
-              selectedText: selectedText,
-              chapterIndex: chapterIndex,
-            );
-            await annotationProvider.createAnnotationFromSelection(
-              color: result.color,
-              note: result.note.isNotEmpty ? result.note : null,
-            );
-          }
-
-          // Clear selection
-          selectableRegionState.clearSelection();
-        },
-        onCopy: () {
-          // Copy text to clipboard
-          Clipboard.setData(ClipboardData(text: selectedText));
-          selectableRegionState.hideToolbar();
-          selectableRegionState.clearSelection();
-
-          // Show snackbar feedback
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Copied to clipboard'),
-              duration: Duration(seconds: 1),
-            ),
-          );
-        },
-      ),
+    // Build a custom context menu with annotation actions
+    return _AnnotationContextMenuBuilder(
+      selectableRegionState: selectableRegionState,
+      chapterIndex: chapterIndex,
     );
   }
 
   /// Injects CSS for annotation highlights into the HTML content.
+  ///
+  /// This method generates CSS classes for each annotation to render
+  /// highlights in the HTML content. Call this after loading annotations
+  /// to visually display them in the reader.
+  // ignore: unused_element
   String _injectAnnotationHighlightsCss(
     String html,
     List<Annotation> annotations,
@@ -559,9 +498,9 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
 
     for (final annotation in annotations) {
       final color = AnnotationColorHelper.getColor(annotation.color);
-      final r = color.red;
-      final g = color.green;
-      final b = color.blue;
+      final r = (color.r * 255.0).round().clamp(0, 255);
+      final g = (color.g * 255.0).round().clamp(0, 255);
+      final b = (color.b * 255.0).round().clamp(0, 255);
 
       cssBuffer.writeln('''
 .annotation-${annotation.id} {
@@ -828,5 +767,146 @@ class _ReaderContentWidgetState extends State<ReaderContentWidget> {
     } else {
       return highlightCss + html;
     }
+  }
+}
+
+/// A stateful widget that builds the annotation context menu.
+///
+/// Uses a clipboard-based approach to reliably get selected text
+/// across different Flutter versions.
+class _AnnotationContextMenuBuilder extends StatefulWidget {
+  final SelectableRegionState selectableRegionState;
+  final int chapterIndex;
+
+  const _AnnotationContextMenuBuilder({
+    required this.selectableRegionState,
+    required this.chapterIndex,
+  });
+
+  @override
+  State<_AnnotationContextMenuBuilder> createState() =>
+      _AnnotationContextMenuBuilderState();
+}
+
+class _AnnotationContextMenuBuilderState
+    extends State<_AnnotationContextMenuBuilder> {
+  String? _selectedText;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _captureSelectedText();
+  }
+
+  Future<void> _captureSelectedText() async {
+    // Copy selection to clipboard to get the text
+    widget.selectableRegionState.copySelection(SelectionChangedCause.toolbar);
+
+    // Small delay to ensure clipboard is updated
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    // Read from clipboard
+    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+    if (mounted) {
+      setState(() {
+        _selectedText = clipboardData?.text;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Show loading or fall back to default menu while getting text
+    if (_isLoading || _selectedText == null || _selectedText!.trim().isEmpty) {
+      return AdaptiveTextSelectionToolbar.selectableRegion(
+        selectableRegionState: widget.selectableRegionState,
+      );
+    }
+
+    final selectedText = _selectedText!;
+    final anchors = widget.selectableRegionState.contextMenuAnchors;
+
+    return Positioned(
+      top: anchors.primaryAnchor.dy,
+      left: anchors.primaryAnchor.dx,
+      child: AnnotationContextMenu(
+        selectedText: selectedText,
+        onHighlight: (color) => _createHighlight(color, selectedText),
+        onAddNote: () => _showNoteDialog(selectedText),
+        onCopy: () => _copyToClipboard(selectedText),
+      ),
+    );
+  }
+
+  Future<void> _createHighlight(
+    AnnotationColor color,
+    String selectedText,
+  ) async {
+    // Clear selection
+    widget.selectableRegionState.hideToolbar();
+    widget.selectableRegionState.clearSelection();
+
+    // Create annotation via provider
+    final annotationProvider = context.read<AnnotationProvider>();
+    annotationProvider.setSelection(
+      selectedText: selectedText,
+      chapterIndex: widget.chapterIndex,
+    );
+    await annotationProvider.createAnnotationFromSelection(color: color);
+  }
+
+  Future<void> _showNoteDialog(String selectedText) async {
+    // Hide selection toolbar
+    widget.selectableRegionState.hideToolbar();
+
+    // Capture context before async gap
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final annotationProvider = context.read<AnnotationProvider>();
+
+    // Show note editor dialog
+    final result = await NoteEditorDialog.show(
+      context: context,
+      selectedText: selectedText,
+    );
+
+    if (result != null) {
+      // Create annotation with note
+      annotationProvider.setSelection(
+        selectedText: selectedText,
+        chapterIndex: widget.chapterIndex,
+      );
+      final annotation = await annotationProvider.createAnnotationFromSelection(
+        color: result.color,
+        note: result.note.isNotEmpty ? result.note : null,
+      );
+
+      if (annotation != null) {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Annotation created'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+
+    // Clear selection
+    widget.selectableRegionState.clearSelection();
+  }
+
+  void _copyToClipboard(String selectedText) {
+    // Text is already in clipboard from our capture
+    widget.selectableRegionState.hideToolbar();
+    widget.selectableRegionState.clearSelection();
+
+    // Show snackbar feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Copied to clipboard'),
+        duration: Duration(seconds: 1),
+      ),
+    );
   }
 }
