@@ -5,6 +5,7 @@ import '../../../../data/services/background_sync_manager.dart';
 import '../../../../data/services/nextcloud_news_sync_service.dart';
 import '../../../../domain/entities/catalog.dart';
 import '../../../providers/catalogs_provider.dart';
+import '../../../providers/sync_settings_provider.dart';
 import '../../../widgets/adaptive/adaptive_button.dart';
 import 'nextcloud_folder_picker_dialog.dart';
 
@@ -40,15 +41,30 @@ class _NextcloudCatalogSettingsDialogState
   bool _isCheckingNews = false;
   bool _isSaving = false;
   String? _error;
+  bool _globalSyncEnabled = false;
+  bool _feedSyncEnabled = true;
 
   @override
   void initState() {
     super.initState();
     _catalog = widget.catalog;
 
+    // Check sync settings
+    _checkSyncSettings();
+
     // Check News app availability if not yet checked
     if (_catalog.newsAppAvailable == null) {
       _checkNewsAvailability();
+    }
+  }
+
+  void _checkSyncSettings() {
+    if (sl.isRegistered<SyncSettingsProvider>()) {
+      final syncSettings = sl<SyncSettingsProvider>();
+      setState(() {
+        _globalSyncEnabled = syncSettings.syncEnabled;
+        _feedSyncEnabled = syncSettings.feedSyncEnabled;
+      });
     }
   }
 
@@ -327,46 +343,82 @@ class _NextcloudCatalogSettingsDialogState
     }
 
     // News app is available - show toggle
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.5),
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.rss_feed,
-            color: _catalog.newsSyncEnabled
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline,
+    final showSyncWarning =
+        _catalog.newsSyncEnabled && (!_globalSyncEnabled || !_feedSyncEnabled);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.5),
+            ),
+            borderRadius: BorderRadius.circular(8),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Sync feeds from News app',
-                  style: theme.textTheme.bodyMedium,
+          child: Row(
+            children: [
+              Icon(
+                Icons.rss_feed,
+                color: _catalog.newsSyncEnabled
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outline,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sync feeds from News app',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    Text(
+                      'Import RSS subscriptions and sync read status',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'Import RSS subscriptions and sync read status',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.outline,
+              ),
+              Switch.adaptive(
+                value: _catalog.newsSyncEnabled,
+                onChanged: _toggleNewsSyncEnabled,
+              ),
+            ],
+          ),
+        ),
+        if (showSyncWarning) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.tertiaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: theme.colorScheme.onTertiaryContainer,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Enable "Sync" and "Feed sync" in Settings > Sync for this to work.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onTertiaryContainer,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          Switch.adaptive(
-            value: _catalog.newsSyncEnabled,
-            onChanged: _toggleNewsSyncEnabled,
-          ),
         ],
-      ),
+      ],
     );
   }
 }

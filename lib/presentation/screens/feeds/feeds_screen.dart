@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/di/service_locator.dart';
+import '../../../data/services/background_sync_manager.dart';
 import '../../../domain/entities/catalog.dart';
 import '../../providers/catalogs_provider.dart';
 import '../../providers/feed_reader_provider.dart';
@@ -41,6 +43,43 @@ class _FeedsScreenState extends State<FeedsScreen> {
       );
       feedReaderProvider.loadAllUnreadCounts();
     });
+  }
+
+  /// Refresh feeds by syncing from Nextcloud News and reloading.
+  Future<void> _refreshFeeds() async {
+    final catalogsProvider = Provider.of<CatalogsProvider>(
+      context,
+      listen: false,
+    );
+
+    // Trigger Nextcloud News sync for all enabled catalogs
+    if (sl.isRegistered<BackgroundSyncManager>()) {
+      try {
+        final syncManager = await sl.getAsync<BackgroundSyncManager>();
+        final catalogs = catalogsProvider.catalogs;
+
+        // Schedule sync for each Nextcloud catalog with News sync enabled
+        for (final catalog in catalogs) {
+          if (catalog.isNextcloud && catalog.newsSyncEnabled) {
+            await syncManager.scheduleNextcloudNewsSync(catalogId: catalog.id);
+          }
+        }
+      } catch (e) {
+        // Ignore sync errors, still reload the list
+      }
+    }
+
+    // Reload catalogs from database
+    await catalogsProvider.loadCatalogs();
+
+    // Refresh unread counts
+    if (mounted) {
+      final feedReaderProvider = Provider.of<FeedReaderProvider>(
+        context,
+        listen: false,
+      );
+      await feedReaderProvider.loadAllUnreadCounts();
+    }
   }
 
   Future<void> _showAddFeedDialog() async {
@@ -221,7 +260,7 @@ class _FeedsScreenState extends State<FeedsScreen> {
 
   Widget _buildFeedList(CatalogsProvider provider, List<Catalog> feeds) {
     return RefreshIndicator.adaptive(
-      onRefresh: () => provider.loadCatalogs(),
+      onRefresh: _refreshFeeds,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: feeds.length,
