@@ -149,6 +149,10 @@ class AdaptiveActionSheet {
 
     return showModalBottomSheet<T>(
       context: context,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -201,29 +205,37 @@ class AdaptiveActionSheet {
               const Divider(height: 1),
             ],
 
-            // Actions
-            ...actions.map((action) {
-              final color = action.isDestructive
-                  ? theme.colorScheme.error
-                  : theme.colorScheme.onSurface;
+            // Actions (scrollable to handle many items or small screens)
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: actions.map((action) {
+                    final color = action.isDestructive
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurface;
 
-              return ListTile(
-                leading: action.icon != null
-                    ? Icon(action.icon, color: color)
-                    : null,
-                title: Text(
-                  action.label,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: action.isDefault ? FontWeight.w600 : null,
-                  ),
+                    return ListTile(
+                      leading: action.icon != null
+                          ? Icon(action.icon, color: color)
+                          : null,
+                      title: Text(
+                        action.label,
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: action.isDefault ? FontWeight.w600 : null,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        action.onPressed();
+                      },
+                    );
+                  }).toList(),
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  action.onPressed();
-                },
-              );
-            }),
+              ),
+            ),
 
             // Cancel action (if provided, show as a separate button)
             if (cancelAction != null) ...[
