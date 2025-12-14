@@ -10,6 +10,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/sync_settings_provider.dart';
 import '../../providers/update_provider.dart';
+import '../../widgets/adaptive/adaptive_button.dart';
 import '../../widgets/update_dialog.dart';
 import 'sync_settings_section.dart';
 
@@ -234,7 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
@@ -327,11 +328,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'This will clear cached images and temporary files. Your books and reading progress will not be affected.',
         ),
         actions: [
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          FilledButton(
+          AdaptiveFilledButton(
             onPressed: () {
               Navigator.pop(context);
               // TODO: Implement cache clearing
@@ -434,14 +435,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _openUrl('https://github.com/cedricziel/readwhere/issues'),
         ),
         const SizedBox(height: 16),
-        TextButton(
+        AdaptiveTextButton(
           onPressed: () {
             _showResetSettingsDialog();
           },
-          child: const Text(
-            'Reset All Settings',
-            style: TextStyle(color: Colors.red),
-          ),
+          isDestructive: true,
+          child: const Text('Reset All Settings'),
         ),
         const SizedBox(height: 16),
       ],
@@ -497,14 +496,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'This will reset all settings to their default values. Your books and reading progress will not be affected.',
         ),
         actions: [
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+          AdaptiveFilledButton(
             onPressed: () {
               Navigator.pop(context);
               final settingsProvider = Provider.of<SettingsProvider>(

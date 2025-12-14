@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../data/services/background_sync_manager.dart';
 import '../../providers/sync_settings_provider.dart';
+import '../../widgets/adaptive/adaptive_button.dart';
 
 /// A settings section for configuring background sync options.
 ///
@@ -128,7 +129,7 @@ class SyncSettingsSection extends StatelessWidget {
           }).toList(),
         ),
         actions: [
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
@@ -305,6 +306,6 @@ class _SyncNowButtonState extends State<_SyncNowButton> {
             height: 24,
             child: CircularProgressIndicator(strokeWidth: 2),
           )
-        : IconButton(icon: const Icon(Icons.sync), onPressed: _triggerSync);
+        : AdaptiveIconButton(icon: Icons.sync, onPressed: _triggerSync);
   }
 }
