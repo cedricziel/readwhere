@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/library_facet.dart';
 import '../../providers/library_provider.dart';
+import '../../widgets/adaptive/adaptive_action_sheet.dart';
 import '../../widgets/adaptive/adaptive_text_field.dart';
 import '../../widgets/adaptive/responsive_layout.dart';
 import '../../widgets/common/app_logo.dart';
@@ -195,11 +196,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
             },
           ),
           // More options menu
-          PopupMenuButton<String>(
+          IconButton(
             icon: const Icon(Icons.more_vert),
             tooltip: 'More options',
-            onSelected: _handleMoreMenuSelection,
-            itemBuilder: (context) => _buildMoreMenuItems(),
+            onPressed: () {
+              AdaptiveActionSheet.show(
+                context: context,
+                actions: [
+                  AdaptiveActionSheetAction(
+                    label: 'Refresh All Metadata',
+                    icon: Icons.refresh,
+                    onPressed: _refreshAllMetadata,
+                  ),
+                ],
+              );
+            },
           ),
         ],
 
@@ -266,22 +277,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
         Text(label),
       ],
     );
-  }
-
-  /// Builds more menu items for desktop
-  List<PopupMenuEntry<String>> _buildMoreMenuItems() {
-    return [
-      const PopupMenuItem(
-        value: 'refresh_all_metadata',
-        child: Row(
-          children: [
-            Icon(Icons.refresh, size: 20),
-            SizedBox(width: 12),
-            Text('Refresh All Metadata'),
-          ],
-        ),
-      ),
-    ];
   }
 
   /// Builds consolidated menu items for mobile
@@ -353,13 +348,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ),
       ),
     ];
-  }
-
-  /// Handles more menu selection (desktop)
-  void _handleMoreMenuSelection(String value) {
-    if (value == 'refresh_all_metadata') {
-      _refreshAllMetadata();
-    }
   }
 
   /// Handles mobile consolidated menu selection

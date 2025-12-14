@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../domain/entities/catalog.dart';
 import '../../../providers/feed_reader_provider.dart';
+import '../../../widgets/adaptive/adaptive_action_sheet.dart';
 
 /// A card widget displaying an RSS feed entry
 class FeedCard extends StatelessWidget {
@@ -68,25 +69,21 @@ class FeedCard extends StatelessWidget {
                 ),
               ),
               // Menu button
-              PopupMenuButton<String>(
+              IconButton(
                 icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
-                  switch (value) {
-                    case 'delete':
-                      onDelete();
-                      break;
-                  }
+                onPressed: () {
+                  AdaptiveActionSheet.show(
+                    context: context,
+                    actions: [
+                      AdaptiveActionSheetAction(
+                        label: 'Unsubscribe',
+                        icon: Icons.delete_outline,
+                        onPressed: onDelete,
+                        isDestructive: true,
+                      ),
+                    ],
+                  );
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: ListTile(
-                      leading: Icon(Icons.delete_outline, color: Colors.red),
-                      title: Text('Unsubscribe'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),

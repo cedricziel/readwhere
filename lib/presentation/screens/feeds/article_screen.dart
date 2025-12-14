@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../domain/entities/feed_item.dart';
 import '../../providers/feed_reader_provider.dart';
+import '../../widgets/adaptive/adaptive_action_sheet.dart';
 
 /// Screen for reading a feed article/item content.
 ///
@@ -155,42 +156,30 @@ class _ArticleScreenState extends State<ArticleScreen> {
               tooltip: _item!.isStarred ? 'Unstar' : 'Star',
               onPressed: _toggleStarred,
             ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'browser':
-                    _openInBrowser();
-                  case 'read_state':
-                    _toggleReadState();
-                }
-              },
-              itemBuilder: (context) => [
-                if (_item?.link != null)
-                  const PopupMenuItem(
-                    value: 'browser',
-                    child: ListTile(
-                      leading: Icon(Icons.open_in_browser),
-                      title: Text('Open in browser'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                PopupMenuItem(
-                  value: 'read_state',
-                  child: ListTile(
-                    leading: Icon(
-                      _item?.isRead ?? false
-                          ? Icons.mark_email_unread
-                          : Icons.mark_email_read,
-                    ),
-                    title: Text(
-                      _item?.isRead ?? false
+            IconButton(
+              icon: const Icon(Icons.more_vert),
+              onPressed: () {
+                AdaptiveActionSheet.show(
+                  context: context,
+                  actions: [
+                    if (_item?.link != null)
+                      AdaptiveActionSheetAction(
+                        label: 'Open in browser',
+                        icon: Icons.open_in_browser,
+                        onPressed: _openInBrowser,
+                      ),
+                    AdaptiveActionSheetAction(
+                      label: _item?.isRead ?? false
                           ? 'Mark as unread'
                           : 'Mark as read',
+                      icon: _item?.isRead ?? false
+                          ? Icons.mark_email_unread
+                          : Icons.mark_email_read,
+                      onPressed: _toggleReadState,
                     ),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ],
         ],

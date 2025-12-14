@@ -197,7 +197,7 @@ void main() {
         expect(deleted, isTrue);
       });
 
-      testWidgets('menu shows delete icon', (tester) async {
+      testWidgets('menu shows Unsubscribe option', (tester) async {
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
@@ -208,7 +208,8 @@ void main() {
         await tester.tap(find.byIcon(Icons.more_vert));
         await tester.pumpAndSettle();
 
-        expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+        // AdaptiveActionSheet shows text; icon may not be visible on Cupertino
+        expect(find.text('Unsubscribe'), findsOneWidget);
       });
     });
 

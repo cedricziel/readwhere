@@ -15,6 +15,7 @@ import '../../../providers/catalogs_provider.dart';
 import '../../../providers/feed_reader_provider.dart';
 import '../../../providers/library_provider.dart';
 import '../../../router/routes.dart';
+import '../../../widgets/adaptive/adaptive_action_sheet.dart';
 
 /// Filter options for RSS feed items
 enum FeedFilter { all, downloadable, unread }
@@ -363,23 +364,20 @@ class _RssBrowseScreenState extends State<RssBrowseScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _isRefreshing ? null : _refresh,
           ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'mark_all_read':
-                  _markAllAsRead();
-              }
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {
+              AdaptiveActionSheet.show(
+                context: context,
+                actions: [
+                  AdaptiveActionSheetAction(
+                    label: 'Mark all as read',
+                    icon: Icons.done_all,
+                    onPressed: _markAllAsRead,
+                  ),
+                ],
+              );
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'mark_all_read',
-                child: ListTile(
-                  leading: Icon(Icons.done_all),
-                  title: Text('Mark all as read'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
           ),
         ],
       ),
