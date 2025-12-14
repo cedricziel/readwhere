@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
+import 'package:readwhere/presentation/providers/annotation_provider.dart';
 import 'package:readwhere/presentation/providers/reader_provider.dart';
 import 'package:readwhere/presentation/providers/audio_provider.dart';
 import 'package:readwhere/presentation/screens/reader/widgets/reader_content.dart';
@@ -11,10 +12,12 @@ import '../../../../mocks/mock_repositories.mocks.dart';
 void main() {
   late MockReaderProvider mockReaderProvider;
   late MockAudioProvider mockAudioProvider;
+  late MockAnnotationProvider mockAnnotationProvider;
 
   setUp(() {
     mockReaderProvider = MockReaderProvider();
     mockAudioProvider = MockAudioProvider();
+    mockAnnotationProvider = MockAnnotationProvider();
 
     // Setup default mock responses for ReaderProvider
     when(mockReaderProvider.hasOpenBook).thenReturn(true);
@@ -29,6 +32,18 @@ void main() {
 
     // Setup default mock responses for AudioProvider
     when(mockAudioProvider.highlightedElementId).thenReturn(null);
+
+    // Setup default mock responses for AnnotationProvider
+    when(mockAnnotationProvider.annotations).thenReturn([]);
+    when(mockAnnotationProvider.currentBookId).thenReturn(null);
+    when(mockAnnotationProvider.isLoading).thenReturn(false);
+    when(mockAnnotationProvider.error).thenReturn(null);
+    when(mockAnnotationProvider.currentSelection).thenReturn(null);
+    when(mockAnnotationProvider.sidePanelVisible).thenReturn(false);
+    when(mockAnnotationProvider.hasSelection).thenReturn(false);
+    when(mockAnnotationProvider.annotationsByChapter).thenReturn({});
+    when(mockAnnotationProvider.annotationCount).thenReturn(0);
+    when(mockAnnotationProvider.annotationsForChapter(any)).thenReturn([]);
   });
 
   Widget buildTestWidget({
@@ -45,6 +60,9 @@ void main() {
             ),
             ChangeNotifierProvider<AudioProvider>.value(
               value: mockAudioProvider,
+            ),
+            ChangeNotifierProvider<AnnotationProvider>.value(
+              value: mockAnnotationProvider,
             ),
           ],
           child: ReaderContentWidget(

@@ -5,6 +5,7 @@ import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:readwhere/domain/entities/book.dart';
 import 'package:readwhere/domain/entities/reading_settings.dart';
+import 'package:readwhere/presentation/providers/annotation_provider.dart';
 import 'package:readwhere/presentation/providers/audio_provider.dart';
 import 'package:readwhere/presentation/providers/library_provider.dart';
 import 'package:readwhere/presentation/providers/reader_provider.dart';
@@ -19,6 +20,7 @@ void main() {
   late MockAudioProvider mockAudioProvider;
   late MockLibraryProvider mockLibraryProvider;
   late MockSettingsProvider mockSettingsProvider;
+  late MockAnnotationProvider mockAnnotationProvider;
 
   final testBook = Book(
     id: 'test-book-id',
@@ -35,6 +37,7 @@ void main() {
     mockAudioProvider = MockAudioProvider();
     mockLibraryProvider = MockLibraryProvider();
     mockSettingsProvider = MockSettingsProvider();
+    mockAnnotationProvider = MockAnnotationProvider();
 
     // Setup default mock responses for ReaderProvider
     when(mockReaderProvider.hasOpenBook).thenReturn(true);
@@ -77,6 +80,18 @@ void main() {
     when(
       mockSettingsProvider.comicReadingDirection,
     ).thenReturn(ReadingDirection.leftToRight);
+
+    // Setup default mock responses for AnnotationProvider
+    when(mockAnnotationProvider.annotations).thenReturn([]);
+    when(mockAnnotationProvider.currentBookId).thenReturn(null);
+    when(mockAnnotationProvider.isLoading).thenReturn(false);
+    when(mockAnnotationProvider.error).thenReturn(null);
+    when(mockAnnotationProvider.currentSelection).thenReturn(null);
+    when(mockAnnotationProvider.sidePanelVisible).thenReturn(false);
+    when(mockAnnotationProvider.hasSelection).thenReturn(false);
+    when(mockAnnotationProvider.annotationsByChapter).thenReturn({});
+    when(mockAnnotationProvider.annotationCount).thenReturn(0);
+    when(mockAnnotationProvider.annotationsForChapter(any)).thenReturn([]);
   });
 
   Widget buildTestWidget() {
@@ -92,6 +107,9 @@ void main() {
           ),
           ChangeNotifierProvider<SettingsProvider>.value(
             value: mockSettingsProvider,
+          ),
+          ChangeNotifierProvider<AnnotationProvider>.value(
+            value: mockAnnotationProvider,
           ),
         ],
         child: const ReaderScreen(bookId: 'test-book-id'),
@@ -136,6 +154,9 @@ void main() {
                 ),
                 ChangeNotifierProvider<SettingsProvider>.value(
                   value: mockSettingsProvider,
+                ),
+                ChangeNotifierProvider<AnnotationProvider>.value(
+                  value: mockAnnotationProvider,
                 ),
               ],
               child: Navigator(
