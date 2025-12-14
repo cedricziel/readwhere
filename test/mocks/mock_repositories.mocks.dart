@@ -1698,6 +1698,25 @@ class MockSyncQueueService extends _i1.Mock implements _i38.SyncQueueService {
           as _i10.Future<_i7.SyncJob>);
 
   @override
+  _i10.Future<_i7.SyncJob> enqueueNextcloudNewsSync({
+    required String? catalogId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#enqueueNextcloudNewsSync, [], {
+              #catalogId: catalogId,
+            }),
+            returnValue: _i10.Future<_i7.SyncJob>.value(
+              _FakeSyncJob_5(
+                this,
+                Invocation.method(#enqueueNextcloudNewsSync, [], {
+                  #catalogId: catalogId,
+                }),
+              ),
+            ),
+          )
+          as _i10.Future<_i7.SyncJob>);
+
+  @override
   _i10.Future<bool> hasPendingJobs() =>
       (super.noSuchMethod(
             Invocation.method(#hasPendingJobs, []),
@@ -2086,6 +2105,17 @@ class MockBackgroundSyncManager extends _i1.Mock
             Invocation.method(#scheduleFeedSync, [], {
               #feedId: feedId,
               #feedUrl: feedUrl,
+            }),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> scheduleNextcloudNewsSync({required String? catalogId}) =>
+      (super.noSuchMethod(
+            Invocation.method(#scheduleNextcloudNewsSync, [], {
+              #catalogId: catalogId,
             }),
             returnValue: _i10.Future<void>.value(),
             returnValueForMissingStub: _i10.Future<void>.value(),
@@ -3532,6 +3562,26 @@ class MockCatalogsProvider extends _i1.Mock implements _i54.CatalogsProvider {
           as _i10.Future<_i6.Catalog?>);
 
   @override
+  _i10.Future<_i6.Catalog?> addSynologyCatalog({
+    required String? name,
+    required String? url,
+    required String? username,
+    required String? password,
+    String? booksFolder,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#addSynologyCatalog, [], {
+              #name: name,
+              #url: url,
+              #username: username,
+              #password: password,
+              #booksFolder: booksFolder,
+            }),
+            returnValue: _i10.Future<_i6.Catalog?>.value(),
+          )
+          as _i10.Future<_i6.Catalog?>);
+
+  @override
   _i10.Future<_i6.Catalog?> updateCatalog(_i6.Catalog? catalog) =>
       (super.noSuchMethod(
             Invocation.method(#updateCatalog, [catalog]),
@@ -3609,6 +3659,23 @@ class MockCatalogsProvider extends _i1.Mock implements _i54.CatalogsProvider {
             ),
           )
           as _i10.Future<_i24.NextcloudServerInfo>);
+
+  @override
+  _i10.Future<void> validateSynology(
+    String? serverUrl,
+    String? username,
+    String? password,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#validateSynology, [
+              serverUrl,
+              username,
+              password,
+            ]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<_i21.RssFeed> validateRssFeed(String? url) =>
