@@ -8,6 +8,7 @@ import '../../../../domain/entities/catalog.dart';
 import '../../../providers/library_provider.dart';
 import '../../../providers/unified_catalog_browsing_provider.dart';
 import '../../../router/routes.dart';
+import '../../../widgets/adaptive/adaptive_action_sheet.dart';
 import '../../../widgets/adaptive/adaptive_text_field.dart';
 import '../../../widgets/facets/facet_filter_bar.dart';
 import '../../../widgets/facets/facet_selection_sheet.dart';
@@ -130,16 +131,19 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
       return;
     }
 
-    // Show format selection
-    showModalBottomSheet(
+    // Show format selection using adaptive action sheet
+    AdaptiveActionSheet.show(
       context: context,
-      builder: (context) => _DownloadOptionsSheet(
-        entry: entry,
-        onDownload: (file) {
-          Navigator.pop(context);
-          _downloadFile(entry, file, openAfterDownload);
-        },
-      ),
+      title: 'Choose format',
+      actions: entry.files.map((file) {
+        final name = file.title ?? _getFormatName(file);
+        final size = file.size != null ? ' (${_formatSize(file.size!)})' : '';
+        return AdaptiveActionSheetAction(
+          label: '$name$size',
+          icon: _getFormatIcon(file),
+          onPressed: () => _downloadFile(entry, file, openAfterDownload),
+        );
+      }).toList(),
     );
   }
 
@@ -169,6 +173,28 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
         ).showSnackBar(SnackBar(content: Text(_provider.error!)));
       }
     }
+  }
+
+  IconData _getFormatIcon(CatalogFile file) {
+    if (file.isEpub) return Icons.book;
+    if (file.isPdf) return Icons.picture_as_pdf;
+    if (file.isComic) return Icons.photo_library;
+    return Icons.insert_drive_file;
+  }
+
+  String _getFormatName(CatalogFile file) {
+    final ext = file.extension?.toUpperCase();
+    if (ext != null) return ext;
+    if (file.isEpub) return 'EPUB';
+    if (file.isPdf) return 'PDF';
+    if (file.isComic) return 'Comic';
+    return file.mimeType;
+  }
+
+  String _formatSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   @override
@@ -490,66 +516,5 @@ class _CatalogEntryTile extends StatelessWidget {
     }
 
     return null;
-  }
-}
-
-/// Bottom sheet for selecting download format.
-class _DownloadOptionsSheet extends StatelessWidget {
-  const _DownloadOptionsSheet({required this.entry, required this.onDownload});
-
-  final CatalogEntry entry;
-  final void Function(CatalogFile) onDownload;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'Choose format',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ),
-          const Divider(height: 1),
-          ...entry.files.map(
-            (file) => ListTile(
-              leading: Icon(_getFormatIcon(file)),
-              title: Text(file.title ?? _getFormatName(file)),
-              subtitle: file.size != null
-                  ? Text(_formatSize(file.size!))
-                  : null,
-              onTap: () => onDownload(file),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-
-  IconData _getFormatIcon(CatalogFile file) {
-    if (file.isEpub) return Icons.book;
-    if (file.isPdf) return Icons.picture_as_pdf;
-    if (file.isComic) return Icons.photo_library;
-    return Icons.insert_drive_file;
-  }
-
-  String _getFormatName(CatalogFile file) {
-    final ext = file.extension?.toUpperCase();
-    if (ext != null) return ext;
-    if (file.isEpub) return 'EPUB';
-    if (file.isPdf) return 'PDF';
-    if (file.isComic) return 'Comic';
-    return file.mimeType;
-  }
-
-  String _formatSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }

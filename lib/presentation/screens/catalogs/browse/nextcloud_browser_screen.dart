@@ -13,6 +13,7 @@ import '../../../../domain/repositories/book_repository.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../providers/library_provider.dart';
 import '../../../router/routes.dart';
+import '../../../widgets/adaptive/adaptive_action_sheet.dart';
 
 /// Screen for browsing Nextcloud files via WebDAV
 class NextcloudBrowserScreen extends StatefulWidget {
@@ -85,16 +86,31 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
   }
 
   void _showDownloadSheet(NextcloudFile file) {
-    showModalBottomSheet(
+    final sizeText = file.size != null ? _formatFileSize(file.size!) : '';
+    final message = sizeText.isNotEmpty ? '${file.name}\n$sizeText' : file.name;
+
+    AdaptiveActionSheet.show(
       context: context,
-      builder: (context) =>
-          _DownloadSheet(file: file, onDownload: () => _handleDownload(file)),
+      title: 'Download',
+      message: message,
+      actions: [
+        AdaptiveActionSheetAction(
+          label: 'Download to Library',
+          icon: Icons.download,
+          onPressed: () => _handleDownload(file),
+          isDefault: true,
+        ),
+      ],
     );
   }
 
-  Future<void> _handleDownload(NextcloudFile file) async {
-    Navigator.of(context).pop(); // Close bottom sheet
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
 
+  Future<void> _handleDownload(NextcloudFile file) async {
     final provider = sl<NextcloudProvider>();
 
     try {
@@ -350,64 +366,5 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
         ),
       ),
     );
-  }
-}
-
-/// Bottom sheet for download options
-class _DownloadSheet extends StatelessWidget {
-  final NextcloudFile file;
-  final VoidCallback onDownload;
-
-  const _DownloadSheet({required this.file, required this.onDownload});
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              file.name,
-              style: Theme.of(context).textTheme.titleLarge,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (file.size != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _formatFileSize(file.size!),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onDownload,
-                icon: const Icon(Icons.download),
-                label: const Text('Download to Library'),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }
