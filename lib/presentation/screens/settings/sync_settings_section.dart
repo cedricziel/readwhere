@@ -107,26 +107,29 @@ class SyncSettingsSection extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog.adaptive(
         title: const Text('Sync Interval'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: intervals.entries.map((entry) {
-            final isSelected = entry.key == settings.syncIntervalMinutes;
-            return ListTile(
-              title: Text(entry.value),
-              leading: Icon(
-                isSelected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : null,
-              ),
-              onTap: () {
-                settings.setSyncInterval(entry.key);
-                Navigator.pop(context);
-              },
-            );
-          }).toList(),
+        content: Material(
+          type: MaterialType.transparency,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: intervals.entries.map((entry) {
+              final isSelected = entry.key == settings.syncIntervalMinutes;
+              return ListTile(
+                title: Text(entry.value),
+                leading: Icon(
+                  isSelected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+                onTap: () {
+                  settings.setSyncInterval(entry.key);
+                  Navigator.pop(context);
+                },
+              );
+            }).toList(),
+          ),
         ),
         actions: [
           AdaptiveTextButton(
