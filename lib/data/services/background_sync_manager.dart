@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:get_it/get_it.dart';
 
@@ -311,51 +310,22 @@ class BackgroundSyncManager {
 
   /// Process a Nextcloud News sync job.
   Future<void> _processNextcloudNewsJob(SyncJob job) async {
-    developer.log(
-      '_processNextcloudNewsJob: processing job ${job.id} for target ${job.targetId}',
-      name: 'BackgroundSyncManager',
-    );
-
     // Try to get the service - either from constructor or service locator
     var syncService = _nextcloudNewsSyncService;
     if (syncService == null) {
       // Try to get it from service locator (it may have been registered after manager creation)
       final sl = GetIt.instance;
       if (sl.isRegistered<NextcloudNewsSyncService>()) {
-        developer.log(
-          '_processNextcloudNewsJob: getting service from service locator',
-          name: 'BackgroundSyncManager',
-        );
         syncService = sl<NextcloudNewsSyncService>();
       }
     }
-    if (syncService == null) {
-      developer.log(
-        '_processNextcloudNewsJob: service not available, skipping',
-        name: 'BackgroundSyncManager',
-      );
-      return;
-    }
+    if (syncService == null) return;
 
     // Use feed sync enabled setting for Nextcloud News as well
-    if (!_settingsProvider.feedSyncEnabled) {
-      developer.log(
-        '_processNextcloudNewsJob: feedSyncEnabled is false, skipping',
-        name: 'BackgroundSyncManager',
-      );
-      return;
-    }
+    if (!_settingsProvider.feedSyncEnabled) return;
 
     final catalogId = job.targetId;
-    developer.log(
-      '_processNextcloudNewsJob: calling syncFromCatalog($catalogId)',
-      name: 'BackgroundSyncManager',
-    );
-    final result = await syncService.syncFromCatalog(catalogId);
-    developer.log(
-      '_processNextcloudNewsJob: syncFromCatalog result: $result',
-      name: 'BackgroundSyncManager',
-    );
+    await syncService.syncFromCatalog(catalogId);
   }
 
   /// Schedule a progress sync for a book.
@@ -429,57 +399,22 @@ class BackgroundSyncManager {
   /// Syncs RSS feeds and article state from a Nextcloud catalog's News app.
   /// [catalogId] - The ID of the Nextcloud catalog with News sync enabled
   Future<void> scheduleNextcloudNewsSync({required String catalogId}) async {
-    developer.log(
-      'scheduleNextcloudNewsSync called for catalog: $catalogId',
-      name: 'BackgroundSyncManager',
-    );
-
-    if (!_settingsProvider.syncEnabled) {
-      developer.log(
-        'scheduleNextcloudNewsSync: syncEnabled is false, returning',
-        name: 'BackgroundSyncManager',
-      );
-      return;
-    }
-    if (!_settingsProvider.feedSyncEnabled) {
-      developer.log(
-        'scheduleNextcloudNewsSync: feedSyncEnabled is false, returning',
-        name: 'BackgroundSyncManager',
-      );
-      return;
-    }
+    if (!_settingsProvider.syncEnabled) return;
+    if (!_settingsProvider.feedSyncEnabled) return;
 
     // Check if service is available (either from constructor or service locator)
     final hasService =
         _nextcloudNewsSyncService != null ||
         GetIt.instance.isRegistered<NextcloudNewsSyncService>();
-    if (!hasService) {
-      developer.log(
-        'scheduleNextcloudNewsSync: NextcloudNewsSyncService not available',
-        name: 'BackgroundSyncManager',
-      );
-      return;
-    }
+    if (!hasService) return;
 
-    developer.log(
-      'scheduleNextcloudNewsSync: enqueueing sync job',
-      name: 'BackgroundSyncManager',
-    );
     await _queueService.enqueueNextcloudNewsSync(catalogId: catalogId);
 
     // Try to sync immediately if conditions are met
     final canSync = _connectivityService.canSync(
       wifiOnlyEnabled: _settingsProvider.wifiOnly,
     );
-    developer.log(
-      'scheduleNextcloudNewsSync: canSync=$canSync, wifiOnly=${_settingsProvider.wifiOnly}',
-      name: 'BackgroundSyncManager',
-    );
     if (canSync) {
-      developer.log(
-        'scheduleNextcloudNewsSync: processing pending jobs',
-        name: 'BackgroundSyncManager',
-      );
       await processPendingJobs();
     }
   }
