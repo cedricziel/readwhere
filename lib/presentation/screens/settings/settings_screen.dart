@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart' as package_info;
@@ -11,6 +12,10 @@ import '../../providers/settings_provider.dart';
 import '../../providers/sync_settings_provider.dart';
 import '../../providers/update_provider.dart';
 import '../../widgets/adaptive/adaptive_button.dart';
+import '../../widgets/adaptive/adaptive_list_section.dart';
+import '../../widgets/adaptive/adaptive_list_tile.dart';
+import '../../widgets/adaptive/adaptive_page_scaffold.dart';
+import '../../widgets/adaptive/adaptive_switch_list_tile.dart';
 import '../../widgets/update_dialog.dart';
 import 'sync_settings_section.dart';
 
@@ -52,36 +57,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: Consumer<SettingsProvider>(
+    return AdaptivePageScaffold(
+      title: 'Settings',
+      child: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, child) {
           // In landscape mode, constrain width for better readability
           final content = ListView(
             children: [
-              _buildSectionHeader('Appearance'),
-              _buildThemeModeSelector(settingsProvider),
-              const Divider(),
-              _buildSectionHeader('Reading'),
-              _buildFontSizeSlider(settingsProvider),
-              _buildFontFamilySelector(settingsProvider),
-              _buildLineHeightSlider(settingsProvider),
-              const Divider(),
-              _buildSectionHeader('Sync'),
-              ChangeNotifierProvider.value(
-                value: sl<SyncSettingsProvider>(),
-                child: const SyncSettingsSection(),
+              // Appearance section
+              AdaptiveListSection(
+                header: 'Appearance',
+                children: _buildThemeModeItems(settingsProvider),
               ),
-              const Divider(),
-              _buildSectionHeader('App Behavior'),
-              _buildHapticFeedbackToggle(settingsProvider),
-              _buildKeepScreenAwakeToggle(settingsProvider),
-              const Divider(),
-              _buildSectionHeader('Storage'),
-              _buildStorageInfo(),
-              const Divider(),
-              _buildSectionHeader('About'),
-              _buildAboutInfo(),
+
+              // Reading section
+              AdaptiveListSection(
+                header: 'Reading',
+                children: [
+                  _buildFontSizeItem(settingsProvider),
+                  _buildFontFamilyItem(settingsProvider),
+                  _buildLineHeightItem(settingsProvider),
+                ],
+              ),
+
+              // Sync section
+              AdaptiveListSection(
+                header: 'Sync',
+                children: [
+                  ChangeNotifierProvider.value(
+                    value: sl<SyncSettingsProvider>(),
+                    child: const SyncSettingsSection(),
+                  ),
+                ],
+              ),
+
+              // App Behavior section
+              AdaptiveListSection(
+                header: 'App Behavior',
+                children: [
+                  _buildHapticFeedbackItem(settingsProvider),
+                  _buildKeepScreenAwakeItem(settingsProvider),
+                ],
+              ),
+
+              // Storage section
+              AdaptiveListSection(
+                header: 'Storage',
+                children: _buildStorageItems(),
+              ),
+
+              // About section
+              AdaptiveListSection(
+                header: 'About',
+                children: _buildAboutItems(),
+              ),
+
+              // Reset button
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 24,
+                ),
+                child: AdaptiveTextButton(
+                  onPressed: _showResetSettingsDialog,
+                  isDestructive: true,
+                  child: const Text('Reset All Settings'),
+                ),
+              ),
             ],
           );
 
@@ -101,67 +143,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Builds a section header
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+  /// Builds theme mode selection items
+  List<Widget> _buildThemeModeItems(SettingsProvider settingsProvider) {
+    return [
+      AdaptiveRadioListTile<ThemeMode>(
+        title: const Text('System'),
+        subtitle: const Text('Follow system theme'),
+        value: ThemeMode.system,
+        groupValue: settingsProvider.themeMode,
+        onChanged: (value) {
+          if (value != null) {
+            settingsProvider.setThemeMode(value);
+          }
+        },
       ),
-    );
+      AdaptiveRadioListTile<ThemeMode>(
+        title: const Text('Light'),
+        subtitle: const Text('Always use light theme'),
+        value: ThemeMode.light,
+        groupValue: settingsProvider.themeMode,
+        onChanged: (value) {
+          if (value != null) {
+            settingsProvider.setThemeMode(value);
+          }
+        },
+      ),
+      AdaptiveRadioListTile<ThemeMode>(
+        title: const Text('Dark'),
+        subtitle: const Text('Always use dark theme'),
+        value: ThemeMode.dark,
+        groupValue: settingsProvider.themeMode,
+        onChanged: (value) {
+          if (value != null) {
+            settingsProvider.setThemeMode(value);
+          }
+        },
+      ),
+    ];
   }
 
-  /// Builds the theme mode selector
-  Widget _buildThemeModeSelector(SettingsProvider settingsProvider) {
-    return Column(
-      children: [
-        RadioListTile<ThemeMode>(
-          title: const Text('System'),
-          subtitle: const Text('Follow system theme'),
-          value: ThemeMode.system,
-          groupValue: settingsProvider.themeMode,
-          onChanged: (value) {
-            if (value != null) {
-              settingsProvider.setThemeMode(value);
-            }
-          },
-        ),
-        RadioListTile<ThemeMode>(
-          title: const Text('Light'),
-          subtitle: const Text('Always use light theme'),
-          value: ThemeMode.light,
-          groupValue: settingsProvider.themeMode,
-          onChanged: (value) {
-            if (value != null) {
-              settingsProvider.setThemeMode(value);
-            }
-          },
-        ),
-        RadioListTile<ThemeMode>(
-          title: const Text('Dark'),
-          subtitle: const Text('Always use dark theme'),
-          value: ThemeMode.dark,
-          groupValue: settingsProvider.themeMode,
-          onChanged: (value) {
-            if (value != null) {
-              settingsProvider.setThemeMode(value);
-            }
-          },
-        ),
-      ],
-    );
-  }
-
-  /// Builds the font size slider
-  Widget _buildFontSizeSlider(SettingsProvider settingsProvider) {
+  /// Builds font size item with slider
+  Widget _buildFontSizeItem(SettingsProvider settingsProvider) {
     final fontSize = settingsProvider.defaultReadingSettings.fontSize;
 
-    return ListTile(
+    return AdaptiveListTile(
       title: Text('Font Size: ${fontSize.toStringAsFixed(0)}'),
       subtitle: Slider.adaptive(
         value: fontSize,
@@ -176,17 +201,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Builds the font family selector
-  Widget _buildFontFamilySelector(SettingsProvider settingsProvider) {
+  /// Builds the font family item
+  Widget _buildFontFamilyItem(SettingsProvider settingsProvider) {
     final fontFamily = settingsProvider.defaultReadingSettings.fontFamily;
 
-    return ListTile(
+    return AdaptiveListTile(
       title: const Text('Font Family'),
       subtitle: Text(fontFamily),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () {
-        _showFontFamilyDialog(settingsProvider);
-      },
+      showDisclosureIndicator: true,
+      onTap: () => _showFontFamilyDialog(settingsProvider),
     );
   }
 
@@ -244,11 +267,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Builds the line height slider
-  Widget _buildLineHeightSlider(SettingsProvider settingsProvider) {
+  /// Builds the line height item with slider
+  Widget _buildLineHeightItem(SettingsProvider settingsProvider) {
     final lineHeight = settingsProvider.defaultReadingSettings.lineHeight;
 
-    return ListTile(
+    return AdaptiveListTile(
       title: Text('Line Height: ${lineHeight.toStringAsFixed(1)}'),
       subtitle: Slider.adaptive(
         value: lineHeight,
@@ -263,9 +286,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Builds the haptic feedback toggle
-  Widget _buildHapticFeedbackToggle(SettingsProvider settingsProvider) {
-    return SwitchListTile(
+  /// Builds the haptic feedback toggle item
+  Widget _buildHapticFeedbackItem(SettingsProvider settingsProvider) {
+    return AdaptiveSwitchListTile(
       title: const Text('Haptic Feedback'),
       subtitle: const Text('Vibrate on certain actions'),
       value: settingsProvider.hapticFeedback,
@@ -275,9 +298,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Builds the keep screen awake toggle
-  Widget _buildKeepScreenAwakeToggle(SettingsProvider settingsProvider) {
-    return SwitchListTile(
+  /// Builds the keep screen awake toggle item
+  Widget _buildKeepScreenAwakeItem(SettingsProvider settingsProvider) {
+    return AdaptiveSwitchListTile(
       title: const Text('Keep Screen Awake'),
       subtitle: const Text('Prevent screen from sleeping while reading'),
       value: settingsProvider.keepScreenAwake,
@@ -287,35 +310,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Builds storage information section
-  Widget _buildStorageInfo() {
-    return Column(
-      children: [
-        ListTile(
-          leading: const Icon(Icons.storage),
-          title: const Text('Books Directory'),
-          subtitle: const Text('Default location for imported books'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            // TODO: Implement directory picker
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Directory picker not yet implemented'),
-              ),
-            );
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.cleaning_services),
-          title: const Text('Clear Cache'),
-          subtitle: const Text('Free up storage space'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            _showClearCacheDialog();
-          },
-        ),
-      ],
-    );
+  /// Builds storage information items
+  List<Widget> _buildStorageItems() {
+    return [
+      AdaptiveListTile(
+        leading: context.useCupertino
+            ? const Icon(CupertinoIcons.folder)
+            : const Icon(Icons.storage),
+        title: const Text('Books Directory'),
+        subtitle: const Text('Default location for imported books'),
+        showDisclosureIndicator: true,
+        onTap: () {
+          // TODO: Implement directory picker
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Directory picker not yet implemented'),
+            ),
+          );
+        },
+      ),
+      AdaptiveListTile(
+        leading: context.useCupertino
+            ? const Icon(CupertinoIcons.trash)
+            : const Icon(Icons.cleaning_services),
+        title: const Text('Clear Cache'),
+        subtitle: const Text('Free up storage space'),
+        showDisclosureIndicator: true,
+        onTap: _showClearCacheDialog,
+      ),
+    ];
   }
 
   /// Shows a dialog to confirm cache clearing
@@ -347,104 +370,108 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Builds about information section
-  Widget _buildAboutInfo() {
+  /// Builds about information items
+  List<Widget> _buildAboutItems() {
     final updateProvider = sl<UpdateProvider>();
 
-    return Column(
-      children: [
-        ListTile(
-          leading: const Icon(Icons.info),
-          title: const Text('App Version'),
-          subtitle: Text(_appVersion.isEmpty ? 'Loading...' : _appVersion),
-        ),
-        ListenableBuilder(
-          listenable: updateProvider,
-          builder: (context, _) {
-            return ListTile(
-              leading: Icon(
-                updateProvider.updateAvailable
-                    ? Icons.system_update
-                    : Icons.refresh,
-                color: updateProvider.updateAvailable
-                    ? Theme.of(context).colorScheme.primary
-                    : null,
-              ),
-              title: const Text('Check for Updates'),
-              subtitle: updateProvider.isChecking
-                  ? const Text('Checking...')
-                  : updateProvider.updateAvailable
-                  ? Text(
-                      'Version ${updateProvider.updateInfo?.version} available',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    )
-                  : updateProvider.error != null
-                  ? Text(
-                      'Error: ${updateProvider.error}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    )
-                  : const Text('Check for new versions'),
-              trailing: updateProvider.isChecking
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : updateProvider.updateAvailable
-                  ? Badge(
-                      label: const Text('NEW'),
-                      child: const Icon(Icons.chevron_right),
-                    )
-                  : const Icon(Icons.chevron_right),
-              onTap: updateProvider.isChecking
-                  ? null
-                  : () => _checkForUpdates(),
-            );
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.description),
-          title: const Text('Licenses'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            showLicensePage(
-              context: context,
-              applicationName: 'ReadWhere',
-              applicationVersion: _appVersion,
-              applicationLegalese: 'A cross-platform e-reader for open formats',
-            );
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.code),
-          title: const Text('Source Code'),
-          subtitle: const Text('View on GitHub'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => _openUrl('https://github.com/cedricziel/readwhere'),
-        ),
-        ListTile(
-          leading: const Icon(Icons.bug_report),
-          title: const Text('Report Issue'),
-          subtitle: const Text('Report bugs or request features'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () =>
-              _openUrl('https://github.com/cedricziel/readwhere/issues'),
-        ),
-        const SizedBox(height: 16),
-        AdaptiveTextButton(
-          onPressed: () {
-            _showResetSettingsDialog();
-          },
-          isDestructive: true,
-          child: const Text('Reset All Settings'),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
+    return [
+      AdaptiveListTile(
+        leading: context.useCupertino
+            ? const Icon(CupertinoIcons.info_circle)
+            : const Icon(Icons.info),
+        title: const Text('App Version'),
+        subtitle: Text(_appVersion.isEmpty ? 'Loading...' : _appVersion),
+      ),
+      ListenableBuilder(
+        listenable: updateProvider,
+        builder: (context, _) {
+          return AdaptiveListTile(
+            leading: Icon(
+              context.useCupertino
+                  ? (updateProvider.updateAvailable
+                        ? CupertinoIcons.arrow_down_circle
+                        : CupertinoIcons.refresh)
+                  : (updateProvider.updateAvailable
+                        ? Icons.system_update
+                        : Icons.refresh),
+              color: updateProvider.updateAvailable
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
+            ),
+            title: const Text('Check for Updates'),
+            subtitle: updateProvider.isChecking
+                ? const Text('Checking...')
+                : updateProvider.updateAvailable
+                ? Text(
+                    'Version ${updateProvider.updateInfo?.version} available',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  )
+                : updateProvider.error != null
+                ? Text(
+                    'Error: ${updateProvider.error}',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  )
+                : const Text('Check for new versions'),
+            trailing: updateProvider.isChecking
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                  )
+                : updateProvider.updateAvailable
+                ? Badge(
+                    label: const Text('NEW'),
+                    child: Icon(
+                      context.useCupertino
+                          ? CupertinoIcons.chevron_forward
+                          : Icons.chevron_right,
+                    ),
+                  )
+                : null,
+            showDisclosureIndicator:
+                !updateProvider.isChecking && !updateProvider.updateAvailable,
+            onTap: updateProvider.isChecking ? null : _checkForUpdates,
+          );
+        },
+      ),
+      AdaptiveListTile(
+        leading: context.useCupertino
+            ? const Icon(CupertinoIcons.doc_text)
+            : const Icon(Icons.description),
+        title: const Text('Licenses'),
+        showDisclosureIndicator: true,
+        onTap: () {
+          showLicensePage(
+            context: context,
+            applicationName: 'ReadWhere',
+            applicationVersion: _appVersion,
+            applicationLegalese: 'A cross-platform e-reader for open formats',
+          );
+        },
+      ),
+      AdaptiveListTile(
+        leading: context.useCupertino
+            ? const Icon(CupertinoIcons.chevron_left_slash_chevron_right)
+            : const Icon(Icons.code),
+        title: const Text('Source Code'),
+        subtitle: const Text('View on GitHub'),
+        showDisclosureIndicator: true,
+        onTap: () => _openUrl('https://github.com/cedricziel/readwhere'),
+      ),
+      AdaptiveListTile(
+        leading: context.useCupertino
+            ? const Icon(CupertinoIcons.ant)
+            : const Icon(Icons.bug_report),
+        title: const Text('Report Issue'),
+        subtitle: const Text('Report bugs or request features'),
+        showDisclosureIndicator: true,
+        onTap: () => _openUrl('https://github.com/cedricziel/readwhere/issues'),
+      ),
+    ];
   }
 
   /// Opens a URL in the external browser

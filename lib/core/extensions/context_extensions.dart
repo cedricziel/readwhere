@@ -415,4 +415,74 @@ extension ContextExtensions on BuildContext {
   /// }
   /// ```
   bool get useMaterial => !useCupertino;
+
+  /// Returns true if running on iOS (iPhone or iPad).
+  ///
+  /// Returns false on web, even if the browser is on iOS.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (context.isIOS) {
+  ///   // Use iOS-specific widgets
+  /// }
+  /// ```
+  bool get isIOS {
+    if (kIsWeb) return false;
+    return Platform.isIOS;
+  }
+
+  /// Returns true if running on macOS.
+  ///
+  /// Returns false on web, even if the browser is on macOS.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (context.isMacOS) {
+  ///   // Use macOS-specific widgets
+  /// }
+  /// ```
+  bool get isMacOS {
+    if (kIsWeb) return false;
+    return Platform.isMacOS;
+  }
+
+  /// Returns true if running on iPhone (iOS phone, not tablet).
+  ///
+  /// Determined by checking if iOS and screen is mobile-sized.
+  /// Uses the shorter dimension to handle both orientations.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (context.isIPhone) {
+  ///   return CupertinoTabScaffold(...);
+  /// }
+  /// ```
+  bool get isIPhone {
+    if (!isIOS) return false;
+    // Use the shorter dimension to handle orientation changes
+    final shortestSide = screenWidth < screenHeight
+        ? screenWidth
+        : screenHeight;
+    return shortestSide < 600;
+  }
+
+  /// Returns true if running on iPad (iOS tablet).
+  ///
+  /// Determined by checking if iOS and screen is tablet-sized or larger.
+  /// Uses the shorter dimension to handle both orientations.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (context.isIPad) {
+  ///   return _buildSplitView(...);
+  /// }
+  /// ```
+  bool get isIPad {
+    if (!isIOS) return false;
+    // Use the shorter dimension to handle orientation changes
+    final shortestSide = screenWidth < screenHeight
+        ? screenWidth
+        : screenHeight;
+    return shortestSide >= 600;
+  }
 }

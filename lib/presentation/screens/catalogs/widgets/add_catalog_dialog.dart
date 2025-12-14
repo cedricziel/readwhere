@@ -451,51 +451,54 @@ class _AddCatalogDialogState extends State<AddCatalogDialog> {
                 if (widget.showTypeSelector) ...[
                   Text('Server Type', style: theme.textTheme.labelLarge),
                   const SizedBox(height: 8),
-                  SegmentedButton<CatalogType>(
-                    segments: const [
-                      ButtonSegment(
-                        value: CatalogType.rss,
-                        label: Text('RSS'),
-                        icon: Icon(Icons.rss_feed),
-                      ),
-                      ButtonSegment(
-                        value: CatalogType.kavita,
-                        label: Text('Kavita'),
-                        icon: Icon(Icons.menu_book),
-                      ),
-                      ButtonSegment(
-                        value: CatalogType.nextcloud,
-                        label: Text('Nextcloud'),
-                        icon: Icon(Icons.cloud),
-                      ),
-                      ButtonSegment(
-                        value: CatalogType.synology,
-                        label: Text('Synology'),
-                        icon: Icon(Icons.storage),
-                      ),
-                      ButtonSegment(
-                        value: CatalogType.opds,
-                        label: Text('OPDS'),
-                        icon: Icon(Icons.public),
-                      ),
-                      ButtonSegment(
-                        value: CatalogType.fanfiction,
-                        label: Text('Fanfiction'),
-                        icon: Icon(Icons.auto_stories),
-                      ),
-                    ],
-                    selected: {_catalogType},
-                    onSelectionChanged: (selected) {
-                      _cancelOAuth();
-                      setState(() {
-                        _catalogType = selected.first;
-                        _isValidated = false;
-                        _validatedFeed = null;
-                        _nextcloudServerInfo = null;
-                        _validatedRssFeed = null;
-                        _validationError = null;
-                      });
-                    },
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SegmentedButton<CatalogType>(
+                      segments: const [
+                        ButtonSegment(
+                          value: CatalogType.rss,
+                          label: Text('RSS'),
+                          icon: Icon(Icons.rss_feed),
+                        ),
+                        ButtonSegment(
+                          value: CatalogType.kavita,
+                          label: Text('Kavita'),
+                          icon: Icon(Icons.menu_book),
+                        ),
+                        ButtonSegment(
+                          value: CatalogType.nextcloud,
+                          label: Text('Nextcloud'),
+                          icon: Icon(Icons.cloud),
+                        ),
+                        ButtonSegment(
+                          value: CatalogType.synology,
+                          label: Text('Synology'),
+                          icon: Icon(Icons.storage),
+                        ),
+                        ButtonSegment(
+                          value: CatalogType.opds,
+                          label: Text('OPDS'),
+                          icon: Icon(Icons.public),
+                        ),
+                        ButtonSegment(
+                          value: CatalogType.fanfiction,
+                          label: Text('Fanfiction'),
+                          icon: Icon(Icons.auto_stories),
+                        ),
+                      ],
+                      selected: {_catalogType},
+                      onSelectionChanged: (selected) {
+                        _cancelOAuth();
+                        setState(() {
+                          _catalogType = selected.first;
+                          _isValidated = false;
+                          _validatedFeed = null;
+                          _nextcloudServerInfo = null;
+                          _validatedRssFeed = null;
+                          _validationError = null;
+                        });
+                      },
+                    ),
                   ),
                   const SizedBox(height: 16),
                 ],

@@ -12,7 +12,7 @@ import '../screens/feeds/feeds_screen.dart';
 import '../screens/feeds/article_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/reader/reader_screen.dart';
-import '../widgets/adaptive/adaptive_scaffold.dart';
+import '../widgets/adaptive/adaptive_tab_scaffold.dart';
 import 'routes.dart';
 import '../../core/utils/logger.dart';
 
@@ -98,7 +98,7 @@ GoRouter createAppRouter() {
           final location = state.uri.path;
           final selectedIndex = AppDestinations.getIndexByRoute(location);
 
-          return AdaptiveScaffold(
+          return AdaptiveTabScaffold(
             selectedIndex: selectedIndex,
             destinations: AppDestinations.all,
             onDestinationSelected: (index) {

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:readwhere/presentation/router/routes.dart';
@@ -12,18 +13,24 @@ void main() {
       label: 'Library',
       icon: Icons.library_books_outlined,
       selectedIcon: Icons.library_books,
+      cupertinoIcon: CupertinoIcons.book,
+      cupertinoSelectedIcon: CupertinoIcons.book_fill,
       route: '/library',
     ),
     AppNavigationDestination(
       label: 'Catalogs',
       icon: Icons.cloud_outlined,
       selectedIcon: Icons.cloud,
+      cupertinoIcon: CupertinoIcons.cloud,
+      cupertinoSelectedIcon: CupertinoIcons.cloud_fill,
       route: '/catalogs',
     ),
     AppNavigationDestination(
       label: 'Settings',
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings,
+      cupertinoIcon: CupertinoIcons.gear,
+      cupertinoSelectedIcon: CupertinoIcons.gear_solid,
       route: '/settings',
     ),
   ];

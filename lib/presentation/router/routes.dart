@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,14 +7,33 @@ class AppNavigationDestination {
   final String label;
   final IconData icon;
   final IconData selectedIcon;
+
+  /// Icon to use on iOS/macOS (Cupertino style).
+  final IconData cupertinoIcon;
+
+  /// Selected icon to use on iOS/macOS.
+  final IconData cupertinoSelectedIcon;
   final String route;
 
   const AppNavigationDestination({
     required this.label,
     required this.icon,
     required this.selectedIcon,
+    required this.cupertinoIcon,
+    required this.cupertinoSelectedIcon,
     required this.route,
   });
+
+  /// Gets the appropriate icon based on the platform.
+  IconData getIcon(BuildContext context, {bool selected = false}) {
+    final isCupertino =
+        Theme.of(context).platform == TargetPlatform.iOS ||
+        Theme.of(context).platform == TargetPlatform.macOS;
+    if (isCupertino) {
+      return selected ? cupertinoSelectedIcon : cupertinoIcon;
+    }
+    return selected ? selectedIcon : icon;
+  }
 }
 
 /// Route path constants for the application.
@@ -144,6 +164,8 @@ class AppDestinations {
     label: 'Library',
     icon: Icons.library_books_outlined,
     selectedIcon: Icons.library_books,
+    cupertinoIcon: CupertinoIcons.book,
+    cupertinoSelectedIcon: CupertinoIcons.book_fill,
     route: AppRoutes.library,
   );
 
@@ -151,6 +173,8 @@ class AppDestinations {
     label: 'Catalogs',
     icon: Icons.public_outlined,
     selectedIcon: Icons.public,
+    cupertinoIcon: CupertinoIcons.globe,
+    cupertinoSelectedIcon: CupertinoIcons.globe,
     route: AppRoutes.catalogs,
   );
 
@@ -158,6 +182,8 @@ class AppDestinations {
     label: 'Feeds',
     icon: Icons.rss_feed_outlined,
     selectedIcon: Icons.rss_feed,
+    cupertinoIcon: CupertinoIcons.news,
+    cupertinoSelectedIcon: CupertinoIcons.news_solid,
     route: AppRoutes.feeds,
   );
 
@@ -165,6 +191,8 @@ class AppDestinations {
     label: 'Settings',
     icon: Icons.settings_outlined,
     selectedIcon: Icons.settings,
+    cupertinoIcon: CupertinoIcons.gear,
+    cupertinoSelectedIcon: CupertinoIcons.gear_solid,
     route: AppRoutes.settings,
   );
 
