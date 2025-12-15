@@ -9,6 +9,7 @@ import 'package:readwhere/presentation/screens/catalogs/widgets/synology_folder_
 import 'package:readwhere/presentation/widgets/adaptive/adaptive_text_field.dart';
 import 'package:readwhere_synology/readwhere_synology.dart';
 
+import '../../../../helpers/test_helpers.dart';
 import 'synology_folder_picker_dialog_test.mocks.dart';
 
 /// Finder for text input fields that works with both Material and Cupertino.
@@ -263,6 +264,7 @@ void main() {
       testWidgets('opens create folder dialog when button tapped', (
         tester,
       ) async {
+        await setTestScreenSize(tester);
         when(mockClient.listDirectory(any, any)).thenAnswer(
           (_) async => ListResult(success: true, items: [], total: 0),
         );
@@ -278,6 +280,7 @@ void main() {
       });
 
       testWidgets('validates empty folder name', (tester) async {
+        await setTestScreenSize(tester);
         when(mockClient.listDirectory(any, any)).thenAnswer(
           (_) async => ListResult(success: true, items: [], total: 0),
         );
@@ -294,6 +297,7 @@ void main() {
       });
 
       testWidgets('validates folder name with slash', (tester) async {
+        await setTestScreenSize(tester);
         when(mockClient.listDirectory(any, any)).thenAnswer(
           (_) async => ListResult(success: true, items: [], total: 0),
         );
@@ -311,6 +315,7 @@ void main() {
       });
 
       testWidgets('calls createFolder on create', (tester) async {
+        await setTestScreenSize(tester);
         when(mockClient.listDirectory(any, any)).thenAnswer(
           (_) async => ListResult(success: true, items: [], total: 0),
         );

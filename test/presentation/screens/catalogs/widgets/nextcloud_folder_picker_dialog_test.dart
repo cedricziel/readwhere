@@ -9,6 +9,7 @@ import 'package:readwhere/presentation/screens/catalogs/widgets/nextcloud_folder
 import 'package:readwhere/presentation/widgets/adaptive/adaptive_text_field.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 
+import '../../../../helpers/test_helpers.dart';
 import 'nextcloud_folder_picker_dialog_test.mocks.dart';
 
 /// Finder for text input fields that works with both Material and Cupertino.
@@ -224,6 +225,7 @@ void main() {
       testWidgets('opens create folder dialog when button tapped', (
         tester,
       ) async {
+        await setTestScreenSize(tester);
         when(
           mockClient.listDirectoryWithCredentials(
             serverUrl: anyNamed('serverUrl'),
@@ -247,6 +249,7 @@ void main() {
       });
 
       testWidgets('validates empty folder name', (tester) async {
+        await setTestScreenSize(tester);
         when(
           mockClient.listDirectoryWithCredentials(
             serverUrl: anyNamed('serverUrl'),
@@ -269,6 +272,7 @@ void main() {
       });
 
       testWidgets('validates folder name with slash', (tester) async {
+        await setTestScreenSize(tester);
         when(
           mockClient.listDirectoryWithCredentials(
             serverUrl: anyNamed('serverUrl'),
@@ -306,6 +310,7 @@ void main() {
       testWidgets(
         'does not throw controller disposed error during folder creation',
         (tester) async {
+          await setTestScreenSize(tester);
           when(
             mockClient.listDirectoryWithCredentials(
               serverUrl: anyNamed('serverUrl'),
@@ -383,6 +388,7 @@ void main() {
       testWidgets('calls createDirectoryWithCredentials on create', (
         tester,
       ) async {
+        await setTestScreenSize(tester);
         when(
           mockClient.listDirectoryWithCredentials(
             serverUrl: anyNamed('serverUrl'),

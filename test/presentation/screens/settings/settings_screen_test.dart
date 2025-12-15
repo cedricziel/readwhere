@@ -9,6 +9,7 @@ import 'package:readwhere/presentation/providers/sync_settings_provider.dart';
 import 'package:readwhere/presentation/providers/update_provider.dart';
 import 'package:readwhere/presentation/screens/settings/settings_screen.dart';
 
+import '../../../helpers/test_helpers.dart';
 import '../../../mocks/mock_repositories.mocks.dart';
 
 void main() {
@@ -177,6 +178,7 @@ void main() {
       });
 
       testWidgets('opens font family dialog when tapped', (tester) async {
+        await setTestScreenSize(tester);
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
@@ -258,6 +260,7 @@ void main() {
       });
 
       testWidgets('shows clear cache confirmation dialog', (tester) async {
+        await setTestScreenSize(tester);
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
