@@ -252,6 +252,7 @@ void main() {
 
     group('sort menu', () {
       testWidgets('opens sort menu when sort icon tapped', (tester) async {
+        await setTestScreenSize(tester);
         await tester.pumpWidget(buildTestWidget());
 
         // Tap sort icon
@@ -266,6 +267,7 @@ void main() {
       });
 
       testWidgets('calls setSortOrder when option selected', (tester) async {
+        await setTestScreenSize(tester);
         await tester.pumpWidget(buildTestWidget());
 
         // Open sort menu

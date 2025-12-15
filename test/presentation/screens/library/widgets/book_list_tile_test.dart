@@ -205,6 +205,7 @@ void main() {
       });
 
       testWidgets('shows context menu on long press', (tester) async {
+        await setTestScreenSize(tester);
         final book = createTestBook();
 
         await tester.pumpWidget(
@@ -225,6 +226,7 @@ void main() {
       testWidgets('shows context menu when more options button tapped', (
         tester,
       ) async {
+        await setTestScreenSize(tester);
         final book = createTestBook();
 
         await tester.pumpWidget(
@@ -242,6 +244,7 @@ void main() {
       testWidgets(
         'context menu shows Remove from Favorites when book is favorite',
         (tester) async {
+          await setTestScreenSize(tester);
           final book = createTestFavoriteBook();
 
           await tester.pumpWidget(
@@ -258,6 +261,7 @@ void main() {
       testWidgets(
         'context menu shows Add to Favorites when book is not favorite',
         (tester) async {
+          await setTestScreenSize(tester);
           final book = createTestBook(isFavorite: false);
 
           await tester.pumpWidget(
@@ -274,6 +278,7 @@ void main() {
 
     group('context menu actions', () {
       testWidgets('Open option calls onTap and closes menu', (tester) async {
+        await setTestScreenSize(tester);
         var tapped = false;
         final book = createTestBook();
 
@@ -295,6 +300,7 @@ void main() {
       });
 
       testWidgets('Favorite option calls toggleFavorite', (tester) async {
+        await setTestScreenSize(tester);
         final book = createTestBook(id: 'book-123', isFavorite: false);
 
         await tester.pumpWidget(
@@ -313,6 +319,7 @@ void main() {
       });
 
       testWidgets('Book Details opens dialog with book info', (tester) async {
+        await setTestScreenSize(tester);
         final book = createTestBook(
           title: 'My Book',
           author: 'Test Author',
@@ -341,6 +348,7 @@ void main() {
       });
 
       testWidgets('Delete option shows confirmation dialog', (tester) async {
+        await setTestScreenSize(tester);
         final book = createTestBook(title: 'Book To Delete');
 
         await tester.pumpWidget(
@@ -367,6 +375,7 @@ void main() {
       });
 
       testWidgets('Delete confirmation Cancel does not delete', (tester) async {
+        await setTestScreenSize(tester);
         final book = createTestBook(id: 'book-to-delete');
 
         await tester.pumpWidget(
@@ -390,6 +399,7 @@ void main() {
       testWidgets('Delete confirmation Delete calls deleteBook', (
         tester,
       ) async {
+        await setTestScreenSize(tester);
         final book = createTestBook(id: 'book-to-delete', title: 'My Book');
 
         // Stub deleteBook to return a future

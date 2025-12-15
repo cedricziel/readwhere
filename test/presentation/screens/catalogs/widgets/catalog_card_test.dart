@@ -4,6 +4,7 @@ import 'package:readwhere/domain/entities/catalog.dart';
 import 'package:readwhere/presentation/screens/catalogs/widgets/catalog_card.dart';
 
 import '../../../../helpers/catalog_test_helpers.dart';
+import '../../../../helpers/test_helpers.dart';
 
 void main() {
   Widget buildTestWidget(Widget child) {
@@ -97,6 +98,7 @@ void main() {
       });
 
       testWidgets('shows Remove menu item when menu opened', (tester) async {
+        await setTestScreenSize(tester);
         final catalog = createTestCatalog();
 
         await tester.pumpWidget(
@@ -112,6 +114,7 @@ void main() {
       });
 
       testWidgets('calls onDelete when Remove is selected', (tester) async {
+        await setTestScreenSize(tester);
         var deleted = false;
         final catalog = createTestCatalog();
 
@@ -139,6 +142,7 @@ void main() {
       testWidgets('shows Change Starting Folder for Nextcloud with callback', (
         tester,
       ) async {
+        await setTestScreenSize(tester);
         final catalog = createTestNextcloudServer();
 
         await tester.pumpWidget(
@@ -161,6 +165,7 @@ void main() {
       testWidgets('does not show Change Starting Folder for non-Nextcloud', (
         tester,
       ) async {
+        await setTestScreenSize(tester);
         final catalog = createTestKavitaServer();
 
         await tester.pumpWidget(
@@ -183,6 +188,7 @@ void main() {
       testWidgets(
         'does not show Change Starting Folder when callback is null',
         (tester) async {
+          await setTestScreenSize(tester);
           final catalog = createTestNextcloudServer();
 
           await tester.pumpWidget(
@@ -206,6 +212,7 @@ void main() {
       testWidgets(
         'calls onChangeFolder when Change Starting Folder is selected',
         (tester) async {
+          await setTestScreenSize(tester);
           var changeFolderCalled = false;
           final catalog = createTestNextcloudServer();
 
@@ -233,6 +240,7 @@ void main() {
       testWidgets(
         'OPDS catalog does not show change folder even with callback',
         (tester) async {
+          await setTestScreenSize(tester);
           final catalog = createTestCatalog(type: CatalogType.opds);
 
           await tester.pumpWidget(

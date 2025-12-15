@@ -6,6 +6,7 @@ import 'package:readwhere/presentation/providers/feed_reader_provider.dart';
 import 'package:readwhere/presentation/screens/feeds/widgets/feed_card.dart';
 
 import '../../../../helpers/catalog_test_helpers.dart';
+import '../../../../helpers/test_helpers.dart';
 import '../../../../mocks/mock_repositories.mocks.dart';
 
 void main() {
@@ -160,6 +161,7 @@ void main() {
       testWidgets('shows popup menu when more button is tapped', (
         tester,
       ) async {
+        await setTestScreenSize(tester);
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
@@ -177,6 +179,7 @@ void main() {
       testWidgets('calls onDelete when Unsubscribe is selected', (
         tester,
       ) async {
+        await setTestScreenSize(tester);
         var deleted = false;
         final feed = createTestRssFeed();
 
@@ -198,6 +201,7 @@ void main() {
       });
 
       testWidgets('menu shows Unsubscribe option', (tester) async {
+        await setTestScreenSize(tester);
         final feed = createTestRssFeed();
 
         await tester.pumpWidget(
