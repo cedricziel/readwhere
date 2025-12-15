@@ -74,27 +74,86 @@ class AdaptivePageScaffold extends StatelessWidget {
   Widget _buildMacosScaffold(BuildContext context) {
     // On macOS, we're inside MacosScaffold which provides the window chrome
     // but doesn't provide Material context, so wrap child with Material
+
+    // Extract navigation bar properties if provided
+    String? displayTitle = title;
+    Widget? titleWidget;
+    Widget? leading;
+    List<Widget>? trailing;
+
+    if (navigationBar is AdaptiveNavigationBar) {
+      final navBar = navigationBar as AdaptiveNavigationBar;
+      displayTitle = navBar.title ?? title;
+      titleWidget = navBar.titleWidget;
+      leading = navBar.leading;
+      trailing = navBar.trailing;
+    }
+
     return Material(
       type: MaterialType.transparency,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title bar for macOS content area
-            if (title != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-                child: Text(
-                  title!,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            // Toolbar for macOS content area
+            _buildMacosToolbar(
+              context,
+              title: displayTitle,
+              titleWidget: titleWidget,
+              leading: leading,
+              trailing: trailing,
+            ),
             Expanded(child: child),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMacosToolbar(
+    BuildContext context, {
+    String? title,
+    Widget? titleWidget,
+    Widget? leading,
+    List<Widget>? trailing,
+  }) {
+    final theme = Theme.of(context);
+    final hasToolbarContent =
+        leading != null ||
+        trailing != null && trailing.isNotEmpty ||
+        title != null ||
+        titleWidget != null;
+
+    if (!hasToolbarContent) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+      child: Row(
+        children: [
+          // Leading widget (back button)
+          if (leading != null) ...[leading, const SizedBox(width: 8)],
+          // Title
+          Expanded(
+            child:
+                titleWidget ??
+                (title != null
+                    ? Text(
+                        title,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    : const SizedBox.shrink()),
+          ),
+          // Trailing actions
+          if (trailing != null && trailing.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            ...trailing,
+          ],
+        ],
       ),
     );
   }
@@ -195,28 +254,61 @@ class AdaptiveScrollablePageScaffold extends StatelessWidget {
   }
 
   Widget _buildMacosScaffold(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Extract navigation bar properties if provided
+    String? displayTitle = title;
+    Widget? leadingWidget;
+    List<Widget>? trailingWidgets = trailing;
+
+    if (navigationBar is AdaptiveSliverNavigationBar) {
+      final navBar = navigationBar as AdaptiveSliverNavigationBar;
+      displayTitle = navBar.title ?? title;
+      leadingWidget = navBar.leading;
+      trailingWidgets = navBar.trailing ?? trailing;
+    }
+
+    final hasToolbarContent =
+        leadingWidget != null ||
+        trailingWidgets != null && trailingWidgets.isNotEmpty ||
+        displayTitle != null;
+
     return Material(
       type: MaterialType.transparency,
       child: SafeArea(
         child: CustomScrollView(
           controller: controller,
           slivers: [
-            // Title header for macOS
-            if (title != null)
+            // Toolbar header for macOS
+            if (hasToolbarContent)
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
                   child: Row(
                     children: [
-                      Text(
-                        title!,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      // Leading widget
+                      if (leadingWidget != null) ...[
+                        leadingWidget,
+                        const SizedBox(width: 8),
+                      ],
+                      // Title
+                      Expanded(
+                        child: displayTitle != null
+                            ? Text(
+                                displayTitle,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            : const SizedBox.shrink(),
                       ),
-                      const Spacer(),
-                      if (trailing != null) ...trailing!,
+                      // Trailing actions
+                      if (trailingWidgets != null &&
+                          trailingWidgets.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        ...trailingWidgets,
+                      ],
                     ],
                   ),
                 ),
