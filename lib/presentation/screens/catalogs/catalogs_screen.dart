@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,9 @@ import '../../../domain/entities/catalog.dart';
 import '../../providers/catalogs_provider.dart';
 import '../../router/routes.dart';
 import '../../widgets/adaptive/adaptive_button.dart';
+import '../../widgets/adaptive/adaptive_navigation_bar.dart';
+import '../../widgets/adaptive/adaptive_page_scaffold.dart';
+import '../../widgets/adaptive/adaptive_snackbar.dart';
 import '../../widgets/adaptive/responsive_layout.dart';
 import 'widgets/add_catalog_dialog.dart';
 import 'widgets/catalog_card.dart';
@@ -43,14 +47,13 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
     );
 
     if (result != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Added "${result.name}"'),
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'Open',
-            onPressed: () => _openCatalog(result),
-          ),
+      showAdaptiveSnackBar(
+        context,
+        message: 'Added "${result.name}"',
+        duration: const Duration(seconds: 3),
+        action: AdaptiveSnackBarAction(
+          label: 'Open',
+          onPressed: () => _openCatalog(result),
         ),
       );
     }
@@ -96,14 +99,11 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
       final provider = sl<CatalogsProvider>();
       final success = await provider.removeCatalog(catalog.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? 'Removed "${catalog.name}"'
-                  : 'Failed to remove catalog',
-            ),
-          ),
+        showAdaptiveSnackBar(
+          context,
+          message: success
+              ? 'Removed "${catalog.name}"'
+              : 'Failed to remove catalog',
         );
       }
     }
@@ -116,28 +116,38 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
     );
 
     if (result != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Settings updated for "${result.name}"'),
-          duration: const Duration(seconds: 2),
-        ),
+      showAdaptiveSnackBar(
+        context,
+        message: 'Settings updated for "${result.name}"',
+        duration: const Duration(seconds: 2),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final useCupertino = context.useCupertino;
+
     return ChangeNotifierProvider.value(
       value: sl<CatalogsProvider>(),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Servers')),
-        body: Consumer<CatalogsProvider>(
+      child: AdaptivePageScaffold(
+        navigationBar: AdaptiveNavigationBar(
+          title: 'Servers',
+          trailing: [
+            AdaptiveIconButton(
+              icon: useCupertino ? CupertinoIcons.add : Icons.add,
+              tooltip: 'Add Server',
+              onPressed: _showAddCatalogDialog,
+            ),
+          ],
+        ),
+        child: Consumer<CatalogsProvider>(
           builder: (context, provider, child) {
             // Filter out RSS feeds (they are managed in FeedsScreen)
             final servers = provider.catalogs.where((c) => !c.isRss).toList();
 
             if (provider.isLoading && servers.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator.adaptive());
             }
 
             if (provider.error != null && servers.isEmpty) {
@@ -150,11 +160,6 @@ class _CatalogsScreenState extends State<CatalogsScreen> {
 
             return _buildCatalogList(provider);
           },
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _showAddCatalogDialog,
-          icon: const Icon(Icons.add),
-          label: const Text('Add Server'),
         ),
       ),
     );

@@ -1,13 +1,19 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../data/services/background_sync_manager.dart';
 import '../../../domain/entities/catalog.dart';
 import '../../providers/catalogs_provider.dart';
 import '../../providers/feed_reader_provider.dart';
 import '../../router/routes.dart';
+import '../../widgets/adaptive/adaptive_button.dart';
+import '../../widgets/adaptive/adaptive_navigation_bar.dart';
+import '../../widgets/adaptive/adaptive_page_scaffold.dart';
+import '../../widgets/adaptive/adaptive_snackbar.dart';
 import '../catalogs/widgets/add_catalog_dialog.dart';
 import 'widgets/feed_card.dart';
 
@@ -92,21 +98,20 @@ class _FeedsScreenState extends State<FeedsScreen> {
     );
 
     if (result != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Subscribed to "${result.name}"'),
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'Open',
-            onPressed: () => _openFeed(result),
-          ),
+      showAdaptiveSnackBar(
+        context,
+        message: 'Subscribed to "${result.name}"',
+        duration: const Duration(seconds: 3),
+        action: AdaptiveSnackBarAction(
+          label: 'Open',
+          onPressed: () => _openFeed(result),
         ),
       );
     }
   }
 
   void _openFeed(Catalog feed) {
-    context.push(AppRoutes.rssBrowsePath(feed.id));
+    GoRouter.of(context).push(AppRoutes.rssBrowsePath(feed.id));
   }
 
   Future<void> _confirmUnsubscribe(Catalog feed) async {
@@ -119,13 +124,13 @@ class _FeedsScreenState extends State<FeedsScreen> {
           'Books you\'ve downloaded will remain in your library.',
         ),
         actions: [
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          AdaptiveTextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            isDestructive: true,
             child: const Text('Unsubscribe'),
           ),
         ],
@@ -136,14 +141,11 @@ class _FeedsScreenState extends State<FeedsScreen> {
       final provider = Provider.of<CatalogsProvider>(context, listen: false);
       final success = await provider.removeCatalog(feed.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? 'Unsubscribed from "${feed.name}"'
-                  : 'Failed to unsubscribe',
-            ),
-          ),
+        showAdaptiveSnackBar(
+          context,
+          message: success
+              ? 'Unsubscribed from "${feed.name}"'
+              : 'Failed to unsubscribe',
         );
       }
     }
@@ -151,21 +153,27 @@ class _FeedsScreenState extends State<FeedsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<CatalogsProvider>(
-      builder: (context, provider, child) {
-        // Filter to only RSS feeds
-        final feeds = provider.catalogs.where((c) => c.isRss).toList();
+    final useCupertino = context.useCupertino;
 
-        return Scaffold(
-          appBar: AppBar(title: const Text('Feeds')),
-          body: _buildBody(provider, feeds),
-          floatingActionButton: FloatingActionButton.extended(
+    return AdaptivePageScaffold(
+      navigationBar: AdaptiveNavigationBar(
+        title: 'Feeds',
+        trailing: [
+          AdaptiveIconButton(
+            icon: useCupertino ? CupertinoIcons.add : Icons.add,
+            tooltip: 'Subscribe to Feed',
             onPressed: _showAddFeedDialog,
-            icon: const Icon(Icons.add),
-            label: const Text('Subscribe'),
           ),
-        );
-      },
+        ],
+      ),
+      child: Consumer<CatalogsProvider>(
+        builder: (context, provider, child) {
+          // Filter to only RSS feeds
+          final feeds = provider.catalogs.where((c) => c.isRss).toList();
+
+          return _buildBody(provider, feeds);
+        },
+      ),
     );
   }
 

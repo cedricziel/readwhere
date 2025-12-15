@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
@@ -8,12 +9,17 @@ import 'package:provider/provider.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../../../../data/services/book_import_service.dart';
 import '../../../../domain/repositories/book_repository.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../providers/library_provider.dart';
 import '../../../router/routes.dart';
 import '../../../widgets/adaptive/adaptive_action_sheet.dart';
+import '../../../widgets/adaptive/adaptive_button.dart';
+import '../../../widgets/adaptive/adaptive_navigation_bar.dart';
+import '../../../widgets/adaptive/adaptive_page_scaffold.dart';
+import '../../../widgets/adaptive/adaptive_snackbar.dart';
 
 /// Screen for browsing Nextcloud files via WebDAV
 class NextcloudBrowserScreen extends StatefulWidget {
@@ -123,12 +129,7 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
 
       if (downloadedFile == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Download failed'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+          showAdaptiveSnackBar(context, message: 'Download failed');
         }
         return;
       }
@@ -153,26 +154,20 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
         // Refresh library
         sl<LibraryProvider>().loadBooks();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Downloaded: ${savedBook.title}'),
-            action: SnackBarAction(
-              label: 'Open',
-              onPressed: () {
-                context.push(AppRoutes.readerPath(savedBook.id));
-              },
-            ),
+        showAdaptiveSnackBar(
+          context,
+          message: 'Downloaded: ${savedBook.title}',
+          action: AdaptiveSnackBarAction(
+            label: 'Open',
+            onPressed: () {
+              GoRouter.of(context).push(AppRoutes.readerPath(savedBook.id));
+            },
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Download failed: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showAdaptiveSnackBar(context, message: 'Download failed: $e');
       }
     }
   }
@@ -192,39 +187,43 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final useCupertino = context.useCupertino;
+
     return ChangeNotifierProvider.value(
       value: sl<NextcloudProvider>(),
       child: Consumer<NextcloudProvider>(
         builder: (context, provider, _) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(_catalogName ?? 'Nextcloud'),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
+          return AdaptivePageScaffold(
+            navigationBar: AdaptiveNavigationBar(
+              title: _catalogName ?? 'Nextcloud',
+              leading: AdaptiveIconButton(
+                icon: useCupertino ? CupertinoIcons.back : Icons.arrow_back,
+                tooltip: 'Back',
                 onPressed: () {
                   if (provider.error != null) {
                     // In error state: navigate back without reload
                     final canGoBack = provider.navigateBackWithoutLoad();
                     if (!canGoBack) {
                       provider.closeBrowser();
-                      Navigator.of(context).pop();
+                      GoRouter.of(context).pop();
                     }
                   } else if (provider.canNavigateBack) {
                     provider.navigateBack();
                   } else {
                     provider.closeBrowser();
-                    Navigator.of(context).pop();
+                    GoRouter.of(context).pop();
                   }
                 },
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.refresh),
+              trailing: [
+                AdaptiveIconButton(
+                  icon: useCupertino ? CupertinoIcons.refresh : Icons.refresh,
+                  tooltip: 'Refresh',
                   onPressed: _isRefreshing ? null : _refresh,
                 ),
               ],
             ),
-            body: Column(
+            child: Column(
               children: [
                 // Breadcrumb navigation
                 _buildBreadcrumbs(provider),
@@ -357,7 +356,7 @@ class _NextcloudBrowserScreenState extends State<NextcloudBrowserScreen> {
             OutlinedButton.icon(
               onPressed: () {
                 sl<NextcloudProvider>().closeBrowser();
-                Navigator.of(context).pop();
+                GoRouter.of(context).pop();
               },
               icon: const Icon(Icons.list),
               label: const Text('Back to Catalogs'),

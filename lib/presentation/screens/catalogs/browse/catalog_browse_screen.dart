@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,11 @@ import 'package:readwhere_opds/readwhere_opds.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/extensions/context_extensions.dart';
+import '../../../widgets/adaptive/adaptive_button.dart';
+import '../../../widgets/adaptive/adaptive_navigation_bar.dart';
+import '../../../widgets/adaptive/adaptive_page_scaffold.dart';
+import '../../../widgets/adaptive/adaptive_snackbar.dart';
 import '../../../widgets/adaptive/adaptive_text_field.dart';
 import '../../../providers/catalogs_provider.dart';
 import '../../../providers/library_provider.dart';
@@ -111,37 +117,27 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
       final title = entry.title;
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Downloaded "$title"'),
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'Open',
-            onPressed: () => context.push(AppRoutes.readerPath(bookId)),
-          ),
+      showAdaptiveSnackBar(
+        context,
+        message: 'Downloaded "$title"',
+        duration: const Duration(seconds: 3),
+        action: AdaptiveSnackBarAction(
+          label: 'Open',
+          onPressed: () =>
+              GoRouter.of(context).push(AppRoutes.readerPath(bookId)),
         ),
       );
     } else if (provider.error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.error!),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      showAdaptiveSnackBar(context, message: provider.error!);
     }
   }
 
   void _handleOpenBook(OpdsProvider provider, String entryId) {
     final bookId = provider.getBookIdForEntry(entryId);
     if (bookId != null) {
-      context.push(AppRoutes.readerPath(bookId));
+      GoRouter.of(context).push(AppRoutes.readerPath(bookId));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Book not found in library'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      showAdaptiveSnackBar(context, message: 'Book not found in library');
     }
   }
 
@@ -383,30 +379,36 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final useCupertino = context.useCupertino;
+
     return ChangeNotifierProvider.value(
       value: sl<OpdsProvider>(),
       child: Consumer<OpdsProvider>(
         builder: (context, provider, child) {
           final feed = provider.currentFeed;
 
-          return Scaffold(
-            appBar: AppBar(
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
+          return AdaptivePageScaffold(
+            navigationBar: AdaptiveNavigationBar(
+              title: feed?.title ?? _catalogName ?? 'Catalog',
+              leading: AdaptiveIconButton(
+                icon: useCupertino ? CupertinoIcons.back : Icons.arrow_back,
+                tooltip: 'Back',
                 onPressed: () {
                   if (provider.canNavigateBack) {
                     provider.navigateBack();
                   } else {
                     provider.closeBrowser();
-                    context.pop();
+                    GoRouter.of(context).pop();
                   }
                 },
               ),
-              title: Text(feed?.title ?? _catalogName ?? 'Catalog'),
-              actions: [
+              trailing: [
                 if (feed?.hasSearch == true)
-                  IconButton(
-                    icon: Icon(_showSearch ? Icons.close : Icons.search),
+                  AdaptiveIconButton(
+                    icon: _showSearch
+                        ? (useCupertino ? CupertinoIcons.xmark : Icons.close)
+                        : (useCupertino ? CupertinoIcons.search : Icons.search),
+                    tooltip: _showSearch ? 'Close Search' : 'Search',
                     onPressed: () {
                       setState(() {
                         _showSearch = !_showSearch;
@@ -419,8 +421,15 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
                       });
                     },
                   ),
-                IconButton(
-                  icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
+                AdaptiveIconButton(
+                  icon: _isGridView
+                      ? (useCupertino
+                            ? CupertinoIcons.list_bullet
+                            : Icons.view_list)
+                      : (useCupertino
+                            ? CupertinoIcons.square_grid_2x2
+                            : Icons.grid_view),
+                  tooltip: _isGridView ? 'List View' : 'Grid View',
                   onPressed: () {
                     setState(() {
                       _isGridView = !_isGridView;
@@ -429,7 +438,7 @@ class _CatalogBrowseScreenState extends State<CatalogBrowseScreen> {
                 ),
               ],
             ),
-            body: Column(
+            child: Column(
               children: [
                 // Search bar
                 if (_showSearch)

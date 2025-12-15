@@ -1,14 +1,20 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readwhere_plugin/readwhere_plugin.dart';
 
+import '../../../../core/extensions/context_extensions.dart';
 import '../../../../domain/entities/catalog.dart';
 import '../../../providers/library_provider.dart';
 import '../../../providers/unified_catalog_browsing_provider.dart';
 import '../../../router/routes.dart';
 import '../../../widgets/adaptive/adaptive_action_sheet.dart';
+import '../../../widgets/adaptive/adaptive_button.dart';
+import '../../../widgets/adaptive/adaptive_navigation_bar.dart';
+import '../../../widgets/adaptive/adaptive_page_scaffold.dart';
+import '../../../widgets/adaptive/adaptive_snackbar.dart';
 import '../../../widgets/adaptive/adaptive_text_field.dart';
 import '../../../widgets/facets/facet_filter_bar.dart';
 import '../../../widgets/facets/facet_selection_sheet.dart';
@@ -107,7 +113,7 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
     if (_provider.isDownloaded(entry.id)) {
       final bookId = _provider.getBookIdForEntry(entry.id);
       if (bookId != null) {
-        context.push(AppRoutes.readerPath(bookId));
+        GoRouter.of(context).push(AppRoutes.readerPath(bookId));
       }
       return;
     }
@@ -119,9 +125,7 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
     required bool openAfterDownload,
   }) {
     if (entry.files.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No downloadable files available')),
-      );
+      showAdaptiveSnackBar(context, message: 'No downloadable files available');
       return;
     }
 
@@ -160,17 +164,13 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
           await context.read<LibraryProvider>().loadBooks();
           if (mounted) {
             // Navigate to reader
-            context.push(AppRoutes.readerPath(bookId));
+            GoRouter.of(context).push(AppRoutes.readerPath(bookId));
           }
         } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Downloaded: ${entry.title}')));
+          showAdaptiveSnackBar(context, message: 'Downloaded: ${entry.title}');
         }
       } else if (_provider.error != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_provider.error!)));
+        showAdaptiveSnackBar(context, message: _provider.error!);
       }
     }
   }
@@ -199,58 +199,66 @@ class _UnifiedBrowseScreenState extends State<UnifiedBrowseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: _buildAppBar(), body: _buildBody());
-  }
-
-  PreferredSizeWidget _buildAppBar() {
+    final useCupertino = context.useCupertino;
     final canGoBack = _provider.canNavigateBack;
     final isSearching = _provider.isSearching;
 
-    return AppBar(
-      leading: canGoBack
-          ? IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () async {
-                final navigated = await _provider.navigateBack();
-                if (!navigated && mounted) {
-                  Navigator.of(context).pop();
-                }
+    return AdaptivePageScaffold(
+      navigationBar: AdaptiveNavigationBar(
+        title: _provider.currentResult?.title ?? widget.catalog.name,
+        titleWidget: isSearching
+            ? AdaptiveSearchField(
+                controller: _searchController,
+                autofocus: true,
+                placeholder: 'Search...',
+                onSubmitted: _onSearch,
+                onClear: () {
+                  _searchController.clear();
+                  _provider.clearSearch();
+                },
+              )
+            : null,
+        leading: canGoBack
+            ? AdaptiveIconButton(
+                icon: useCupertino ? CupertinoIcons.back : Icons.arrow_back,
+                tooltip: 'Back',
+                onPressed: () async {
+                  final router = GoRouter.of(context);
+                  final navigated = await _provider.navigateBack();
+                  if (!navigated && mounted) {
+                    router.pop();
+                  }
+                },
+              )
+            : null,
+        trailing: [
+          if (_provider.hasSearch && !isSearching)
+            AdaptiveIconButton(
+              icon: useCupertino ? CupertinoIcons.search : Icons.search,
+              tooltip: 'Search',
+              onPressed: () {
+                setState(() {
+                  _searchController.clear();
+                });
+                _onSearch(''); // Trigger search mode
               },
-            )
-          : null,
-      title: isSearching
-          ? AdaptiveSearchField(
-              controller: _searchController,
-              autofocus: true,
-              placeholder: 'Search...',
-              onSubmitted: _onSearch,
-              onClear: () {
-                _searchController.clear();
-                _provider.clearSearch();
-              },
-            )
-          : Text(_provider.currentResult?.title ?? widget.catalog.name),
-      actions: [
-        if (_provider.hasSearch && !isSearching)
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              setState(() {
-                _searchController.clear();
-              });
-              _onSearch(''); // Trigger search mode
-            },
+            ),
+          if (_provider.isFromCache)
+            Tooltip(
+              message: 'Cached ${_provider.cacheAgeText}',
+              child: Icon(
+                useCupertino ? CupertinoIcons.bolt : Icons.offline_bolt,
+                size: 20,
+              ),
+            ),
+          AdaptiveIconButton(
+            icon: useCupertino ? CupertinoIcons.refresh : Icons.refresh,
+            tooltip: 'Refresh',
+            onPressed: _provider.isLoading ? null : _onRefresh,
           ),
-        if (_provider.isFromCache)
-          Tooltip(
-            message: 'Cached ${_provider.cacheAgeText}',
-            child: const Icon(Icons.offline_bolt, size: 20),
-          ),
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: _provider.isLoading ? null : _onRefresh,
-        ),
-      ],
+        ],
+      ),
+      child: _buildBody(),
     );
   }
 

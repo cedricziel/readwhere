@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,10 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/library_facet.dart';
 import '../../providers/library_provider.dart';
 import '../../widgets/adaptive/adaptive_action_sheet.dart';
+import '../../widgets/adaptive/adaptive_button.dart';
+import '../../widgets/adaptive/adaptive_navigation_bar.dart';
+import '../../widgets/adaptive/adaptive_page_scaffold.dart';
+import '../../widgets/adaptive/adaptive_snackbar.dart';
 import '../../widgets/adaptive/adaptive_text_field.dart';
 import '../../widgets/adaptive/responsive_layout.dart';
 import '../../widgets/common/app_logo.dart';
@@ -62,9 +67,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: Consumer<LibraryProvider>(
+    return AdaptivePageScaffold(
+      navigationBar: _buildNavigationBar(),
+      child: Consumer<LibraryProvider>(
         builder: (context, libraryProvider, child) {
           // Loading state
           if (libraryProvider.isLoading && libraryProvider.books.isEmpty) {
@@ -97,27 +102,151 @@ class _LibraryScreenState extends State<LibraryScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _importBook,
-        tooltip: 'Add Book',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
-  /// Builds the app bar with title, search, view toggle, and sort menu
+  /// Builds the navigation bar with title, search, view toggle, and sort menu
   /// On mobile, consolidates actions into overflow menu for better touch UX
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildNavigationBar() {
     final isMobile = context.isMobile;
+    final useCupertino = context.useCupertino;
 
-    return AppBar(
+    // Build trailing actions
+    final List<Widget> trailing = [];
+
+    // Search toggle
+    trailing.add(
+      AdaptiveIconButton(
+        icon: _isSearching
+            ? (useCupertino ? CupertinoIcons.xmark : Icons.close)
+            : (useCupertino ? CupertinoIcons.search : Icons.search),
+        tooltip: _isSearching ? 'Close search' : 'Search',
+        onPressed: () {
+          setState(() {
+            _isSearching = !_isSearching;
+            if (!_isSearching) {
+              _searchController.clear();
+              final libraryProvider = Provider.of<LibraryProvider>(
+                context,
+                listen: false,
+              );
+              libraryProvider.clearSearch();
+            }
+          });
+        },
+      ),
+    );
+
+    // On larger screens: show individual action buttons
+    if (!isMobile) {
+      // View mode toggle
+      trailing.add(
+        Consumer<LibraryProvider>(
+          builder: (context, libraryProvider, child) {
+            return AdaptiveIconButton(
+              icon: libraryProvider.viewMode == LibraryViewMode.grid
+                  ? (useCupertino
+                        ? CupertinoIcons.list_bullet
+                        : Icons.view_list)
+                  : (useCupertino
+                        ? CupertinoIcons.square_grid_2x2
+                        : Icons.grid_view),
+              tooltip: libraryProvider.viewMode == LibraryViewMode.grid
+                  ? 'List view'
+                  : 'Grid view',
+              onPressed: () {
+                libraryProvider.setViewMode(
+                  libraryProvider.viewMode == LibraryViewMode.grid
+                      ? LibraryViewMode.list
+                      : LibraryViewMode.grid,
+                );
+              },
+            );
+          },
+        ),
+      );
+
+      // Sort menu (wrapped in Material for macOS)
+      trailing.add(
+        Material(
+          type: MaterialType.transparency,
+          child: Consumer<LibraryProvider>(
+            builder: (context, libraryProvider, child) {
+              return PopupMenuButton<LibrarySortOrder>(
+                icon: Icon(
+                  useCupertino ? CupertinoIcons.sort_down : Icons.sort,
+                ),
+                tooltip: 'Sort',
+                onSelected: (order) {
+                  libraryProvider.setSortOrder(order);
+                },
+                itemBuilder: (context) => _buildSortMenuItems(libraryProvider),
+              );
+            },
+          ),
+        ),
+      );
+
+      // More options menu
+      trailing.add(
+        AdaptiveIconButton(
+          icon: useCupertino ? CupertinoIcons.ellipsis : Icons.more_vert,
+          tooltip: 'More options',
+          onPressed: () {
+            AdaptiveActionSheet.show(
+              context: context,
+              actions: [
+                AdaptiveActionSheetAction(
+                  label: 'Refresh All Metadata',
+                  icon: Icons.refresh,
+                  onPressed: _refreshAllMetadata,
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } else {
+      // On mobile: consolidated overflow menu
+      trailing.add(
+        Material(
+          type: MaterialType.transparency,
+          child: Consumer<LibraryProvider>(
+            builder: (context, libraryProvider, child) {
+              return PopupMenuButton<String>(
+                icon: Icon(
+                  useCupertino ? CupertinoIcons.ellipsis : Icons.more_vert,
+                ),
+                tooltip: 'Options',
+                onSelected: (value) =>
+                    _handleMobileMenuSelection(value, libraryProvider),
+                itemBuilder: (context) =>
+                    _buildMobileMenuItems(libraryProvider),
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    // Add book button (FAB replacement)
+    trailing.add(
+      AdaptiveIconButton(
+        icon: useCupertino ? CupertinoIcons.add : Icons.add,
+        tooltip: 'Add Book',
+        onPressed: _importBook,
+      ),
+    );
+
+    return AdaptiveNavigationBar(
+      title: _isSearching ? null : 'Library',
       leading: _isSearching
           ? null
           : const Padding(
               padding: EdgeInsets.all(8.0),
-              child: AppLogo(size: 40),
+              child: AppLogo(size: 32),
             ),
-      title: _isSearching
+      titleWidget: _isSearching
           ? AdaptiveSearchField(
               controller: _searchController,
               autofocus: true,
@@ -137,98 +266,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 libraryProvider.clearSearch();
               },
             )
-          : const Text('Library'),
-      actions: [
-        // Search icon - always visible
-        IconButton(
-          icon: Icon(_isSearching ? Icons.close : Icons.search),
-          tooltip: _isSearching ? 'Close search' : 'Search',
-          onPressed: () {
-            setState(() {
-              _isSearching = !_isSearching;
-              if (!_isSearching) {
-                _searchController.clear();
-                final libraryProvider = Provider.of<LibraryProvider>(
-                  context,
-                  listen: false,
-                );
-                libraryProvider.clearSearch();
-              }
-            });
-          },
-        ),
-
-        // On larger screens: show individual action buttons
-        if (!isMobile) ...[
-          // View mode toggle
-          Consumer<LibraryProvider>(
-            builder: (context, libraryProvider, child) {
-              return IconButton(
-                icon: Icon(
-                  libraryProvider.viewMode == LibraryViewMode.grid
-                      ? Icons.view_list
-                      : Icons.grid_view,
-                ),
-                tooltip: libraryProvider.viewMode == LibraryViewMode.grid
-                    ? 'List view'
-                    : 'Grid view',
-                onPressed: () {
-                  libraryProvider.setViewMode(
-                    libraryProvider.viewMode == LibraryViewMode.grid
-                        ? LibraryViewMode.list
-                        : LibraryViewMode.grid,
-                  );
-                },
-              );
-            },
-          ),
-          // Sort menu
-          Consumer<LibraryProvider>(
-            builder: (context, libraryProvider, child) {
-              return PopupMenuButton<LibrarySortOrder>(
-                icon: const Icon(Icons.sort),
-                tooltip: 'Sort',
-                onSelected: (order) {
-                  libraryProvider.setSortOrder(order);
-                },
-                itemBuilder: (context) => _buildSortMenuItems(libraryProvider),
-              );
-            },
-          ),
-          // More options menu
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            tooltip: 'More options',
-            onPressed: () {
-              AdaptiveActionSheet.show(
-                context: context,
-                actions: [
-                  AdaptiveActionSheetAction(
-                    label: 'Refresh All Metadata',
-                    icon: Icons.refresh,
-                    onPressed: _refreshAllMetadata,
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-
-        // On mobile: consolidated overflow menu
-        if (isMobile)
-          Consumer<LibraryProvider>(
-            builder: (context, libraryProvider, child) {
-              return PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                tooltip: 'Options',
-                onSelected: (value) =>
-                    _handleMobileMenuSelection(value, libraryProvider),
-                itemBuilder: (context) =>
-                    _buildMobileMenuItems(libraryProvider),
-              );
-            },
-          ),
-      ],
+          : null,
+      trailing: trailing,
     );
   }
 
@@ -504,13 +543,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _onPullToRefresh(LibraryProvider libraryProvider) async {
     final refreshedCount = await libraryProvider.refreshAllMetadata();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      showAdaptiveSnackBar(
+        context,
+        message:
             'Refreshed metadata for $refreshedCount of ${libraryProvider.bookCount} books',
-          ),
-          duration: const Duration(seconds: 2),
-        ),
+        duration: const Duration(seconds: 2),
       );
     }
   }
@@ -660,14 +697,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
           if (mounted) {
             if (book != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Added "${book.title}" to library'),
-                  duration: const Duration(seconds: 3),
-                  action: SnackBarAction(
-                    label: 'Open',
-                    onPressed: () => _openBook(book.id),
-                  ),
+              showAdaptiveSnackBar(
+                context,
+                message: 'Added "${book.title}" to library',
+                duration: const Duration(seconds: 3),
+                action: AdaptiveSnackBarAction(
+                  label: 'Open',
+                  onPressed: () => _openBook(book.id),
                 ),
               );
             } else {
@@ -687,12 +723,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   /// Shows an error snackbar
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
+    showAdaptiveSnackBar(context, message: message);
   }
 
   /// Refreshes metadata for all books in the library
@@ -703,9 +734,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
 
     if (libraryProvider.bookCount == 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No books to refresh')));
+      showAdaptiveSnackBar(context, message: 'No books to refresh');
       return;
     }
 
@@ -719,13 +748,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
         libraryProvider: libraryProvider,
         onComplete: (refreshedCount, totalCount) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
+            showAdaptiveSnackBar(
+              context,
+              message:
                   'Refreshed metadata for $refreshedCount of $totalCount books',
-                ),
-                duration: const Duration(seconds: 3),
-              ),
+              duration: const Duration(seconds: 3),
             );
           }
         },

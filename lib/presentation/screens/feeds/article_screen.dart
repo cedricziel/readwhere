@@ -1,11 +1,17 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/feed_item.dart';
 import '../../providers/feed_reader_provider.dart';
 import '../../widgets/adaptive/adaptive_action_sheet.dart';
+import '../../widgets/adaptive/adaptive_button.dart';
+import '../../widgets/adaptive/adaptive_navigation_bar.dart';
+import '../../widgets/adaptive/adaptive_page_scaffold.dart';
+import '../../widgets/adaptive/adaptive_snackbar.dart';
 
 /// Screen for reading a feed article/item content.
 ///
@@ -93,9 +99,7 @@ class _ArticleScreenState extends State<ArticleScreen> {
     if (uri != null && await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Could not open link')));
+      showAdaptiveSnackBar(context, message: 'Could not open link');
     }
   }
 
@@ -143,21 +147,23 @@ class _ArticleScreenState extends State<ArticleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Article'),
-        actions: [
+    final useCupertino = context.useCupertino;
+
+    return AdaptivePageScaffold(
+      navigationBar: AdaptiveNavigationBar(
+        title: 'Article',
+        trailing: [
           if (_item != null) ...[
-            IconButton(
-              icon: Icon(
-                _item!.isStarred ? Icons.star : Icons.star_outline,
-                color: _item!.isStarred ? Colors.amber : null,
-              ),
+            AdaptiveIconButton(
+              icon: _item!.isStarred
+                  ? (useCupertino ? CupertinoIcons.star_fill : Icons.star)
+                  : (useCupertino ? CupertinoIcons.star : Icons.star_outline),
               tooltip: _item!.isStarred ? 'Unstar' : 'Star',
               onPressed: _toggleStarred,
             ),
-            IconButton(
-              icon: const Icon(Icons.more_vert),
+            AdaptiveIconButton(
+              icon: useCupertino ? CupertinoIcons.ellipsis : Icons.more_vert,
+              tooltip: 'More',
               onPressed: () {
                 AdaptiveActionSheet.show(
                   context: context,
@@ -184,7 +190,7 @@ class _ArticleScreenState extends State<ArticleScreen> {
           ],
         ],
       ),
-      body: _buildBody(),
+      child: _buildBody(),
     );
   }
 
@@ -454,15 +460,14 @@ class _ArticleScreenState extends State<ArticleScreen> {
     // Navigate to RSS browse screen which handles downloads
     // For now, show a snackbar indicating the feature
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Downloading: ${_getEnclosureLabel(enclosure.url)}'),
-          action: SnackBarAction(
-            label: 'View',
-            onPressed: () {
-              // Could navigate to library after download
-            },
-          ),
+      showAdaptiveSnackBar(
+        context,
+        message: 'Downloading: ${_getEnclosureLabel(enclosure.url)}',
+        action: AdaptiveSnackBarAction(
+          label: 'View',
+          onPressed: () {
+            // Could navigate to library after download
+          },
         ),
       );
 

@@ -21,6 +21,7 @@ export 'adaptive_list_tile.dart';
 export 'adaptive_navigation_bar.dart';
 export 'adaptive_page_scaffold.dart';
 export 'adaptive_scaffold.dart';
+export 'adaptive_snackbar.dart';
 export 'adaptive_switch_list_tile.dart';
 export 'adaptive_tab_scaffold.dart';
 export 'adaptive_text_field.dart';
