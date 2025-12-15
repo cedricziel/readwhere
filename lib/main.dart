@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:macos_ui/macos_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:readwhere_kavita/readwhere_kavita.dart';
 import 'package:readwhere_nextcloud/readwhere_nextcloud.dart';
@@ -27,6 +30,14 @@ import 'presentation/providers/theme_provider.dart';
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize macOS window utilities for native sidebar appearance
+  if (!kIsWeb && Platform.isMacOS) {
+    const config = MacosWindowUtilsConfig(
+      toolbarStyle: NSWindowToolbarStyle.unified,
+    );
+    await config.apply();
+  }
 
   // Initialize logger
   AppLogger.initialize(level: Level.INFO);

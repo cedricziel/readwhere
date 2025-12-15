@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:macos_ui/macos_ui.dart';
 
 import '../../../core/extensions/context_extensions.dart';
 import 'adaptive_navigation_bar.dart';
@@ -74,6 +75,7 @@ class AdaptivePageScaffold extends StatelessWidget {
   Widget _buildMacosScaffold(BuildContext context) {
     // On macOS, we're inside MacosScaffold which provides the window chrome
     // but doesn't provide Material context, so wrap child with Material
+    // Use MacosTheme.canvasColor for proper background color
 
     // Extract navigation bar properties if provided
     String? displayTitle = title;
@@ -89,8 +91,10 @@ class AdaptivePageScaffold extends StatelessWidget {
       trailing = navBar.trailing;
     }
 
+    final macosTheme = MacosTheme.of(context);
+
     return Material(
-      type: MaterialType.transparency,
+      color: backgroundColor ?? macosTheme.canvasColor,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,6 +259,7 @@ class AdaptiveScrollablePageScaffold extends StatelessWidget {
 
   Widget _buildMacosScaffold(BuildContext context) {
     final theme = Theme.of(context);
+    final macosTheme = MacosTheme.of(context);
 
     // Extract navigation bar properties if provided
     String? displayTitle = title;
@@ -274,7 +279,7 @@ class AdaptiveScrollablePageScaffold extends StatelessWidget {
         displayTitle != null;
 
     return Material(
-      type: MaterialType.transparency,
+      color: backgroundColor ?? macosTheme.canvasColor,
       child: SafeArea(
         child: CustomScrollView(
           controller: controller,
