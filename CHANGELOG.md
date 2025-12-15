@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.6.0](https://github.com/cedricziel/readwhere/compare/v0.5.0...v0.6.0) (2025-12-15)
+
+
+### Features
+
+* **adaptive:** add custom adaptive widgets and Widgetbook use cases ([0980106](https://github.com/cedricziel/readwhere/commit/09801064de60bc26bfa28aa1e2c4b4b8f8b11379))
+* **adaptive:** add platform-adaptive widgets for cross-platform UX ([ee01c79](https://github.com/cedricziel/readwhere/commit/ee01c799579a38a8a2b4431717385af92f922102))
+* **adaptive:** migrate all screens to adaptive widgets ([91117db](https://github.com/cedricziel/readwhere/commit/91117dbbc486eb92a042f363556bd7352820bf6c))
+* **adaptive:** migrate Catalogs screen to adaptive widgets ([cede144](https://github.com/cedricziel/readwhere/commit/cede144f73ddd5f21993f0ee246891b25c26ec55))
+* **adaptive:** migrate download sheets to AdaptiveActionSheet ([4717f7a](https://github.com/cedricziel/readwhere/commit/4717f7a7520f22699c4659af29f748edef416635))
+* **adaptive:** migrate form fields to AdaptiveTextField ([775c54b](https://github.com/cedricziel/readwhere/commit/775c54bf8f17b7d16ba8cbedba321efda95bc029))
+* **adaptive:** migrate Library context menus to AdaptiveActionSheet ([adc6470](https://github.com/cedricziel/readwhere/commit/adc6470215629a5a44f93a5f5e577c42170c88f1))
+* **adaptive:** migrate popup menus to AdaptiveActionSheet ([0b4b057](https://github.com/cedricziel/readwhere/commit/0b4b05789d644aec63f2360eff9ca30cacc3eb0d))
+* **adaptive:** migrate search fields to AdaptiveSearchField ([7aab9f8](https://github.com/cedricziel/readwhere/commit/7aab9f84ec4916f59d4e5210d550e0623fff4bfe))
+* **adaptive:** migrate Settings screen to adaptive buttons ([e546eca](https://github.com/cedricziel/readwhere/commit/e546ecab8316f5c753e18e90c7d00c9726bb21b5))
+* **adaptive:** use RefreshIndicator.adaptive() for iOS pull-to-refresh ([4f28fbb](https://github.com/cedricziel/readwhere/commit/4f28fbb64f31b44fcff19cd5d1a35fbb710fdb3b))
+* **annotations:** add annotation data layer and provider ([916f2a1](https://github.com/cedricziel/readwhere/commit/916f2a1edf82e13337566f61fe1d9db339fabe9d))
+* **annotations:** add annotation selection via bottom sheet ([350399d](https://github.com/cedricziel/readwhere/commit/350399deec82a6200e8e68370dadc2a689efeda7))
+* **annotations:** add in-document highlight rendering ([c8b98c2](https://github.com/cedricziel/readwhere/commit/c8b98c22b1770ff4833374c4805811c224fca580))
+* **annotations:** integrate annotation UI with reader screen ([18703b2](https://github.com/cedricziel/readwhere/commit/18703b2f394540452881bf468d464601b2be1f39))
+* **mobile:** improve smartphone UX with responsive layouts and accessibility ([e8f7ad5](https://github.com/cedricziel/readwhere/commit/e8f7ad5dac2c41754966f9c00b96cd0c8c6156d9))
+* **nextcloud:** add Nextcloud News RSS sync infrastructure ([8f5837b](https://github.com/cedricziel/readwhere/commit/8f5837b7342df8c1495a659c41e5983e2d33b54f))
+* **nextcloud:** add settings dialog with News sync toggle ([f80dbf9](https://github.com/cedricziel/readwhere/commit/f80dbf9ed69e66f0e06d619fc9c99ca4e0564c78))
+* **platform:** add multi-platform support with native macOS and iOS UI ([eb4601f](https://github.com/cedricziel/readwhere/commit/eb4601f35f00fc82eaf1bb418fadf9c92853156f))
+* **sync:** add background sync infrastructure ([cdedda6](https://github.com/cedricziel/readwhere/commit/cdedda68be23b8524d5a45c5c8cc3c2d33a0ddf2))
+* **sync:** add native platform configurations for background sync ([a166268](https://github.com/cedricziel/readwhere/commit/a166268f57024585e6fc9d353cac3c7fdfcaa41f))
+* **sync:** initialize sync services at app startup ([f28b3ca](https://github.com/cedricziel/readwhere/commit/f28b3ca3f057a52b8cd008d210816adce3da1911))
+* **synology:** add folder picker dialog for Synology catalogs ([37df00f](https://github.com/cedricziel/readwhere/commit/37df00f61e2e4f76f26f79f3e0f25550b3f210e3))
+* **synology:** add Synology Drive as content source ([5c1109f](https://github.com/cedricziel/readwhere/commit/5c1109f757038ca234f91a7db37a1df157090a19))
+* **test:** add cross-platform testing helpers ([aebcd4a](https://github.com/cedricziel/readwhere/commit/aebcd4a25afc2bddf00c27c2d7329fffbaf4a036))
+* **ux:** Phase 2 mobile UX enhancements ([bbb6cde](https://github.com/cedricziel/readwhere/commit/bbb6cde0063ab751ecaf291ef0af62285a6d1e08))
+* **ux:** Phase 3 responsive infrastructure ([c3a6251](https://github.com/cedricziel/readwhere/commit/c3a625156892d258670f3c5efcfac84eabb63e94))
+* **ux:** Phase 4 landscape layouts for all screens ([0ef7a0d](https://github.com/cedricziel/readwhere/commit/0ef7a0d5afe843b7adc663759ddb6c1e00ad16ab))
+
+
+### Bug Fixes
+
+* **adaptive:** make Material bottom sheet scrollable to prevent overflow ([6b1fa08](https://github.com/cedricziel/readwhere/commit/6b1fa08e0859ea22ab40d700ece3b149893fdb7f))
+* **adaptive:** render toolbar with actions on macOS pages ([871ae13](https://github.com/cedricziel/readwhere/commit/871ae130ed03df173bef4dad74213ff063f1b282))
+* **adaptive:** wrap dialog content in Material for Cupertino compatibility ([fe84d52](https://github.com/cedricziel/readwhere/commit/fe84d52999d4f5a8bf8857bb9661f7473f194007))
+* **adaptive:** wrap sync interval dialog content in Material ([d1c4a01](https://github.com/cedricziel/readwhere/commit/d1c4a01c12fb9dca049ec48bcc977b64b08a6d44))
+* **annotations:** register AnnotationProvider in app providers ([39fc5a7](https://github.com/cedricziel/readwhere/commit/39fc5a763964f12965e61f87aac5fadf3d6be6b5))
+* **annotations:** use CustomSingleChildLayout for context menu positioning ([b56e08b](https://github.com/cedricziel/readwhere/commit/b56e08bc9357c2df1b0f9c4838497e907cefb3bf))
+* **ci:** rename claude command file for Windows compatibility ([5888a68](https://github.com/cedricziel/readwhere/commit/5888a6809159aac181785d351dc0419f10a32e80))
+* **macos:** use proper background colors for native macOS appearance ([3a5681c](https://github.com/cedricziel/readwhere/commit/3a5681c3b3c7f91ae78b1ed5b88e88dc337dc138))
+* **nextcloud:** fix News sync not triggering and add pull-to-refresh ([b1bbe9b](https://github.com/cedricziel/readwhere/commit/b1bbe9bc49c019fb67c04e81744d6854049b3f43))
+* **test:** resolve 23 failing tests after sync settings addition ([3820e43](https://github.com/cedricziel/readwhere/commit/3820e43fd38678720b314f96a669cd982fdeded3))
+* **tests:** add missing AnnotationProvider to reader tests ([9ca9654](https://github.com/cedricziel/readwhere/commit/9ca96541c67865ee8c42264cd35adcfb3fff49ae))
+* **ui:** add explicit duration to snackbars with actions ([c72c097](https://github.com/cedricziel/readwhere/commit/c72c0976ffadeb271991008af08df970498e22ab))
+
 ## [0.5.0](https://github.com/cedricziel/readwhere/compare/v0.4.0...v0.5.0) (2025-12-13)
 
 
