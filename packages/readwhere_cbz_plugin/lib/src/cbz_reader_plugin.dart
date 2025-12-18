@@ -160,7 +160,10 @@ class CbzReaderPlugin extends PluginBase with ReaderCapability {
   }
 
   @override
-  Future<ReaderController> openBook(String filePath) async {
+  Future<ReaderController> openBook(
+    String filePath, {
+    Map<String, String>? credentials,
+  }) async {
     try {
       _log.info('Opening book: $filePath');
 

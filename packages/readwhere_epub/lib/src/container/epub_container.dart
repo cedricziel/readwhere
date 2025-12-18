@@ -205,6 +205,12 @@ class EpubContainer {
     return _archive.hasFile('META-INF/license.lcpl');
   }
 
+  /// Gets the LCP license JSON content if it exists.
+  String? getLcpLicenseJson() {
+    if (!hasLcpLicense()) return null;
+    return _archive.readFileString('META-INF/license.lcpl');
+  }
+
   /// Validates the mimetype file.
   MimetypeValidation validateMimetype() {
     return _archive.validateMimetype();

@@ -113,6 +113,7 @@ class ReadwhereEpubPlugin extends PluginBase with ReaderCapability {
       final encryptionDescription = encryptionInfo.hasDrm
           ? encryptionInfo.description
           : null;
+      final lcpPassphraseHint = reader.lcpPassphraseHint;
 
       // Check for fixed-layout
       final isFixedLayout = reader.book.isFixedLayout;
@@ -143,6 +144,7 @@ class ReadwhereEpubPlugin extends PluginBase with ReaderCapability {
         tableOfContents: toc,
         encryptionType: encryptionType,
         encryptionDescription: encryptionDescription,
+        lcpPassphraseHint: lcpPassphraseHint,
         isFixedLayout: isFixedLayout,
         hasMediaOverlays: hasMediaOverlays,
       );
@@ -188,11 +190,23 @@ class ReadwhereEpubPlugin extends PluginBase with ReaderCapability {
   }
 
   @override
-  Future<ReaderController> openBook(String filePath) async {
+  Future<ReaderController> openBook(
+    String filePath, {
+    Map<String, String>? credentials,
+  }) async {
     try {
       _log.info('Opening book: $filePath');
 
-      final controller = await ReadwhereEpubController.create(filePath);
+      // Extract passphrase from credentials if provided
+      final passphrase = credentials?['passphrase'];
+      if (passphrase != null) {
+        _log.info('Opening with LCP passphrase');
+      }
+
+      final controller = await ReadwhereEpubController.create(
+        filePath,
+        passphrase: passphrase,
+      );
 
       _log.info('Book opened successfully');
       return controller;

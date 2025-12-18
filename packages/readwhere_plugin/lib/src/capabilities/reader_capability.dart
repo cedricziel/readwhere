@@ -74,10 +74,18 @@ mixin ReaderCapability on PluginBase {
   /// - Search
   /// - Progress tracking
   ///
+  /// [filePath] - Path to the book file.
+  /// [credentials] - Optional credentials for encrypted books. For LCP-protected
+  ///   EPUBs, this should be a map with a 'passphrase' key containing the user's
+  ///   passphrase.
+  ///
   /// The caller is responsible for disposing the controller when done.
   ///
-  /// Throws an exception if the file cannot be opened.
-  Future<ReaderController> openBook(String filePath);
+  /// Throws an exception if the file cannot be opened or decryption fails.
+  Future<ReaderController> openBook(
+    String filePath, {
+    Map<String, String>? credentials,
+  });
 
   /// Extract the cover image from the book file.
   ///
