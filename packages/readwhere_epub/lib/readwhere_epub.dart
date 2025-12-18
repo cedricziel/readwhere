@@ -67,5 +67,8 @@ export 'src/fxl/rendition_properties.dart';
 // Encryption
 export 'src/encryption/encryption_info.dart';
 
+// Decryption
+export 'src/decryption/decryption.dart';
+
 // Media Overlays
 export 'src/media/smil_models.dart';

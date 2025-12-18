@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import '../container/epub_container.dart';
 import '../content/content_document.dart';
+import '../decryption/decryption_context.dart';
 import '../encryption/encryption_info.dart';
 import '../encryption/encryption_parser.dart';
 import '../errors/epub_exception.dart';
@@ -52,6 +54,9 @@ class EpubReader {
   /// The navigation structure.
   final EpubNavigation _navigation;
 
+  /// Decryption context for encrypted resources.
+  final DecryptionContext _decryptionContext;
+
   /// Cached chapters.
   final Map<int, EpubChapter> _chapterCache = {};
 
@@ -59,37 +64,51 @@ class EpubReader {
     required EpubContainer container,
     required PackageDocument package,
     required EpubNavigation navigation,
+    required DecryptionContext decryptionContext,
   })  : _container = container,
         _package = package,
-        _navigation = navigation;
+        _navigation = navigation,
+        _decryptionContext = decryptionContext;
 
   /// Opens an EPUB from a file path.
+  ///
+  /// [filePath] - Path to the EPUB file.
+  /// [passphrase] - Optional passphrase for LCP-protected EPUBs.
   ///
   /// Throws [EpubReadException] if the file cannot be read.
   /// Throws [EpubValidationException] if the EPUB structure is invalid.
   /// Throws [EpubParseException] if parsing fails.
-  static Future<EpubReader> open(String filePath) async {
+  static Future<EpubReader> open(String filePath, {String? passphrase}) async {
     final container = await EpubContainer.fromFile(filePath);
-    return _createFromContainer(container);
+    return _createFromContainer(container, passphrase: passphrase);
   }
 
   /// Opens an EPUB from bytes.
   ///
+  /// [bytes] - The EPUB file content.
+  /// [passphrase] - Optional passphrase for LCP-protected EPUBs.
+  ///
   /// Throws [EpubReadException] if the bytes are not a valid ZIP.
   /// Throws [EpubValidationException] if the EPUB structure is invalid.
   /// Throws [EpubParseException] if parsing fails.
-  static EpubReader openBytes(Uint8List bytes) {
+  static EpubReader openBytes(Uint8List bytes, {String? passphrase}) {
     final container = EpubContainer.fromBytes(bytes);
-    return _createFromContainer(container);
+    return _createFromContainer(container, passphrase: passphrase);
   }
 
   /// Opens an EPUB from a File object.
-  static Future<EpubReader> openFile(File file) async {
+  ///
+  /// [file] - The EPUB file.
+  /// [passphrase] - Optional passphrase for LCP-protected EPUBs.
+  static Future<EpubReader> openFile(File file, {String? passphrase}) async {
     final bytes = await file.readAsBytes();
-    return openBytes(bytes);
+    return openBytes(bytes, passphrase: passphrase);
   }
 
-  static EpubReader _createFromContainer(EpubContainer container) {
+  static EpubReader _createFromContainer(
+    EpubContainer container, {
+    String? passphrase,
+  }) {
     // Parse OPF package document
     final opfContent = container.readOpf();
     final package = PackageDocument.parse(opfContent, container.opfPath);
@@ -97,10 +116,25 @@ class EpubReader {
     // Parse navigation (try EPUB 3 nav doc first, then NCX)
     final navigation = _parseNavigation(container, package);
 
+    // Create decryption context
+    final encryptionInfo = EncryptionParser.parse(
+      container.getEncryptionXml(),
+      hasRightsFile: container.hasRightsFile(),
+      hasLcpLicense: container.hasLcpLicense(),
+    );
+
+    final decryptionContext = DecryptionContext.create(
+      uniqueIdentifier: package.uniqueIdentifier ?? '',
+      encryptionInfo: encryptionInfo,
+      lcpLicenseJson: container.getLcpLicenseJson(),
+      lcpPassphrase: passphrase,
+    );
+
     return EpubReader._(
       container: container,
       package: package,
       navigation: navigation,
+      decryptionContext: decryptionContext,
     );
   }
 
@@ -224,7 +258,7 @@ class EpubReader {
     }
 
     final path = _container.resolveOpfRelativePath(manifestItem.href);
-    final content = _container.readFileString(path);
+    final content = _readDecryptedString(path);
 
     // Find title from navigation
     final title = _findTitleForHref(manifestItem.href);
@@ -309,15 +343,32 @@ class EpubReader {
   }
 
   // ============================================================
+  // Decryption helpers
+  // ============================================================
+
+  /// Reads and decrypts a file as bytes.
+  Uint8List _readDecryptedBytes(String path) {
+    final bytes = _container.readFileBytes(path);
+    return _decryptionContext.decryptResource(path, bytes);
+  }
+
+  /// Reads and decrypts a file as a string (UTF-8).
+  String _readDecryptedString(String path) {
+    final bytes = _readDecryptedBytes(path);
+    return utf8.decode(bytes);
+  }
+
+  // ============================================================
   // Resource access
   // ============================================================
 
   /// Gets any resource by href.
   ///
   /// Throws [EpubResourceNotFoundException] if the resource is not found.
+  /// Throws [DecryptionException] if decryption fails.
   GenericResource getResource(String href) {
     final path = _container.resolveOpfRelativePath(href);
-    final bytes = _container.readFileBytes(path);
+    final bytes = _readDecryptedBytes(path);
 
     final manifestItem = manifest.getByHref(href);
 
@@ -379,7 +430,7 @@ class EpubReader {
       if (item.isCss) {
         try {
           final path = _container.resolveOpfRelativePath(item.href);
-          final bytes = _container.readFileBytes(path);
+          final bytes = _readDecryptedBytes(path);
           stylesheets.add(EpubStylesheet(
             id: item.id,
             href: item.href,
@@ -411,7 +462,7 @@ class EpubReader {
       if (item.isImage) {
         try {
           final path = _container.resolveOpfRelativePath(item.href);
-          final bytes = _container.readFileBytes(path);
+          final bytes = _readDecryptedBytes(path);
           images.add(EpubImage(
             id: item.id,
             href: item.href,
@@ -435,7 +486,7 @@ class EpubReader {
 
     try {
       final path = _container.resolveOpfRelativePath(item.href);
-      final bytes = _container.readFileBytes(path);
+      final bytes = _readDecryptedBytes(path);
       return EpubImage(
         id: item.id,
         href: item.href,
@@ -483,7 +534,7 @@ class EpubReader {
 
     try {
       final path = _container.resolveOpfRelativePath(overlayItem.href);
-      final content = _container.readFileString(path);
+      final content = _readDecryptedString(path);
       return SmilParser.parse(content, overlayId, overlayItem.href);
     } catch (_) {
       return null;
@@ -522,15 +573,41 @@ class EpubReader {
   /// Detailed encryption information.
   ///
   /// Returns [EncryptionInfo.none] if no encryption is detected.
-  /// Note: This library does not support DRM decryption.
-  EncryptionInfo get encryptionInfo {
-    final encryptionXml = _container.getEncryptionXml();
-    return EncryptionParser.parse(
-      encryptionXml,
-      hasRightsFile: _container.hasRightsFile(),
-      hasLcpLicense: _container.hasLcpLicense(),
-    );
-  }
+  EncryptionInfo get encryptionInfo => _decryptionContext.encryptionInfo;
+
+  /// The decryption context for this EPUB.
+  ///
+  /// Use this to check decryption status and capabilities.
+  DecryptionContext get decryptionContext => _decryptionContext;
+
+  /// Whether the content can be decrypted.
+  ///
+  /// Returns true if:
+  /// - The EPUB is not encrypted
+  /// - The EPUB uses only font obfuscation (no credentials needed)
+  /// - LCP encryption and a valid passphrase was provided
+  ///
+  /// Returns false if:
+  /// - Adobe DRM or Apple FairPlay is used (not supported)
+  /// - LCP encryption but no/invalid passphrase was provided
+  bool get canDecrypt => _decryptionContext.canDecrypt;
+
+  /// Whether this EPUB requires credentials (passphrase) to read.
+  ///
+  /// Returns true if the EPUB is LCP protected and no valid passphrase
+  /// was provided when opening.
+  bool get requiresCredentials => _decryptionContext.requiresCredentials;
+
+  /// The passphrase hint for LCP-protected EPUBs.
+  ///
+  /// Returns null if not LCP protected or no hint is available.
+  String? get lcpPassphraseHint => _decryptionContext.lcpPassphraseHint;
+
+  /// Whether this EPUB has an LCP license.
+  bool get hasLcpLicense => _container.hasLcpLicense();
+
+  /// A human-readable description of the encryption status.
+  String get encryptionDescription => _decryptionContext.description;
 
   /// Total number of files in the EPUB.
   int get fileCount => _container.fileCount;

@@ -42,10 +42,29 @@ class ReadwhereEpubController implements ReaderController {
   }) : _reader = reader;
 
   /// Create and initialize a controller.
-  static Future<ReadwhereEpubController> create(String filePath) async {
+  ///
+  /// [filePath] - Path to the EPUB file.
+  /// [passphrase] - Optional passphrase for LCP-protected EPUBs.
+  static Future<ReadwhereEpubController> create(
+    String filePath, {
+    String? passphrase,
+  }) async {
     _logger.info('Creating ReadwhereEpubController for: $filePath');
 
-    final reader = await epub.EpubReader.open(filePath);
+    final reader = await epub.EpubReader.open(filePath, passphrase: passphrase);
+
+    // Check if decryption was successful
+    if (!reader.canDecrypt) {
+      if (reader.requiresCredentials) {
+        throw epub.DecryptionException(
+          'This book requires a passphrase to read',
+        );
+      }
+      throw epub.DecryptionException(
+        'This book uses unsupported DRM: ${reader.encryptionDescription}',
+      );
+    }
+
     final controller = ReadwhereEpubController._(
       reader: reader,
       filePath: filePath,

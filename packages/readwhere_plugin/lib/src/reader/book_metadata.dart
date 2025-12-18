@@ -42,6 +42,9 @@ class BookMetadata extends Equatable {
   /// Human-readable description of encryption status.
   final String? encryptionDescription;
 
+  /// Passphrase hint for LCP-protected books.
+  final String? lcpPassphraseHint;
+
   /// Whether this book is a fixed-layout EPUB.
   final bool isFixedLayout;
 
@@ -59,6 +62,7 @@ class BookMetadata extends Equatable {
     this.tableOfContents = const [],
     this.encryptionType = EpubEncryptionType.none,
     this.encryptionDescription,
+    this.lcpPassphraseHint,
     this.isFixedLayout = false,
     this.hasMediaOverlays = false,
   });
@@ -67,6 +71,9 @@ class BookMetadata extends Equatable {
   bool get hasDrm =>
       encryptionType != EpubEncryptionType.none &&
       encryptionType != EpubEncryptionType.fontObfuscation;
+
+  /// Whether this LCP book requires a passphrase to read.
+  bool get requiresLcpPassphrase => encryptionType == EpubEncryptionType.lcp;
 
   /// Creates a copy of this BookMetadata with the given fields replaced
   BookMetadata copyWith({
@@ -80,6 +87,7 @@ class BookMetadata extends Equatable {
     List<TocEntry>? tableOfContents,
     EpubEncryptionType? encryptionType,
     String? encryptionDescription,
+    String? lcpPassphraseHint,
     bool? isFixedLayout,
     bool? hasMediaOverlays,
   }) {
@@ -95,6 +103,7 @@ class BookMetadata extends Equatable {
       encryptionType: encryptionType ?? this.encryptionType,
       encryptionDescription:
           encryptionDescription ?? this.encryptionDescription,
+      lcpPassphraseHint: lcpPassphraseHint ?? this.lcpPassphraseHint,
       isFixedLayout: isFixedLayout ?? this.isFixedLayout,
       hasMediaOverlays: hasMediaOverlays ?? this.hasMediaOverlays,
     );
@@ -112,6 +121,7 @@ class BookMetadata extends Equatable {
     tableOfContents,
     encryptionType,
     encryptionDescription,
+    lcpPassphraseHint,
     isFixedLayout,
     hasMediaOverlays,
   ];

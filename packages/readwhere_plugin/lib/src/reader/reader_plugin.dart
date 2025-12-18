@@ -39,8 +39,12 @@ abstract class ReaderPlugin {
   /// Open the book and return a controller for reading it
   ///
   /// The controller manages navigation, content retrieval, and search.
+  /// [credentials] - Optional credentials for encrypted books (e.g., passphrase, password).
   /// Throws an exception if the file cannot be opened.
-  Future<ReaderController> openBook(String filePath);
+  Future<ReaderController> openBook(
+    String filePath, {
+    Map<String, String>? credentials,
+  });
 
   /// Extract the cover image from the book file
   ///

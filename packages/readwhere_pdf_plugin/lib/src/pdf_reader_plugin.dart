@@ -147,11 +147,26 @@ class PdfReaderPlugin extends PluginBase with ReaderCapability {
   }
 
   @override
-  Future<ReaderController> openBook(String filePath) async {
+  Future<ReaderController> openBook(
+    String filePath, {
+    Map<String, String>? credentials,
+  }) async {
     try {
       _log.info('Opening book: $filePath');
 
-      final controller = await PdfReaderController.create(filePath);
+      // Check for PDF password in credentials
+      final password = credentials?['password'];
+
+      PdfReaderController controller;
+      if (password != null) {
+        _log.info('Opening with password');
+        controller = await PdfReaderController.createWithPassword(
+          filePath,
+          password,
+        );
+      } else {
+        controller = await PdfReaderController.create(filePath);
+      }
 
       _log.info('Book opened successfully');
       return controller;
@@ -162,24 +177,12 @@ class PdfReaderPlugin extends PluginBase with ReaderCapability {
   }
 
   /// Open a password-protected PDF.
+  @Deprecated('Use openBook with credentials parameter instead')
   Future<ReaderController> openBookWithPassword(
     String filePath,
     String password,
   ) async {
-    try {
-      _log.info('Opening password-protected book: $filePath');
-
-      final controller = await PdfReaderController.createWithPassword(
-        filePath,
-        password,
-      );
-
-      _log.info('Password-protected book opened successfully');
-      return controller;
-    } catch (e, stackTrace) {
-      _log.severe('Error opening book $filePath', e, stackTrace);
-      rethrow;
-    }
+    return openBook(filePath, credentials: {'password': password});
   }
 
   /// Build TOC entries from PDF outline.
