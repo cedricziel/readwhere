@@ -9,7 +9,7 @@ environment:
 
 dependencies:
   xml: ^6.5.0
-  equatable: ^2.0.5
+  equatable: ^2.0.8
 
 dev_dependencies:
   test: ^1.25.0

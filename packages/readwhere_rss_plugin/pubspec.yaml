@@ -15,7 +15,7 @@ dependencies:
   readwhere_plugin:
     path: ../readwhere_plugin
   http: ^1.2.0
-  equatable: ^2.0.5
+  equatable: ^2.0.8
   logging: ^1.2.0
 
 dev_dependencies:
