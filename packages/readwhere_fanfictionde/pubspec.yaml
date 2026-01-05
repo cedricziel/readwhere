@@ -9,7 +9,7 @@ environment:
 
 dependencies:
   archive: ^4.0.2
-  equatable: ^2.0.7
+  equatable: ^2.0.8
   html: ^0.15.5
   http: ^1.2.2
   meta: ^1.15.0
