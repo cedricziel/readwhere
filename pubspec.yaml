@@ -40,7 +40,7 @@ dependencies:
 
   # UI
   cupertino_icons: ^1.0.8
-  google_fonts: ^6.3.3
+  google_fonts: ^7.0.2
   flutter_svg: ^2.2.3
   cached_network_image: ^3.4.1
   flutter_markdown_plus: ^1.0.5
