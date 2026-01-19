@@ -35,5 +35,5 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   mockito: ^5.6.1
-  build_runner: ^2.10.4
+  build_runner: ^2.10.5
   coverage: ^1.7.0
