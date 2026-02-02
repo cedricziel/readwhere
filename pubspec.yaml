@@ -142,7 +142,7 @@ dependencies:
 
   # Networking
   http: ^1.6.0
-  dio: ^5.9.0
+  dio: ^5.9.1
   connectivity_plus: ^7.0.0
 
   # Background Execution
