@@ -9,7 +9,7 @@ environment:
 resolution: workspace
 
 dependencies:
-  dio: ^5.9.0
+  dio: ^5.9.1
   xml: ^6.6.1
   equatable: ^2.0.7
   collection: ^1.19.1
